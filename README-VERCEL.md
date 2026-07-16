@@ -13,16 +13,6 @@ O site e a Function do Last.fm podem ser publicados juntos no mesmo projeto Verc
 
 O endereco `/` abre `lastfm-collage.html`, e o navegador usa automaticamente a Function `/api/lastfm`.
 
-## Desenvolvimento local
-
-Defina `LASTFM_API_KEY` apenas no ambiente do terminal antes de iniciar `serve-local.js`. Nao crie um arquivo `.env` para enviar ao GitHub.
-
-PowerShell:
-
-```powershell
-$env:LASTFM_API_KEY='sua-chave'; node serve-local.js
-```
-
 O Shared Secret do Last.fm nao e necessario para as consultas de leitura usadas pelo gerador e nao deve ser configurado.
 
 ## Frontend em outro dominio

@@ -1,0 +1,5 @@
+serve-local.js
+.env
+.env.*
+.git
+node_modules
