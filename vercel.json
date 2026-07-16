@@ -6,6 +6,15 @@
   "functions": {
     "api/lastfm.js": {
       "maxDuration": 30
+    },
+    "api/fanart.js": {
+      "maxDuration": 30
+    },
+    "api/fanart-image.js": {
+      "maxDuration": 30
+    },
+    "api/youtube-music.js": {
+      "maxDuration": 30
     }
   },
   "headers": [
