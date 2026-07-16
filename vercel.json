@@ -1,0 +1,19 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    { "source": "/", "destination": "/lastfm-collage.html" }
+  ],
+  "functions": {
+    "api/lastfm.js": {
+      "maxDuration": 30
+    }
+  },
+  "headers": [
+    {
+      "source": "/lastfm-collage.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache" }
+      ]
+    }
+  ]
+}
