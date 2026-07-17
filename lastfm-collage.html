@@ -3412,6 +3412,17 @@
 
           <div class="toggle-row" id="tile-shading-row"><span class="toggle-label">Sombreamento dos quadros</span><div style="display:flex;align-items:center;gap:8px;"><div class="mini-swatch-wrap" id="tile-shading-color-swatch" style="background:#000000"><input type="color" id="tile-shading-color" value="#000000"></div><label class="toggle-switch"><input type="checkbox" id="tile-shading-enabled" checked><span class="toggle-slider"></span></label></div></div>
 
+          <div class="toggle-row" id="tile-shading-position-row">
+            <span class="toggle-label">Posição do sombreamento</span>
+            <div class="red-slash-toggle" id="tile-shading-position-toggle">
+              <button data-position="top">Topo</button>
+              <span class="slash-sep">/</span>
+              <button data-position="both">Topo e fundo</button>
+              <span class="slash-sep">/</span>
+              <button class="active" data-position="bottom">Fundo</button>
+            </div>
+          </div>
+
           <div class="slider-row" id="tile-shading-alpha-row"><div class="slider-row-head"><span class="slider-name">Transparência do sombreamento</span><span class="slider-val" id="val-tile-shading-alpha">100%</span></div><input type="range" id="tile-shading-alpha" min="0" max="100" value="100" step="1"></div>
 
           <div>
@@ -5067,6 +5078,7 @@ const DEFAULTS = {
   tileShadingEnabled: true,
   tileShadingColor: '#000000',
   tileShadingAlpha: 100,
+  tileShadingPosition: 'bottom',
   tileCornerRadiusEnabled: false,
   tileCornerRadius: 10,
   tileBorderEnabled: false,
@@ -5828,6 +5840,7 @@ let tileShadingEnabled = DEFAULTS.tileShadingEnabled;
 let tileShadingAutoDisabled = false;
 let tileShadingColor = DEFAULTS.tileShadingColor;
 let tileShadingAlpha = DEFAULTS.tileShadingAlpha;
+let tileShadingPosition = DEFAULTS.tileShadingPosition;
 let tileCornerRadiusEnabled = DEFAULTS.tileCornerRadiusEnabled;
 let tileCornerRadius = DEFAULTS.tileCornerRadius;
 let tileBorderEnabled = DEFAULTS.tileBorderEnabled;
@@ -6905,10 +6918,15 @@ const tileShadingColorInput = document.getElementById('tile-shading-color');
 const tileShadingAlphaSlider = document.getElementById('tile-shading-alpha');
 const tileShadingAlphaVal = document.getElementById('val-tile-shading-alpha');
 const tileShadingAlphaRow = document.getElementById('tile-shading-alpha-row');
+const tileShadingPositionRow = document.getElementById('tile-shading-position-row');
 function syncTileShadingUi() {
+  if (tileShadingPositionRow) tileShadingPositionRow.style.display = tileShadingEnabled ? '' : 'none';
   if (tileShadingAlphaRow) tileShadingAlphaRow.style.display = tileShadingEnabled ? '' : 'none';
   if (tileShadingAlphaSlider) tileShadingAlphaSlider.value = tileShadingAlpha;
   if (tileShadingAlphaVal) tileShadingAlphaVal.textContent = tileShadingAlpha + '%';
+  document.querySelectorAll('#tile-shading-position-toggle button').forEach(button => {
+    button.classList.toggle('active', button.dataset.position === tileShadingPosition);
+  });
 }
 if (tileShadingChk) tileShadingChk.addEventListener('change', () => {
   tileShadingAutoDisabled = false;
@@ -6918,6 +6936,13 @@ if (tileShadingChk) tileShadingChk.addEventListener('change', () => {
 });
 if (tileShadingColorInput) tileShadingColorInput.addEventListener('input', () => { tileShadingColor = tileShadingColorInput.value; document.getElementById('tile-shading-color-swatch').style.background = tileShadingColor; redrawIfReady(); });
 if (tileShadingAlphaSlider) tileShadingAlphaSlider.addEventListener('input', () => { tileShadingAlpha = parseInt(tileShadingAlphaSlider.value); syncTileShadingUi(); redrawIfReady(); });
+document.getElementById('tile-shading-position-toggle')?.addEventListener('click', event => {
+  const button = event.target.closest('button[data-position]');
+  if (!button) return;
+  tileShadingPosition = button.dataset.position;
+  syncTileShadingUi();
+  redrawIfReady();
+});
 syncTileShadingUi();
 
 const tileCornerRadiusSlider = document.getElementById('tile-corner-radius');
@@ -7234,6 +7259,7 @@ function organizeCustomizationSections() {
 
     const shadingBox = makeTileTopic('tile-topic-shading', 'Sombreamento');
     moveTileBlock(shadingBox, document.getElementById('tile-shading-row'));
+    moveTileBlock(shadingBox, document.getElementById('tile-shading-position-row'));
     moveTileBlock(shadingBox, document.getElementById('tile-shading-alpha-row'));
 
     const rankBox = makeTileTopic('tile-topic-rank', 'Ranque');
@@ -9408,6 +9434,7 @@ function resetVisual() {
   tileShadingEnabled = DEFAULTS.tileShadingEnabled;
   tileShadingColor = DEFAULTS.tileShadingColor;
   tileShadingAlpha = DEFAULTS.tileShadingAlpha;
+  tileShadingPosition = DEFAULTS.tileShadingPosition;
   if (tileShadingChk) tileShadingChk.checked = DEFAULTS.tileShadingEnabled;
   if (tileShadingColorInput) tileShadingColorInput.value = DEFAULTS.tileShadingColor;
   const tileShadingSwatch = document.getElementById('tile-shading-color-swatch');
@@ -11377,11 +11404,26 @@ async function drawCollage(items, type, cols, rows, headerLabel, apikey, accentO
 
     // Shading overlay
     if (tileShadingEnabled) {
-      const grad = ctx.createLinearGradient(x, y+tileH*.3, x, y+tileH);
       const shadeAlpha = tileShadingAlpha / 100;
-      grad.addColorStop(0,   hexToRgba(tileShadingColor, 0));
-      grad.addColorStop(0.5, hexToRgba(tileShadingColor, 0.6 * shadeAlpha));
-      grad.addColorStop(1,   hexToRgba(tileShadingColor, 0.95 * shadeAlpha));
+      let grad;
+      if (tileShadingPosition === 'top') {
+        grad = ctx.createLinearGradient(x, y, x, y + tileH * .7);
+        grad.addColorStop(0, hexToRgba(tileShadingColor, .95 * shadeAlpha));
+        grad.addColorStop(.5, hexToRgba(tileShadingColor, .6 * shadeAlpha));
+        grad.addColorStop(1, hexToRgba(tileShadingColor, 0));
+      } else if (tileShadingPosition === 'both') {
+        grad = ctx.createLinearGradient(x, y, x, y + tileH);
+        grad.addColorStop(0, hexToRgba(tileShadingColor, .95 * shadeAlpha));
+        grad.addColorStop(.25, hexToRgba(tileShadingColor, .6 * shadeAlpha));
+        grad.addColorStop(.5, hexToRgba(tileShadingColor, 0));
+        grad.addColorStop(.75, hexToRgba(tileShadingColor, .6 * shadeAlpha));
+        grad.addColorStop(1, hexToRgba(tileShadingColor, .95 * shadeAlpha));
+      } else {
+        grad = ctx.createLinearGradient(x, y + tileH * .3, x, y + tileH);
+        grad.addColorStop(0, hexToRgba(tileShadingColor, 0));
+        grad.addColorStop(.5, hexToRgba(tileShadingColor, .6 * shadeAlpha));
+        grad.addColorStop(1, hexToRgba(tileShadingColor, .95 * shadeAlpha));
+      }
       ctx.fillStyle = grad;
       ctx.fillRect(x, y, tileW, tileH);
     }
@@ -12446,6 +12488,17 @@ function redrawIfReady() {
   });
 }
 
+function syncCanvasInteractionLayersAfterLayout() {
+  // A troca de proporcao altera primeiro o tamanho intrinseco do canvas e
+  // somente depois sua posicao centralizada. Aguarda o layout estabilizar
+  // para que o destaque de edicao acompanhe exatamente a collage.
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    if (!mainCanvas.width || !mainCanvas.height) return;
+    syncOverlaySize();
+    if (deletingCanvas.classList.contains('active')) redrawDeletingOverlay();
+  }));
+}
+
 async function runDraw() {
   // Se já existe um desenho em andamento, não inicia outro em paralelo —
   // só marca que precisa rodar de novo (com os valores mais recentes) assim
@@ -12455,6 +12508,9 @@ async function runDraw() {
   try {
     const { cols, rows } = getDrawGrid();
     await drawCollage(currentItems, getDrawType(), cols, rows, headerLabelText, currentApiKey, getDrawAccentOverride(), { cacheOnlyImages: true });
+    lastHoveredHit = null;
+    stopHoverAnim();
+    syncCanvasInteractionLayersAfterLayout();
     // A codificação PNG é independente do preview e acontece somente após
     // uma breve pausa, usando toBlob assíncrono em vez de bloquear com toDataURL.
     scheduleDownloadRefresh();
@@ -12718,9 +12774,13 @@ function hitTestTile(clientX, clientY) {
 // left/top precisam acompanhar o deslocamento real em vez de permanecer em 0.
 function positionCanvasOverlay(element) {
   const rect = mainCanvas.getBoundingClientRect();
+  const containingBlock = element.offsetParent || mainCanvas.parentElement;
+  const containingRect = containingBlock.getBoundingClientRect();
+  const left = rect.left - containingRect.left - containingBlock.clientLeft + containingBlock.scrollLeft;
+  const top = rect.top - containingRect.top - containingBlock.clientTop + containingBlock.scrollTop;
   element.style.position = 'absolute';
-  element.style.left = mainCanvas.offsetLeft + 'px';
-  element.style.top = mainCanvas.offsetTop + 'px';
+  element.style.left = left + 'px';
+  element.style.top = top + 'px';
   element.style.width = rect.width + 'px';
   element.style.height = rect.height + 'px';
 }
@@ -15541,6 +15601,7 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
     { sel: '#download-html-text-toggle button', attr: 'htmlText', id: 'download-html-text' },
     { sel: '#extend-pos-seg button',    attr: 'pos',    id: 'extend-position' },
     { sel: '#tile-dir-toggle button',   attr: 'dir',    id: 'tile-direction' },
+    { sel: '#tile-shading-position-toggle button', attr: 'position', id: 'tile-shading-position' },
     { sel: '#align-main-toggle button',  attr: 'align', id: 'align-main' },
     { sel: '#align-album-toggle button', attr: 'align', id: 'align-album' },
     { sel: '#align-sub-toggle button',   attr: 'align', id: 'align-sub' },
@@ -17425,7 +17486,10 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
     generatedObserver.observe(desktopGenerate, { attributes: true, attributeFilter: ['data-mode', 'disabled', 'style'], childList: true });
 
     if ('ResizeObserver' in window) {
-      new ResizeObserver(updateMobileEditPreview).observe(mainCanvas);
+      new ResizeObserver(() => {
+        updateMobileEditPreview();
+        syncCanvasInteractionLayersAfterLayout();
+      }).observe(mainCanvas);
     }
     window.addEventListener('resize', updateMobileEditPreview, { passive: true });
     document.querySelector('.sidebar')?.addEventListener('input', () => requestAnimationFrame(updateMobileEditPreview));
