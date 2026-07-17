@@ -112,6 +112,53 @@
   .settings-transfer-btn + .settings-transfer-btn { border-left: 1px solid var(--border); }
   .settings-transfer-btn:hover { color: var(--text); background: #ffffff0d; }
   .settings-transfer-btn svg { width: 12px; height: 12px; flex: 0 0 12px; }
+  .settings-transfer-btn { width: 28px; padding: 0; }
+  #desktop-menu-wrap { position: relative; }
+  #desktop-settings-menu {
+    position: absolute; z-index: 720; top: calc(100% + 8px); right: 0;
+    width: min(340px, calc(100% - 8px), calc(100vw - 32px)); max-height: min(78vh, 680px);
+    display: none; overflow-x: hidden; overflow-y: auto;
+    padding: 10px; border: 1px solid #343434; border-radius: 7px;
+    background: #181818; box-shadow: 0 18px 48px #000c;
+    scrollbar-width: thin; scrollbar-color: #444 transparent;
+  }
+  #desktop-settings-menu.visible { display: grid; gap: 12px; }
+  .desktop-menu-section { display: grid; gap: 6px; min-width: 0; }
+  .desktop-menu-label {
+    color: #777; font-size: 9px; font-weight: 800; letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  .desktop-menu-list { display: grid; gap: 5px; min-width: 0; }
+  .desktop-menu-item {
+    width: 100%; min-height: 38px; padding: 8px 10px;
+    display: flex; align-items: center; gap: 8px;
+    border: 1px solid #303030; border-radius: 6px;
+    background: #202020; color: #ddd; cursor: pointer;
+    font: 700 11px/1.2 inherit; text-align: left;
+  }
+  .desktop-menu-item:hover, .desktop-account-entry.expanded > .desktop-menu-item {
+    border-color: #555; background: #272727; color: #fff;
+  }
+  .desktop-menu-item svg { width: 14px; height: 14px; flex: 0 0 14px; color: #888; }
+  .desktop-menu-note { margin-left: auto; color: #666; font-size: 9px; white-space: nowrap; }
+  .desktop-menu-divider { width: 100%; height: 1px; margin: 1px 0; border: 0; background: #303030; }
+  .desktop-account-entry { display: grid; gap: 5px; min-width: 0; }
+  .desktop-account-slot { display: none; min-width: 0; gap: 7px; }
+  .desktop-account-entry.expanded .desktop-account-slot { display: grid; }
+  .desktop-account-entry.account-synced > .desktop-menu-item {
+    border-color: #22c55e; background: #12351f; color: #eaffef;
+  }
+  .desktop-account-entry.account-synced > .desktop-menu-item svg,
+  .desktop-account-entry.account-synced > .desktop-menu-item .desktop-menu-note { color: #65e58d; }
+  .desktop-account-slot > * {
+    min-width: 0; margin: 0 !important; padding: 10px;
+    border: 1px solid #303030; border-radius: 6px; background: #1d1d1d;
+  }
+  .desktop-account-slot .source-key-box { display: block !important; }
+  #desktop-download-settings-host:empty { display: none; }
+  #desktop-download-settings-host #download-settings-panel {
+    position: static; width: 100%; max-width: none; margin: 0; box-shadow: none;
+  }
 
   /* ── BUSCA NA SIDEBAR ──
      Combina destaque (no texto exato encontrado) com esconder (no que
@@ -175,15 +222,6 @@
     transition: color .15s, background .15s;
   }
   .eye-toggle-btn:hover { color: var(--text); background: #ffffff0d; }
-  #lastfm-api-fallback-toggle {
-    display: inline-flex; align-items: center; justify-content: flex-start;
-    margin-top: 7px; padding: 0; border: 0; background: transparent;
-    color: var(--muted); font: 500 10px/1.4 inherit; cursor: pointer;
-    text-decoration: underline; text-underline-offset: 3px;
-  }
-  #lastfm-api-fallback-toggle:hover { color: var(--text); }
-  #lastfm-apikey-box.lastfm-api-collapsed { display: none !important; }
-
   .type-toggle { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
   .type-btn[data-type="new_artists"] { grid-column: 1 / -1; }
   .type-btn {
@@ -723,6 +761,8 @@
   .download-action-wrap:has(.dl-btn.visible) { flex: 1; }
   .download-action-wrap:has(.dl-btn.visible) .dl-btn { border-radius: 9px 0 0 9px; border-right: 0; }
   .download-action-wrap:has(.dl-btn.visible) #download-settings-btn { border-radius: 0 9px 9px 0; }
+  body.query-clean .sidebar-actions #gen-btn { display: none; }
+  body.query-clean .sidebar-actions .download-action-wrap { flex: 1 1 100%; }
   #download-settings-btn {
     width: 42px; flex: 0 0 42px; display: inline-flex; align-items: center; justify-content: center;
     border: 1.5px solid var(--border); border-radius: 9px; background: transparent;
@@ -869,6 +909,81 @@
     display: block; width: auto; height: auto;
     min-width: min(300px, 100%); max-width: 100%; max-height: calc(100vh - 80px);
     object-fit: contain; cursor: pointer;
+  }
+  #desktop-preview-zoom {
+    display: none;
+  }
+  .collage-center.desktop-preview-zoomed::-webkit-scrollbar { width: 10px; height: 10px; }
+  .collage-center.desktop-preview-zoomed::-webkit-scrollbar-track { background: #151515; }
+  .collage-center.desktop-preview-zoomed::-webkit-scrollbar-thumb {
+    border: 2px solid #151515;
+    border-radius: 8px;
+    background: #555;
+  }
+  @media (any-hover: hover) and (any-pointer: fine) and (max-width: 74.999rem) {
+    .collage-center { position: relative; }
+    .collage-center.desktop-preview-zoomed {
+      width: 100%;
+      max-width: 100%;
+      align-items: flex-start !important;
+      justify-content: flex-start !important;
+      overflow: scroll !important;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable;
+      scrollbar-width: thin;
+      scrollbar-color: #454545 transparent;
+    }
+    .collage-center.desktop-preview-zoomed::-webkit-scrollbar { width: 10px; height: 10px; }
+    .collage-center.desktop-preview-zoomed::-webkit-scrollbar-track { background: #151515; }
+    .collage-center.desktop-preview-zoomed::-webkit-scrollbar-thumb {
+      border: 2px solid #151515;
+      border-radius: 8px;
+      background: #555;
+    }
+    .collage-center.desktop-preview-zoomed #collage-wrap.visible {
+      flex: 0 0 auto;
+      margin: 0;
+      overflow: visible;
+    }
+    #desktop-preview-zoom {
+      position: fixed;
+      right: 1rem;
+      bottom: 1rem;
+      z-index: 880;
+      align-items: center;
+      gap: 2px;
+      padding: 3px;
+      border: 1px solid #ffffff24;
+      border-radius: 6px;
+      background: #111111e8;
+      box-shadow: 0 8px 24px #0009;
+      backdrop-filter: blur(10px);
+    }
+    #desktop-preview-zoom.visible { display: flex; }
+    #desktop-preview-zoom button {
+      width: 32px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      border: 0;
+      border-radius: 4px;
+      background: transparent;
+      color: #aaa;
+      cursor: pointer;
+    }
+    #desktop-preview-zoom button:hover,
+    #desktop-preview-zoom button:focus-visible { background: #ffffff12; color: #fff; outline: none; }
+    #desktop-preview-zoom button:disabled { opacity: .3; cursor: default; }
+    #desktop-preview-zoom svg { width: 17px; height: 17px; }
+    #desktop-preview-zoom-value {
+      min-width: 49px;
+      color: #ddd;
+      font: 700 10px/1 Inter, sans-serif;
+      text-align: center;
+      user-select: none;
+    }
   }
 
   @media (max-width: 800px) {
@@ -1542,19 +1657,31 @@
     }
     .collage-center {
       grid-area: collage;
+      position: relative;
       width: 100%;
       height: 100%;
       min-height: 0;
       justify-content: center;
-      overflow: hidden;
+      overflow: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+      scrollbar-color: #454545 transparent;
     }
     #collage-wrap.visible {
-      flex: 1 1 auto;
+      flex: 0 0 auto;
       width: 100%;
       min-height: 0;
       max-height: 100%;
       justify-content: center;
+      margin: auto;
     }
+    .collage-center.desktop-preview-zoomed {
+      align-items: flex-start;
+      justify-content: flex-start;
+      overflow: scroll;
+      scrollbar-gutter: stable;
+    }
+    .collage-center.desktop-preview-zoomed #collage-wrap.visible { margin: 0; }
     #collage-canvas {
       max-width: 100%;
       max-height: 100%;
@@ -1580,6 +1707,60 @@
       justify-self: center;
     }
     #status-history-preview { max-height: min(18dvh, 9rem); }
+    #desktop-preview-zoom {
+      grid-area: collage;
+      align-self: end;
+      justify-self: end;
+      z-index: 80;
+      display: none;
+      align-items: center;
+      gap: 2px;
+      margin: 0.75rem;
+      padding: 3px;
+      border: 1px solid #ffffff24;
+      border-radius: 6px;
+      background: #111111e8;
+      box-shadow: 0 8px 24px #0009;
+      backdrop-filter: blur(10px);
+    }
+    #desktop-preview-zoom.visible { display: flex; }
+    #desktop-preview-zoom button {
+      width: 32px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      border: 0;
+      border-radius: 4px;
+      background: transparent;
+      color: #aaa;
+      cursor: pointer;
+    }
+    #desktop-preview-zoom button:hover,
+    #desktop-preview-zoom button:focus-visible {
+      background: #ffffff12;
+      color: #fff;
+      outline: none;
+    }
+    #desktop-preview-zoom button:disabled { opacity: .3; cursor: default; }
+    #desktop-preview-zoom svg { width: 17px; height: 17px; }
+    #desktop-preview-zoom-value {
+      min-width: 49px;
+      color: #ddd;
+      font: 700 10px/1 Inter, sans-serif;
+      text-align: center;
+      user-select: none;
+    }
+  }
+
+  @media (min-width: 75rem) and (max-width: 99.999rem) {
+    .preview-area:not(:has(#history-panels.has-items)) {
+      grid-template-columns: minmax(18.75rem, 1fr);
+      grid-template-areas:
+        "collage"
+        "status";
+    }
   }
 
   /* Desktop amplo: restaura o histórico à esquerda da collage. */
@@ -1597,6 +1778,10 @@
       justify-self: stretch;
     }
     #status-history-preview { max-height: min(38dvh, 19rem); }
+    .preview-area:not(:has(#history-panels.has-items)) {
+      grid-template-columns: minmax(11rem, 14rem) minmax(18.75rem, 1fr);
+      grid-template-areas: "status collage";
+    }
   }
 
   /* ── INTERFACE MOBILE ────────────────────────────────────────── */
@@ -1607,7 +1792,9 @@
   #mobile-history-sheet,
   #mobile-edit-tabs,
   #mobile-open-account-menu,
-  #mobile-account-error-action { display: none; }
+  #mobile-quick-account,
+  #mobile-account-error-action,
+  #mobile-preset-quick-menu { display: none; }
   .source-drag-handle { display: none; }
 
   @media (max-width: 47.999rem) {
@@ -1667,6 +1854,30 @@
     .mobile-icon-btn:active,
     .mobile-icon-btn[aria-expanded="true"] { background: #ffffff0d; color: #fff; }
     .mobile-icon-btn svg { width: 1.35rem; height: 1.35rem; }
+    #mobile-preset-quick-menu {
+      position: fixed;
+      z-index: 940;
+      top: calc(var(--mobile-header-h) + env(safe-area-inset-top) + .35rem);
+      right: 3.75rem;
+      width: min(15rem, calc(100vw - 2rem));
+      max-height: min(52dvh, 24rem);
+      overflow-y: auto;
+      padding: .375rem;
+      border: 1px solid #343434;
+      border-radius: .4375rem;
+      background: #181818f8;
+      box-shadow: 0 1rem 2.5rem #000c;
+    }
+    #mobile-preset-quick-menu.visible { display: grid; gap: .25rem; }
+    .mobile-preset-quick-option {
+      width: 100%; min-height: 2.75rem; padding: .6rem .7rem;
+      display: flex; align-items: center; gap: .6rem;
+      border: 1px solid transparent; border-radius: .375rem;
+      background: transparent; color: #ddd; cursor: pointer;
+      font: 700 .75rem/1.2 inherit; text-align: left;
+    }
+    .mobile-preset-quick-option.active { border-color: #484848; background: #242424; }
+    .mobile-preset-quick-option .preset-color-dot { flex: 0 0 auto; }
 
     /* As instrucoes de mouse/teclado nao ajudam no modal de quadro mobile. */
     #text-edit-overlay #paste-hint,
@@ -1860,6 +2071,38 @@
     }
     #mobile-open-account-menu.account-synced > svg { color: #65e58d; }
     #mobile-open-account-menu.account-synced small { color: #65e58d; }
+    #mobile-quick-account {
+      width: 100%;
+      margin-top: .5rem;
+      padding: .75rem;
+      border: 1px solid #303030;
+      border-radius: .4375rem;
+      background: #1b1b1b;
+    }
+    #mobile-quick-account.visible { display: block; }
+    #mobile-quick-account label {
+      display: block;
+      margin-bottom: .45rem;
+      color: #aaa;
+      font: 700 .625rem/1.2 inherit;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    #mobile-quick-username {
+      width: 100%;
+      min-height: 2.875rem;
+      padding: .72rem .8rem;
+      border: 1px solid #3a3a3a;
+      border-radius: .375rem;
+      background: #222;
+      color: #fff;
+      font: 500 1rem/1.2 inherit;
+      outline: none;
+    }
+    #mobile-quick-username:focus {
+      border-color: #ef1d17;
+      box-shadow: 0 0 0 2px #ef1d1724;
+    }
     body.mobile-missing-account #mobile-account-error-action {
       min-height: 2.75rem;
       margin-top: .75rem;
@@ -1906,6 +2149,7 @@
     body[data-mobile-view="setup"] #below-grid-body,
     body[data-mobile-view="setup"] #preset-config-end-marker { display: none !important; }
     body[data-mobile-view="setup"] #mobile-open-account-menu { display: flex; }
+    body.mobile-quick-account-open #mobile-open-account-menu { display: none !important; }
 
     body[data-mobile-view="preview"] { overflow: hidden; }
     body[data-mobile-view="preview"] .app {
@@ -1924,6 +2168,7 @@
     }
     body[data-mobile-view="preview"] .preview-content { display: block; width: 100%; height: 100%; min-height: 0; }
     body[data-mobile-view="preview"] .collage-center { width: 100%; height: 100%; min-height: 0; overflow: hidden; }
+    body[data-mobile-view="preview"] .collage-center.desktop-preview-zoomed { overflow: scroll !important; }
     body[data-mobile-view="preview"] #collage-wrap.visible {
       width: 100%;
       height: 100%;
@@ -1938,6 +2183,13 @@
       min-width: 0;
       max-width: 100%;
       max-height: 100%;
+    }
+    @media (any-hover: hover) and (any-pointer: fine) {
+      body:not([data-mobile-view="preview"]) #desktop-preview-zoom { display: none !important; }
+      body[data-mobile-view="preview"] #desktop-preview-zoom {
+        right: .625rem;
+        bottom: calc(var(--mobile-bottom-h) + env(safe-area-inset-bottom) + .625rem);
+      }
     }
 
     body[data-mobile-view="edit"] { overflow: hidden; }
@@ -2001,6 +2253,7 @@
     #mobile-edit-tabs button.active { border-color: #ef1d17; background: #ef1d1715; color: #fff; }
     body[data-mobile-view="edit"][data-mobile-edit-panel="collage"] .mobile-collage-control { display: block !important; }
     body[data-mobile-view="edit"][data-mobile-edit-panel="collage"] #mobile-open-account-menu { display: flex !important; }
+    body[data-mobile-view="edit"].mobile-quick-account-open #mobile-open-account-menu { display: none !important; }
     body[data-mobile-view="edit"]:not([data-mobile-edit-panel="collage"]) #below-grid-body {
       display: block !important;
       max-height: none !important;
@@ -2110,6 +2363,8 @@
     #mobile-save-btn { display: none; background: #181818; border-color: #555; }
     body.mobile-has-generated .mobile-primary-btn { flex: 1 1 0; width: 50%; height: 100%; }
     body.mobile-has-generated #mobile-save-btn { display: inline-flex; }
+    body.mobile-has-generated.query-clean #mobile-generate-btn { display: none; }
+    body.mobile-has-generated.query-clean #mobile-save-btn { width: 100%; flex-basis: 100%; }
 
     #mobile-history-sheet {
       display: none;
@@ -2248,6 +2503,7 @@
     </button>
   </div>
 </header>
+<div id="mobile-preset-quick-menu" role="listbox" aria-label="Selecionar preset"></div>
 
 <div id="mobile-menu-backdrop" aria-hidden="true"></div>
 <aside id="mobile-menu-drawer" aria-label="Menu de configurações" aria-hidden="true">
@@ -2346,19 +2602,75 @@
         <img class="site-brand-logo" id="collager-site-logo" alt="Collager.fm">
       </div>
       <div class="logo-actions">
-        <button class="logo-action-btn" id="sidebar-lang-btn" title="Idioma (em breve)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-        </button>
         <div class="settings-transfer-control" role="group" aria-label="Exportar ou importar configurações">
-          <button class="settings-transfer-btn" id="settings-export-btn" title="Exportar configurações (.txt)">
-            <span>Exportar</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <button class="settings-transfer-btn" id="settings-export-btn" title="Exportar configurações (.txt)" aria-label="Exportar configurações">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           </button>
-          <button class="settings-transfer-btn" id="settings-import-btn" title="Importar configurações (.txt)">
-            <span>Importar</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <button class="settings-transfer-btn" id="settings-import-btn" title="Importar configurações (.txt)" aria-label="Importar configurações">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </button>
+        </div>
+        <div id="desktop-menu-wrap">
+          <button class="logo-action-btn" id="desktop-menu-toggle" title="Menu" aria-label="Abrir menu" aria-expanded="false" aria-controls="desktop-settings-menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
           </button>
         </div>
         <input type="file" id="settings-import-input" accept=".txt,.json" style="display:none;">
       </div>
+    </div>
+
+    <div id="desktop-settings-menu" aria-label="Menu de configurações">
+      <section class="desktop-menu-section">
+        <span class="desktop-menu-label">Conta Last.fm</span>
+        <div class="desktop-account-entry" data-desktop-account="lastfm">
+          <button type="button" class="desktop-menu-item desktop-account-toggle" aria-expanded="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/></svg>
+            Informar conta Last.fm <span class="desktop-menu-note">usuário e API</span>
+          </button>
+          <div class="desktop-account-slot" id="desktop-account-lastfm-slot">
+            <div id="desktop-menu-username-box">
+              <span class="section-label">Usuário Last.fm</span>
+              <input id="desktop-menu-username" type="text" placeholder="seu usuário..." autocomplete="off" spellcheck="false" list="username-history">
+            </div>
+          </div>
+        </div>
+      </section>
+      <hr class="desktop-menu-divider">
+      <section class="desktop-menu-section">
+        <span class="desktop-menu-label">Informar fontes de imagem</span>
+        <div class="desktop-menu-list">
+          <div class="desktop-account-entry" data-desktop-account="spotify">
+            <button type="button" class="desktop-menu-item desktop-account-toggle" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M7 10.5c3.6-1.1 7.4-.7 10.5 1M8 14c2.9-.8 5.9-.5 8.4.8M9 17c2.1-.5 4.2-.3 6 .6"/></svg>Spotify <span class="desktop-menu-note">Premium</span></button>
+            <div class="desktop-account-slot" id="desktop-account-spotify-slot"></div>
+          </div>
+          <div class="desktop-account-entry" data-desktop-account="youtube">
+            <button type="button" class="desktop-menu-item desktop-account-toggle" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 12s0-4-1-5-5-1-9-1-8 0-9 1-1 5-1 5 0 4 1 5 5 1 9 1 8 0 9-1 1-5 1-5Z"/><path d="m10 9 5 3-5 3Z"/></svg>YouTube</button>
+            <div class="desktop-account-slot" id="desktop-account-youtube-slot"></div>
+          </div>
+          <div class="desktop-account-entry" data-desktop-account="fanart">
+            <button type="button" class="desktop-menu-item desktop-account-toggle" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>Fanart.tv</button>
+            <div class="desktop-account-slot" id="desktop-account-fanart-slot"></div>
+          </div>
+          <div class="desktop-account-entry" data-desktop-account="local">
+            <button type="button" class="desktop-menu-item desktop-account-toggle" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 7h5l2 2h11v10H3Z"/><path d="M3 7V5h6l2 2"/></svg>Definir pasta local <span class="desktop-menu-note">opcional</span></button>
+            <div class="desktop-account-slot" id="desktop-account-local-slot"></div>
+          </div>
+        </div>
+      </section>
+      <hr class="desktop-menu-divider">
+      <section class="desktop-menu-section">
+        <span class="desktop-menu-label">Aplicativo</span>
+        <div class="desktop-menu-list">
+          <button type="button" class="desktop-menu-item" id="desktop-language-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>Idioma</button>
+          <button type="button" class="desktop-menu-item" id="desktop-export-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>Exportar configurações</button>
+          <button type="button" class="desktop-menu-item" id="desktop-import-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21V9M7 14l5-5 5 5"/><path d="M5 3h14"/></svg>Importar configurações</button>
+          <button type="button" class="desktop-menu-item" id="desktop-save-settings-btn" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12.2 2h-.4a2 2 0 0 0-2 2v.2a2 2 0 0 1-1 1.7l-.4.3a2 2 0 0 1-2 0l-.2-.1a2 2 0 0 0-2.7.7l-.2.4a2 2 0 0 0 .7 2.7l.2.1a2 2 0 0 1 1 1.7v.6a2 2 0 0 1-1 1.7l-.2.1a2 2 0 0 0-.7 2.7l.2.4a2 2 0 0 0 2.7.7l.2-.1a2 2 0 0 1 2 0l.4.3a2 2 0 0 1 1 1.7v.2a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.2a2 2 0 0 1 1-1.7l.4-.3a2 2 0 0 1 2 0l.2.1a2 2 0 0 0 2.7-.7l.2-.4a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.7v-.6a2 2 0 0 1 1-1.7l.2-.1a2 2 0 0 0 .7-2.7l-.2-.4a2 2 0 0 0-2.7-.7l-.2.1a2 2 0 0 1-2 0l-.4-.3a2 2 0 0 1-1-1.7V4a2 2 0 0 0-2-2Z"/><circle cx="12" cy="12" r="3"/></svg>Configurações de salvamento da collage</button>
+          <div id="desktop-download-settings-host"></div>
+          <button type="button" class="desktop-menu-item" id="desktop-manage-presets-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 3h12a2 2 0 0 1 2 2v14l-8-4-8 4V5a2 2 0 0 1 2-2Z"/><path d="M8 7h8M8 11h5"/></svg>Gerenciar presets</button>
+          <button type="button" class="desktop-menu-item" id="desktop-deleted-list-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18v14H3z"/><path d="M8 3h8v3M8 11h8M8 15h5"/></svg>Listagem de excluídos</button>
+          <button type="button" class="desktop-menu-item" id="desktop-merged-list-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 7h11v11H8z"/><path d="M5 16H3V5h11v2"/><path d="m12 12 2 2 4-4"/></svg>Listagem de mesclados</button>
+        </div>
+      </section>
     </div>
 
     <div id="sidebar-search-bar">
@@ -2383,14 +2695,17 @@
       <span><strong id="mobile-account-title">Informar conta</strong><small id="mobile-account-note">Last.fm, Spotify, YouTube, Fanart.tv e pasta local</small></span>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
     </button>
+    <div id="mobile-quick-account" aria-hidden="true">
+      <label for="mobile-quick-username">Usuário Last.fm</label>
+      <input id="mobile-quick-username" type="text" placeholder="seu usuário..." autocomplete="username" autocapitalize="none" spellcheck="false" enterkeyhint="done">
+    </div>
 
     <div id="lastfm-username-box">
       <span class="section-label">Usuário Last.fm</span>
       <input id="username" type="text" placeholder="seu usuário..." autocomplete="off" spellcheck="false" list="username-history">
       <datalist id="username-history"></datalist>
-      <button type="button" id="lastfm-api-fallback-toggle" aria-expanded="false" aria-controls="lastfm-apikey-box">Collage não está funcionando?</button>
     </div>
-    <div id="lastfm-apikey-box" class="lastfm-api-collapsed">
+    <div id="lastfm-apikey-box">
       <span class="section-label">API Key opcional &nbsp;<a href="https://www.last.fm/api/account/create" target="_blank" style="color:#555;font-size:10px;font-weight:400">obter chave ↗</a></span>
       <div class="apikey-field-wrap">
         <input id="apikey" type="text" placeholder="use apenas se a chave padrão falhar..." autocomplete="off" list="apikey-history" class="masked">
@@ -2422,7 +2737,6 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6v6h-6"/><path d="M4 18v-6h6"/><path d="M18.5 9A7 7 0 0 0 6 6.5L4 9"/><path d="M5.5 15A7 7 0 0 0 18 17.5l2-2.5"/></svg>
         </button>
       </div>
-      <div style="margin-top:5px;color:#666;font-size:9px;line-height:1.35;">A chave padrão protegida já está ativa. Preencha este campo somente se necessário.</div>
     </div>
 
     <div id="preset-config-start-marker" aria-hidden="true"></div>
@@ -3901,8 +4215,7 @@
   <div class="collage-center">
     <div class="spinner" id="spinner"></div>
     <div class="status-msg" id="status">
-      Informe seu usuário do Last.fm para começar.<br>
-      A chave padrão protegida será usada automaticamente.
+      Informe seu usuário do Last.fm para começar.
     </div>
     <button type="button" id="mobile-account-error-action">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/></svg>
@@ -3927,6 +4240,18 @@
       <div class="history-pagination" id="merged-pagination"><button class="history-page-btn" id="merged-prev" aria-label="Página anterior">‹</button><span class="history-page-label" id="merged-page-label">1</span><button class="history-page-btn" id="merged-next" aria-label="Próxima página">›</button></div>
     </section>
   </div>
+  </div>
+  <div id="desktop-preview-zoom" role="group" aria-label="Zoom da prévia">
+    <button type="button" id="desktop-preview-zoom-out" title="Diminuir zoom" aria-label="Diminuir zoom">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3M8 11h6"/></svg>
+    </button>
+    <span id="desktop-preview-zoom-value" aria-live="polite">100%</span>
+    <button type="button" id="desktop-preview-zoom-in" title="Aumentar zoom" aria-label="Aumentar zoom">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg>
+    </button>
+    <button type="button" id="desktop-preview-zoom-fit" title="Ajustar à tela" aria-label="Ajustar collage à tela">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+    </button>
   </div>
 </main>
 </div>
@@ -12015,6 +12340,7 @@ function closeDownloadSettings() {
   downloadSettingsPanel.classList.remove('visible');
   downloadSettingsButton.setAttribute('aria-expanded', 'false');
   document.getElementById('mobile-save-settings-btn')?.setAttribute('aria-expanded', 'false');
+  document.getElementById('desktop-save-settings-btn')?.setAttribute('aria-expanded', 'false');
 }
 downloadSettingsButton.addEventListener('click', event => {
   event.stopPropagation();
@@ -12051,6 +12377,33 @@ function capturePendingQueryState() {
     sources,
   };
 }
+
+let queryConfigurationSyncFrame = null;
+function queryConfigurationSignature(state = capturePendingQueryState()) {
+  return JSON.stringify(state || null);
+}
+function isQueryConfigurationDirty() {
+  if (!generatedQueryState) return true;
+  return queryConfigurationSignature() !== queryConfigurationSignature(generatedQueryState);
+}
+function syncQueryConfigurationState() {
+  queryConfigurationSyncFrame = null;
+  const generated = document.getElementById('collage-wrap')?.classList.contains('visible')
+    && document.getElementById('collage-canvas')?.width > 0;
+  const clean = generated && !isQueryConfigurationDirty();
+  document.body.classList.toggle('query-clean', clean);
+  document.dispatchEvent(new CustomEvent('collager:query-dirty-state', { detail: { dirty: !clean } }));
+}
+function notifyQueryConfigurationChanged() {
+  if (queryConfigurationSyncFrame !== null) return;
+  queryConfigurationSyncFrame = requestAnimationFrame(syncQueryConfigurationState);
+}
+document.addEventListener('input', notifyQueryConfigurationChanged);
+document.addEventListener('change', notifyQueryConfigurationChanged);
+document.addEventListener('click', notifyQueryConfigurationChanged);
+document.querySelectorAll('.source-toggle-group').forEach(group => {
+  new MutationObserver(notifyQueryConfigurationChanged).observe(group, { childList: true });
+});
 
 function getRenderedQueryState() {
   if (generationQueryState) return generationQueryState;
@@ -12276,12 +12629,13 @@ async function generate() {
     captureCurrentCollageMemory();
     saveCredential(user, apikey);
     recordTimelineAction('Collage gerada.');
+    notifyQueryConfigurationChanged();
 
   } catch(err) {
     if (err.message === 'cancelled') {
       showStatus('Geração cancelada.', false);
     } else if (!apikey && err.code === 'DEFAULT_LASTFM_KEY_FAILED') {
-      setLastfmApiFallbackOpen(true, { focus: true });
+      openLastfmApiSettings();
       showStatus('A chave padrão do Last.fm falhou. Informe sua API key para continuar.', true);
     } else {
       console.error(err);
@@ -14740,21 +15094,6 @@ function populateUsernameDatalist() {
 // preenche a API key correspondente automaticamente.
 const usernameInput = document.getElementById('username');
 const apikeyInput   = document.getElementById('apikey');
-const lastfmApiFallbackToggle = document.getElementById('lastfm-api-fallback-toggle');
-const lastfmApiKeyBox = document.getElementById('lastfm-apikey-box');
-
-function setLastfmApiFallbackOpen(open, options = {}) {
-  lastfmApiKeyBox.classList.toggle('lastfm-api-collapsed', !open);
-  lastfmApiFallbackToggle.setAttribute('aria-expanded', String(open));
-  lastfmApiFallbackToggle.textContent = open
-    ? 'Ocultar API key opcional'
-    : 'Collage não está funcionando?';
-  if (open && options.focus) requestAnimationFrame(() => apikeyInput.focus({ preventScroll: true }));
-}
-
-lastfmApiFallbackToggle.addEventListener('click', () => {
-  setLastfmApiFallbackOpen(lastfmApiKeyBox.classList.contains('lastfm-api-collapsed'));
-});
 
 // Botão de olho — mostra/esconde a API key (toggla a classe "masked")
 const toggleVisBtn = document.getElementById('toggle-apikey-visibility');
@@ -15795,7 +16134,34 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
   function closePresetMenu() {
     document.getElementById('preset-select-menu').classList.remove('visible');
     document.getElementById('preset-select-trigger').setAttribute('aria-expanded', 'false');
+    document.getElementById('mobile-preset-quick-menu')?.classList.remove('visible');
     document.getElementById('mobile-preset-toggle')?.setAttribute('aria-expanded', 'false');
+  }
+
+  function renderMobilePresetQuickMenu() {
+    const menu = document.getElementById('mobile-preset-quick-menu');
+    if (!menu) return;
+    menu.innerHTML = '';
+    const presets = [
+      { id: 'default', name: 'Padrão', color: '#d51007' },
+      ...userPresets,
+    ];
+    presets.forEach(preset => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'mobile-preset-quick-option' + (preset.id === selectedPresetId ? ' active' : '');
+      button.dataset.presetId = preset.id;
+      button.setAttribute('role', 'option');
+      button.setAttribute('aria-selected', String(preset.id === selectedPresetId));
+      const dot = document.createElement('span');
+      dot.className = 'preset-color-dot';
+      dot.style.background = preset.color;
+      const name = document.createElement('span');
+      name.textContent = preset.name;
+      name.style.color = preset.color;
+      button.append(dot, name);
+      menu.appendChild(button);
+    });
   }
 
   function syncSelectedPresetLabel() {
@@ -15847,6 +16213,7 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       menu.appendChild(row);
     });
     syncSelectedPresetLabel();
+    renderMobilePresetQuickMenu();
   }
 
   async function applyPresetSnapshot(preset) {
@@ -15887,12 +16254,12 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       if (wasDrawing) {
         _redrawPending = true;
       } else {
-        const cols = parseInt(document.getElementById('cols').value);
-        const rows = parseInt(document.getElementById('rows').value);
+        const { cols, rows } = getDrawGrid();
         await drawCollage(currentItems, getDrawType(), cols, rows, headerLabelText, currentApiKey, getDrawAccentOverride(), { cacheOnlyImages: true });
         scheduleDownloadRefresh();
       }
     }
+    notifyQueryConfigurationChanged();
     recordTimelineAction(`Preset aplicado: ${preset.name}.`);
   }
 
@@ -15936,7 +16303,6 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       const open = !menu.classList.contains('visible');
       menu.classList.toggle('visible', open);
       trigger.setAttribute('aria-expanded', String(open));
-      document.getElementById('mobile-preset-toggle')?.setAttribute('aria-expanded', String(open));
     });
 
     menu.addEventListener('click', async event => {
@@ -15950,6 +16316,18 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
         closePresetMenu();
         return;
       }
+      selectedPresetId = preset.id;
+      closePresetMenu();
+      renderPresetMenu();
+      await applyPresetSnapshot(preset);
+    });
+
+    document.getElementById('mobile-preset-quick-menu')?.addEventListener('click', async event => {
+      event.stopPropagation();
+      const option = event.target.closest('.mobile-preset-quick-option[data-preset-id]');
+      if (!option) return;
+      const preset = getPresetById(option.dataset.presetId);
+      if (!preset) return;
       selectedPresetId = preset.id;
       closePresetMenu();
       renderPresetMenu();
@@ -16378,6 +16756,7 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       try {
         const data = JSON.parse(ev.target.result);
         await applySettings(data);
+        notifyQueryConfigurationChanged();
         showStatus('Configurações importadas com sucesso.');
       } catch (err) {
         console.error(err);
@@ -16462,6 +16841,9 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
     const downloadPanelHome = document.getElementById('download-action-wrap');
     const mobileHistoryHost = document.getElementById('mobile-history-host');
     const mobileDownloadHost = document.getElementById('mobile-download-settings-host');
+    const desktopDownloadHost = document.getElementById('desktop-download-settings-host');
+    const desktopMenu = document.getElementById('desktop-settings-menu');
+    const desktopMenuToggle = document.getElementById('desktop-menu-toggle');
 
     const menuDrawer = document.getElementById('mobile-menu-drawer');
     const menuToggle = document.getElementById('mobile-menu-toggle');
@@ -16480,16 +16862,21 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
     const belowGridBody = document.getElementById('below-grid-body');
     const mobileEditTabs = document.getElementById('mobile-edit-tabs');
     const mobileAccountGroups = [
-      { slot: document.getElementById('mobile-account-lastfm-slot'), elements: [document.getElementById('lastfm-username-box'), document.getElementById('lastfm-apikey-box')] },
-      { slot: document.getElementById('mobile-account-spotify-slot'), elements: [document.getElementById('spotify-key-box')] },
-      { slot: document.getElementById('mobile-account-youtube-slot'), elements: [document.getElementById('youtube-key-box')] },
-      { slot: document.getElementById('mobile-account-fanart-slot'), elements: [document.getElementById('fanart-key-box')] },
-      { slot: document.getElementById('mobile-account-local-slot'), elements: [document.getElementById('local-artist-folder-box')] },
+      { name: 'lastfm', slot: document.getElementById('mobile-account-lastfm-slot'), desktopSlot: document.getElementById('desktop-account-lastfm-slot'), elements: [document.getElementById('lastfm-username-box'), document.getElementById('lastfm-apikey-box')] },
+      { name: 'spotify', slot: document.getElementById('mobile-account-spotify-slot'), desktopSlot: document.getElementById('desktop-account-spotify-slot'), elements: [document.getElementById('spotify-key-box')] },
+      { name: 'youtube', slot: document.getElementById('mobile-account-youtube-slot'), desktopSlot: document.getElementById('desktop-account-youtube-slot'), elements: [document.getElementById('youtube-key-box')] },
+      { name: 'fanart', slot: document.getElementById('mobile-account-fanart-slot'), desktopSlot: document.getElementById('desktop-account-fanart-slot'), elements: [document.getElementById('fanart-key-box')] },
+      { name: 'local', slot: document.getElementById('mobile-account-local-slot'), desktopSlot: document.getElementById('desktop-account-local-slot'), elements: [document.getElementById('local-artist-folder-box')] },
     ].map(group => ({ ...group, elements: group.elements.filter(Boolean) }));
     const accountMountPoints = mobileAccountGroups.flatMap(group => group.elements.map(element => {
       const marker = document.createComment(`mobile-account-home:${element.id}`);
       element.parentNode.insertBefore(marker, element);
-      return { element, marker, slot: group.slot };
+      return {
+        element,
+        marker,
+        slot: group.slot,
+        desktopSlot: element.id === 'lastfm-username-box' ? null : group.desktopSlot,
+      };
     }));
     const historySheetMarker = document.createComment('mobile-history-sheet-home');
     historySheet.parentNode.insertBefore(historySheetMarker, historySheet);
@@ -16502,6 +16889,46 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
 
     const isMobile = () => mobileQuery.matches;
     const hasGeneratedCollage = () => collageWrap.classList.contains('visible') && mainCanvas.width > 0;
+
+    function closeDesktopMenu() {
+      desktopMenu?.classList.remove('visible');
+      desktopMenuToggle?.setAttribute('aria-expanded', 'false');
+    }
+
+    function openDesktopMenu() {
+      if (isMobile()) return;
+      desktopMenu?.classList.add('visible');
+      desktopMenuToggle?.setAttribute('aria-expanded', 'true');
+    }
+
+    function expandAccountEntry(entry, selector) {
+      if (!entry) return;
+      const toggle = entry.querySelector(selector);
+      entry.parentElement?.querySelectorAll(selector === '.mobile-account-toggle' ? '.mobile-account-entry' : '.desktop-account-entry').forEach(other => {
+        if (other === entry) return;
+        other.classList.remove('expanded');
+        other.querySelector(selector)?.setAttribute('aria-expanded', 'false');
+      });
+      entry.classList.add('expanded');
+      toggle?.setAttribute('aria-expanded', 'true');
+    }
+
+    window.openLastfmApiSettings = function openLastfmApiSettings() {
+      if (isMobile()) {
+        openMobileDrawer();
+        const entry = document.querySelector('.mobile-account-entry[data-mobile-account="lastfm"]');
+        expandAccountEntry(entry, '.mobile-account-toggle');
+        requestAnimationFrame(() => {
+          entry?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          document.getElementById('apikey')?.focus({ preventScroll: true });
+        });
+        return;
+      }
+      openDesktopMenu();
+      const entry = document.querySelector('.desktop-account-entry[data-desktop-account="lastfm"]');
+      expandAccountEntry(entry, '.desktop-account-toggle');
+      requestAnimationFrame(() => document.getElementById('apikey')?.focus({ preventScroll: true }));
+    };
 
     function closeMobileDrawer() {
       body.classList.remove('mobile-drawer-open');
@@ -16561,8 +16988,20 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       });
     }
 
-    function openMobilePresets() {
+    function toggleMobilePresetQuickMenu() {
       if (!isMobile()) return;
+      closeMobileDrawer();
+      closeMobileHistory();
+      closeMobileSearch({ keepResults: false });
+      const quickMenu = document.getElementById('mobile-preset-quick-menu');
+      const open = !quickMenu.classList.contains('visible');
+      quickMenu.classList.toggle('visible', open);
+      presetToggle.setAttribute('aria-expanded', String(open));
+    }
+
+    function openMobilePresetManager() {
+      if (!isMobile()) return;
+      closePresetMenu();
       closeMobileDrawer();
       closeMobileHistory();
       closeMobileSearch({ keepResults: false });
@@ -16577,7 +17016,6 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
         const trigger = document.getElementById('preset-select-trigger');
         presetSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         if (trigger && trigger.getAttribute('aria-expanded') !== 'true') trigger.click();
-        presetToggle.setAttribute('aria-expanded', 'true');
       });
     }
 
@@ -16653,6 +17091,7 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
     function syncMobileGeneratedState() {
       const generated = hasGeneratedCollage() && desktopSave.classList.contains('visible');
       body.classList.toggle('mobile-has-generated', generated);
+      body.classList.toggle('query-clean', generated && !isQueryConfigurationDirty());
       viewToggle.disabled = !generated;
       historyToggle.disabled = !generated;
       if (!generated && body.dataset.mobileView !== 'setup' && desktopGenerate.dataset.mode !== 'cancel') {
@@ -16664,6 +17103,7 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
 
     function mountMobilePanels() {
       if (isMobile()) {
+        closeDesktopMenu();
         accountMountPoints.forEach(({ element, slot }) => {
           if (slot && element.parentElement !== slot) slot.appendChild(element);
         });
@@ -16674,19 +17114,24 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
         if (!body.dataset.mobileView) body.dataset.mobileView = hasGeneratedCollage() ? 'preview' : 'setup';
         if (!body.dataset.mobileEditPanel) setMobileEditPanel('collage');
       } else {
-        accountMountPoints.forEach(({ element, marker }) => {
-          if (marker.parentNode && element.previousSibling !== marker) marker.parentNode.insertBefore(element, marker.nextSibling);
+        accountMountPoints.forEach(({ element, marker, desktopSlot }) => {
+          if (desktopSlot && element.parentElement !== desktopSlot) {
+            desktopSlot.appendChild(element);
+          } else if (!desktopSlot && marker.parentNode && element.previousSibling !== marker) {
+            marker.parentNode.insertBefore(element, marker.nextSibling);
+          }
         });
         if (historySheetMarker.parentNode && historySheet.previousSibling !== historySheetMarker) {
           historySheetMarker.parentNode.insertBefore(historySheet, historySheetMarker.nextSibling);
         }
         if (statusDock.parentElement !== previewArea) previewArea.insertBefore(statusDock, previewContent);
         if (historyPanels.parentElement !== previewContent) previewContent.appendChild(historyPanels);
-        if (downloadPanel.parentElement !== downloadPanelHome) downloadPanelHome.appendChild(downloadPanel);
+        if (desktopDownloadHost && downloadPanel.parentElement !== desktopDownloadHost) desktopDownloadHost.appendChild(downloadPanel);
         body.classList.remove('mobile-drawer-open', 'mobile-history-open', 'mobile-search-open', 'mobile-searching', 'mobile-has-generated', 'mobile-edit-header-bottom');
         body.removeAttribute('data-mobile-view');
         body.removeAttribute('data-mobile-edit-panel');
         document.querySelectorAll('.mobile-account-entry.expanded').forEach(entry => entry.classList.remove('expanded'));
+        document.getElementById('mobile-preset-quick-menu')?.classList.remove('visible');
       }
       syncMobileGenerateButton();
       syncMobileGeneratedState();
@@ -16696,6 +17141,12 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       if (body.classList.contains('mobile-drawer-open')) closeMobileDrawer();
       else openMobileDrawer();
     });
+    desktopMenuToggle?.addEventListener('click', event => {
+      event.stopPropagation();
+      if (desktopMenu?.classList.contains('visible')) closeDesktopMenu();
+      else openDesktopMenu();
+    });
+    desktopMenu?.addEventListener('click', event => event.stopPropagation());
     document.getElementById('mobile-menu-close').addEventListener('click', closeMobileDrawer);
     menuBackdrop.addEventListener('click', closeMobileDrawer);
 
@@ -16703,7 +17154,10 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       if (body.classList.contains('mobile-search-open')) closeMobileSearch();
       else openMobileSearch();
     });
-    presetToggle.addEventListener('click', openMobilePresets);
+    presetToggle.addEventListener('click', event => {
+      event.stopPropagation();
+      toggleMobilePresetQuickMenu();
+    });
     document.getElementById('mobile-search-close').addEventListener('click', () => closeMobileSearch());
     mobileSearchInput.addEventListener('input', () => {
       sidebarSearchInput.value = mobileSearchInput.value;
@@ -16754,7 +17208,38 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       });
     });
 
-    document.getElementById('mobile-open-account-menu').addEventListener('click', openMobileDrawer);
+    const mobileQuickAccount = document.getElementById('mobile-quick-account');
+    const mobileQuickUsername = document.getElementById('mobile-quick-username');
+    const primaryUsername = document.getElementById('username');
+
+    function openMobileQuickAccount() {
+      if (!isMobile()) return;
+      body.classList.add('mobile-quick-account-open');
+      mobileQuickAccount?.classList.add('visible');
+      mobileQuickAccount?.setAttribute('aria-hidden', 'false');
+      if (mobileQuickUsername && primaryUsername && mobileQuickUsername.value !== primaryUsername.value) {
+        mobileQuickUsername.value = primaryUsername.value;
+      }
+      mobileQuickUsername?.focus({ preventScroll: true });
+      mobileQuickUsername?.select();
+      requestAnimationFrame(() => mobileQuickAccount?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+    }
+
+    document.getElementById('mobile-open-account-menu').addEventListener('click', openMobileQuickAccount);
+    mobileQuickUsername?.addEventListener('input', () => {
+      if (!primaryUsername || primaryUsername.value === mobileQuickUsername.value) return;
+      primaryUsername.value = mobileQuickUsername.value;
+      primaryUsername.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    primaryUsername?.addEventListener('input', () => {
+      if (!mobileQuickUsername || mobileQuickUsername.value === primaryUsername.value) return;
+      mobileQuickUsername.value = primaryUsername.value;
+    });
+    mobileQuickUsername?.addEventListener('keydown', event => {
+      if (event.key !== 'Enter') return;
+      event.preventDefault();
+      mobileQuickUsername.blur();
+    });
 
     document.querySelectorAll('.mobile-account-toggle').forEach(button => {
       button.addEventListener('click', () => {
@@ -16775,11 +17260,41 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       });
     });
 
+    document.querySelectorAll('.desktop-account-toggle').forEach(button => {
+      button.addEventListener('click', () => {
+        const entry = button.closest('.desktop-account-entry');
+        if (!entry) return;
+        const willOpen = !entry.classList.contains('expanded');
+        document.querySelectorAll('.desktop-account-entry').forEach(otherEntry => {
+          otherEntry.classList.remove('expanded');
+          otherEntry.querySelector('.desktop-account-toggle')?.setAttribute('aria-expanded', 'false');
+        });
+        entry.classList.toggle('expanded', willOpen);
+        button.setAttribute('aria-expanded', String(willOpen));
+        if (willOpen) requestAnimationFrame(() => entry.querySelector('input, select, textarea, button:not(.desktop-account-toggle)')?.focus({ preventScroll: true }));
+      });
+    });
+
     const mobileAccountButton = document.getElementById('mobile-open-account-menu');
     const mobileAccountTitle = document.getElementById('mobile-account-title');
     const mobileAccountNote = document.getElementById('mobile-account-note');
+    const desktopMenuUsername = document.getElementById('desktop-menu-username');
+    desktopMenuUsername?.addEventListener('input', () => {
+      const username = document.getElementById('username');
+      if (!username || username.value === desktopMenuUsername.value) return;
+      username.value = desktopMenuUsername.value;
+      username.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    document.getElementById('username')?.addEventListener('input', event => {
+      if (desktopMenuUsername && desktopMenuUsername.value !== event.target.value) {
+        desktopMenuUsername.value = event.target.value;
+      }
+    });
     function updateMobileAccountState() {
       const hasUsername = Boolean(document.getElementById('username')?.value.trim());
+      if (desktopMenuUsername && desktopMenuUsername.value !== document.getElementById('username')?.value) {
+        desktopMenuUsername.value = document.getElementById('username')?.value || '';
+      }
       const synced = hasUsername;
       mobileAccountButton?.classList.toggle('account-synced', synced);
       if (mobileAccountTitle) mobileAccountTitle.textContent = synced ? 'Conta informada com sucesso' : 'Informar conta';
@@ -16799,6 +17314,8 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       Object.entries(accountStates).forEach(([name, ready]) => {
         document.querySelector(`.mobile-account-entry[data-mobile-account="${name}"]`)
           ?.classList.toggle('account-synced', ready);
+        document.querySelector(`.desktop-account-entry[data-desktop-account="${name}"]`)
+          ?.classList.toggle('account-synced', ready);
       });
     }
     ['username', 'apikey', 'spotify-client-id', 'youtube-apikey', 'fanart-apikey', 'local-artist-folder-path']
@@ -16807,11 +17324,8 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
     updateMobileAccountState();
 
     document.getElementById('mobile-account-error-action').addEventListener('click', () => {
-      openMobileDrawer();
-      const lastfmEntry = document.querySelector('.mobile-account-entry[data-mobile-account="lastfm"]');
-      const lastfmToggle = lastfmEntry?.querySelector('.mobile-account-toggle');
-      if (lastfmEntry && !lastfmEntry.classList.contains('expanded')) lastfmToggle?.click();
-      requestAnimationFrame(() => lastfmEntry?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+      setMobileView('setup', { scroll: false });
+      openMobileQuickAccount();
     });
 
     function openAllHistoryList(kind) {
@@ -16823,20 +17337,36 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
     }
     document.getElementById('mobile-deleted-list-btn').addEventListener('click', () => openAllHistoryList('deleted'));
     document.getElementById('mobile-merged-list-btn').addEventListener('click', () => openAllHistoryList('merged'));
+    document.getElementById('desktop-deleted-list-btn')?.addEventListener('click', () => {
+      closeDesktopMenu();
+      openAllHistoryList('deleted');
+    });
+    document.getElementById('desktop-merged-list-btn')?.addEventListener('click', () => {
+      closeDesktopMenu();
+      openAllHistoryList('merged');
+    });
     document.getElementById('history-list-close').addEventListener('click', () => body.classList.remove('mobile-menu-all-history'));
     document.getElementById('history-list-overlay').addEventListener('click', event => {
       if (event.target === event.currentTarget) body.classList.remove('mobile-menu-all-history');
     });
 
-    document.getElementById('mobile-language-btn').addEventListener('click', () => {
-      document.getElementById('sidebar-lang-btn')?.click();
-    });
+    const openLanguageSettings = () => showStatus('Configurações de idioma estarão disponíveis em breve.');
+    document.getElementById('mobile-language-btn').addEventListener('click', openLanguageSettings);
+    document.getElementById('desktop-language-btn')?.addEventListener('click', openLanguageSettings);
     document.getElementById('mobile-export-btn').addEventListener('click', () => {
       closeMobileDrawer();
       document.getElementById('settings-export-btn')?.click();
     });
     document.getElementById('mobile-import-btn').addEventListener('click', () => {
       closeMobileDrawer();
+      document.getElementById('settings-import-btn')?.click();
+    });
+    document.getElementById('desktop-export-btn')?.addEventListener('click', () => {
+      closeDesktopMenu();
+      document.getElementById('settings-export-btn')?.click();
+    });
+    document.getElementById('desktop-import-btn')?.addEventListener('click', () => {
+      closeDesktopMenu();
       document.getElementById('settings-import-btn')?.click();
     });
     mobileSaveSettings.addEventListener('click', event => {
@@ -16846,17 +17376,42 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       mobileSaveSettings.setAttribute('aria-expanded', String(willOpen));
       downloadSettingsButton.setAttribute('aria-expanded', String(willOpen));
     });
-    document.getElementById('mobile-manage-presets-btn').addEventListener('click', openMobilePresets);
+    const desktopSaveSettings = document.getElementById('desktop-save-settings-btn');
+    downloadSettingsButton.addEventListener('click', () => {
+      if (isMobile()) return;
+      openDesktopMenu();
+      desktopSaveSettings?.setAttribute('aria-expanded', String(downloadPanel.classList.contains('visible')));
+      if (downloadPanel.classList.contains('visible')) {
+        requestAnimationFrame(() => desktopDownloadHost?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
+      }
+    });
+    desktopSaveSettings?.addEventListener('click', event => {
+      event.stopPropagation();
+      const willOpen = !downloadPanel.classList.contains('visible');
+      downloadPanel.classList.toggle('visible', willOpen);
+      desktopSaveSettings.setAttribute('aria-expanded', String(willOpen));
+      downloadSettingsButton.setAttribute('aria-expanded', String(willOpen));
+    });
+    document.getElementById('mobile-manage-presets-btn').addEventListener('click', openMobilePresetManager);
+    document.getElementById('desktop-manage-presets-btn')?.addEventListener('click', () => {
+      closeDesktopMenu();
+      const section = document.querySelector('.preset-section');
+      section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      requestAnimationFrame(() => document.getElementById('preset-select-trigger')?.focus({ preventScroll: true }));
+    });
 
     document.addEventListener('click', event => {
-      if (event.target.closest('#mobile-preset-toggle, .preset-section')) return;
-      presetToggle.setAttribute('aria-expanded', 'false');
+      if (!event.target.closest('#mobile-preset-toggle, #mobile-preset-quick-menu, .preset-section')) closePresetMenu();
+      if (!event.target.closest('#desktop-menu-toggle, #desktop-settings-menu')) closeDesktopMenu();
     });
 
     document.addEventListener('keydown', event => {
-      if (event.key !== 'Escape' || !isMobile()) return;
+      if (event.key !== 'Escape') return;
+      closeDesktopMenu();
+      if (!isMobile()) return;
       body.classList.remove('mobile-menu-all-history');
-      if (body.dataset.mobileView === 'history') setMobileView('preview');
+      if (document.getElementById('mobile-preset-quick-menu')?.classList.contains('visible')) closePresetMenu();
+      else if (body.dataset.mobileView === 'history') setMobileView('preview');
       else if (body.classList.contains('mobile-drawer-open')) closeMobileDrawer();
       else if (body.classList.contains('mobile-search-open')) closeMobileSearch();
     });
@@ -16879,6 +17434,170 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
     else mobileQuery.addListener(mountMobilePanels);
 
     mountMobilePanels();
+  })();
+
+  (() => {
+    const desktopQuery = window.matchMedia('(any-hover: hover) and (any-pointer: fine)');
+    const center = document.querySelector('.collage-center');
+    const wrap = document.getElementById('collage-wrap');
+    const canvas = document.getElementById('collage-canvas');
+    const toolbar = document.getElementById('desktop-preview-zoom');
+    const value = document.getElementById('desktop-preview-zoom-value');
+    const zoomOut = document.getElementById('desktop-preview-zoom-out');
+    const zoomIn = document.getElementById('desktop-preview-zoom-in');
+    const zoomFit = document.getElementById('desktop-preview-zoom-fit');
+    const historyPanels = document.getElementById('history-panels');
+    if (!center || !wrap || !canvas || !toolbar || !value || !zoomOut || !zoomIn || !zoomFit) return;
+
+    const MIN_ZOOM = 0.5;
+    const MAX_ZOOM = 4;
+    const ZOOM_STEP = 0.15;
+    let zoom = 1;
+    let fitSize = null;
+    let resizeTimer = 0;
+
+    const clearPreviewSizing = () => {
+      wrap.style.removeProperty('width');
+      wrap.style.removeProperty('height');
+      wrap.style.removeProperty('max-width');
+      wrap.style.removeProperty('max-height');
+      wrap.style.removeProperty('margin-left');
+      wrap.style.removeProperty('margin-right');
+      wrap.style.removeProperty('margin-top');
+      wrap.style.removeProperty('margin-bottom');
+      canvas.style.removeProperty('width');
+      canvas.style.removeProperty('height');
+      canvas.style.removeProperty('max-width');
+      canvas.style.removeProperty('max-height');
+      canvas.style.removeProperty('min-width');
+    };
+
+    const captureFitSize = () => {
+      clearPreviewSizing();
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) fitSize = { width: rect.width, height: rect.height };
+      return fitSize;
+    };
+
+    const updateToolbar = () => {
+      const active = desktopQuery.matches && wrap.classList.contains('visible');
+      toolbar.classList.toggle('visible', active);
+      toolbar.setAttribute('aria-hidden', String(!active));
+      value.textContent = `${Math.round(zoom * 100)}%`;
+      zoomOut.disabled = zoom <= MIN_ZOOM + 0.001;
+      zoomIn.disabled = zoom >= MAX_ZOOM - 0.001;
+    };
+
+    const applyZoom = (nextZoom, anchor = null) => {
+      if (!desktopQuery.matches || !wrap.classList.contains('visible')) return;
+      const oldZoom = zoom;
+      const base = fitSize || captureFitSize();
+      if (!base) return;
+      zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Math.round(nextZoom * 100) / 100));
+      center.classList.toggle('desktop-preview-zoomed', zoom > 1.001);
+
+      const width = Math.max(1, base.width * zoom);
+      const height = Math.max(1, base.height * zoom);
+      wrap.style.width = `${width}px`;
+      wrap.style.height = `${height}px`;
+      wrap.style.maxWidth = 'none';
+      wrap.style.maxHeight = 'none';
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      canvas.style.maxWidth = 'none';
+      canvas.style.maxHeight = 'none';
+      canvas.style.minWidth = '0';
+      updateToolbar();
+
+      requestAnimationFrame(() => {
+        if (zoom > 1.001) {
+          const horizontalInset = Math.max(0, (center.clientWidth - width) / 2);
+          wrap.style.marginLeft = `${horizontalInset}px`;
+          wrap.style.marginRight = '0';
+          wrap.style.marginTop = '0';
+          wrap.style.marginBottom = '0';
+        } else {
+          wrap.style.removeProperty('margin-left');
+          wrap.style.removeProperty('margin-right');
+          wrap.style.removeProperty('margin-top');
+          wrap.style.removeProperty('margin-bottom');
+        }
+        if (anchor && oldZoom > 0) {
+          const ratio = zoom / oldZoom;
+          center.scrollLeft = anchor.contentX * ratio - anchor.viewportX;
+          center.scrollTop = anchor.contentY * ratio - anchor.viewportY;
+        } else if (zoom > 1.001) {
+          center.scrollLeft = Math.max(0, (center.scrollWidth - center.clientWidth) / 2);
+          center.scrollTop = 0;
+        } else if (zoom === 1) {
+          center.scrollTo({ left: 0, top: 0 });
+        }
+        if (typeof syncOverlaySize === 'function') syncOverlaySize();
+        if (typeof syncDeletingOverlay === 'function') syncDeletingOverlay();
+      });
+    };
+
+    const fitPreview = () => {
+      zoom = 1;
+      fitSize = null;
+      center.classList.remove('desktop-preview-zoomed');
+      clearPreviewSizing();
+      requestAnimationFrame(() => {
+        captureFitSize();
+        center.scrollTo({ left: 0, top: 0 });
+        updateToolbar();
+        if (typeof syncOverlaySize === 'function') syncOverlaySize();
+      });
+    };
+
+    center.addEventListener('wheel', event => {
+      if (!desktopQuery.matches || !wrap.classList.contains('visible') || !event.target.closest('#collage-wrap')) return;
+      event.preventDefault();
+      const rect = center.getBoundingClientRect();
+      const viewportX = event.clientX - rect.left;
+      const viewportY = event.clientY - rect.top;
+      const anchor = {
+        viewportX,
+        viewportY,
+        contentX: center.scrollLeft + viewportX,
+        contentY: center.scrollTop + viewportY,
+      };
+      applyZoom(zoom + (event.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP), anchor);
+    }, { passive: false });
+
+    zoomOut.addEventListener('click', () => applyZoom(zoom - ZOOM_STEP));
+    zoomIn.addEventListener('click', () => applyZoom(zoom + ZOOM_STEP));
+    zoomFit.addEventListener('click', fitPreview);
+
+    new MutationObserver(() => {
+      if (wrap.classList.contains('visible')) fitPreview();
+      else updateToolbar();
+    }).observe(wrap, { attributes: true, attributeFilter: ['class'] });
+
+    if (historyPanels) {
+      new MutationObserver(() => {
+        if (!desktopQuery.matches || !wrap.classList.contains('visible')) return;
+        const previousZoom = zoom;
+        fitSize = null;
+        center.classList.remove('desktop-preview-zoomed');
+        clearPreviewSizing();
+        requestAnimationFrame(() => {
+          captureFitSize();
+          applyZoom(previousZoom);
+        });
+      }).observe(historyPanels, { attributes: true, attributeFilter: ['class'] });
+    }
+
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        if (desktopQuery.matches && wrap.classList.contains('visible')) fitPreview();
+        else updateToolbar();
+      }, 120);
+    }, { passive: true });
+    if (typeof desktopQuery.addEventListener === 'function') desktopQuery.addEventListener('change', fitPreview);
+    else desktopQuery.addListener(fitPreview);
+    updateToolbar();
   })();
 
   initializePresetControls();
