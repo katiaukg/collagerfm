@@ -175,6 +175,14 @@
     transition: color .15s, background .15s;
   }
   .eye-toggle-btn:hover { color: var(--text); background: #ffffff0d; }
+  #lastfm-api-fallback-toggle {
+    display: inline-flex; align-items: center; justify-content: flex-start;
+    margin-top: 7px; padding: 0; border: 0; background: transparent;
+    color: var(--muted); font: 500 10px/1.4 inherit; cursor: pointer;
+    text-decoration: underline; text-underline-offset: 3px;
+  }
+  #lastfm-api-fallback-toggle:hover { color: var(--text); }
+  #lastfm-apikey-box.lastfm-api-collapsed { display: none !important; }
 
   .type-toggle { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
   .type-btn[data-type="new_artists"] { grid-column: 1 / -1; }
@@ -2380,8 +2388,9 @@
       <span class="section-label">Usuário Last.fm</span>
       <input id="username" type="text" placeholder="seu usuário..." autocomplete="off" spellcheck="false" list="username-history">
       <datalist id="username-history"></datalist>
+      <button type="button" id="lastfm-api-fallback-toggle" aria-expanded="false" aria-controls="lastfm-apikey-box">Collage não está funcionando?</button>
     </div>
-    <div id="lastfm-apikey-box">
+    <div id="lastfm-apikey-box" class="lastfm-api-collapsed">
       <span class="section-label">API Key opcional &nbsp;<a href="https://www.last.fm/api/account/create" target="_blank" style="color:#555;font-size:10px;font-weight:400">obter chave ↗</a></span>
       <div class="apikey-field-wrap">
         <input id="apikey" type="text" placeholder="use apenas se a chave padrão falhar..." autocomplete="off" list="apikey-history" class="masked">
@@ -12272,6 +12281,7 @@ async function generate() {
     if (err.message === 'cancelled') {
       showStatus('Geração cancelada.', false);
     } else if (!apikey && err.code === 'DEFAULT_LASTFM_KEY_FAILED') {
+      setLastfmApiFallbackOpen(true, { focus: true });
       showStatus('A chave padrão do Last.fm falhou. Informe sua API key para continuar.', true);
     } else {
       console.error(err);
@@ -14730,6 +14740,21 @@ function populateUsernameDatalist() {
 // preenche a API key correspondente automaticamente.
 const usernameInput = document.getElementById('username');
 const apikeyInput   = document.getElementById('apikey');
+const lastfmApiFallbackToggle = document.getElementById('lastfm-api-fallback-toggle');
+const lastfmApiKeyBox = document.getElementById('lastfm-apikey-box');
+
+function setLastfmApiFallbackOpen(open, options = {}) {
+  lastfmApiKeyBox.classList.toggle('lastfm-api-collapsed', !open);
+  lastfmApiFallbackToggle.setAttribute('aria-expanded', String(open));
+  lastfmApiFallbackToggle.textContent = open
+    ? 'Ocultar API key opcional'
+    : 'Collage não está funcionando?';
+  if (open && options.focus) requestAnimationFrame(() => apikeyInput.focus({ preventScroll: true }));
+}
+
+lastfmApiFallbackToggle.addEventListener('click', () => {
+  setLastfmApiFallbackOpen(lastfmApiKeyBox.classList.contains('lastfm-api-collapsed'));
+});
 
 // Botão de olho — mostra/esconde a API key (toggla a classe "masked")
 const toggleVisBtn = document.getElementById('toggle-apikey-visibility');
