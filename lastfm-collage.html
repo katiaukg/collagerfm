@@ -9953,7 +9953,17 @@ function extractLastfmImage(item) {
 // Busca imagem via Deezer Search (CORS aberto — tenta direto primeiro, depois proxy)
 async function fetchDeezer(endpoint) {
   const url = `https://api.deezer.com/${endpoint}`;
+  const endpointUrl = new URL(endpoint, 'https://api.deezer.com/');
+  const serverParams = new URLSearchParams({
+    endpoint: endpointUrl.pathname.replace(/^\//, ''),
+    q: endpointUrl.searchParams.get('q') || '',
+    limit: endpointUrl.searchParams.get('limit') || '1',
+  });
+  const serverAttempts = location.protocol === 'https:'
+    ? [{ label: 'collager.fm', run: () => fetch(`/api/deezer?${serverParams}`, { signal: combinedSignal(8000) }) }]
+    : [];
   const attempts = [
+    ...serverAttempts,
     { label: 'direto',      run: () => fetch(url, { signal: combinedSignal(6000) }) },
     { label: 'allorigins',  run: () => fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`, { signal: combinedSignal(5000) }) },
     { label: 'corsproxy',   run: () => fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`, { signal: combinedSignal(5000) }) },

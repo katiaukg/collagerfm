@@ -7,6 +7,9 @@
     "api/lastfm.js": {
       "maxDuration": 30
     },
+    "api/deezer.js": {
+      "maxDuration": 30
+    },
     "api/fanart.js": {
       "maxDuration": 30
     },
