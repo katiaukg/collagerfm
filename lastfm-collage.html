@@ -4585,6 +4585,9 @@
     <div class="status-msg" id="status">
       Informe seu usuário do Last.fm para começar.
     </div>
+    <button type="button" id="lastfm-own-key-action" hidden style="max-width:360px;padding:9px 12px;border:1px solid #ffffff24;border-radius:8px;background:#ffffff08;color:var(--muted);font:700 10.5px/1.35 inherit;cursor:pointer;">
+      Caso não queira depender de filas, você deve usar sua própria chave API
+    </button>
     <button type="button" id="mobile-account-error-action">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/></svg>
       Informar conta Last.fm
@@ -6369,7 +6372,9 @@ let customPlays   = {}; // { [poolIdx]: number } — sobrescreve scrobbles (usad
 let recentLiveTimer = null;
 let recentLiveGeneration = 0;
 let recentLiveBusy = false;
-const RECENT_LIVE_INTERVAL = 3000;
+let recentLivePoll = null;
+const RECENT_LIVE_MIN_INTERVAL = 5000;
+const RECENT_LIVE_MAX_INTERVAL = 30000;
 const RECENT_METADATA_RULES_STORAGE = 'collagerRecentMetadataRules';
 const recentMetadataRules = new Map();
 try {
@@ -10732,22 +10737,64 @@ function resetFonts() {
 // ─────────────────────────────────────────────────────────────
 // API HELPERS
 // ─────────────────────────────────────────────────────────────
-async function apiFetch(params) {
+document.getElementById('lastfm-own-key-action').addEventListener('click', () => {
+  window.openLastfmApiSettings?.();
+});
+
+async function apiFetch(params, options = {}) {
   const suppliedApiKey = String(params?.api_key || '').trim();
   if (!suppliedApiKey) {
+    const requestId = globalThis.crypto?.randomUUID?.() || `lfm_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const ownKeyAction = document.getElementById('lastfm-own-key-action');
+    let requestFinished = false;
+    let queuePollTimer = 0;
+    let keepOwnKeyActionVisible = Boolean(options.keepOwnKeyActionVisible);
+    const showQueueState = queue => {
+      if (options.silentQueue || requestFinished || !queue) return;
+      const status = document.getElementById('status');
+      if (queue.state === 'queued' && Number(queue.position) > 0) {
+        status.style.display = '';
+        status.className = 'status-msg';
+        status.textContent = `Aguardando Last.fm — posição ${queue.position} da fila.`;
+        ownKeyAction.hidden = false;
+      } else if (queue.state === 'deduplicated') {
+        status.style.display = '';
+        status.className = 'status-msg';
+        status.textContent = 'Aguardando uma solicitação igual que já está em andamento...';
+        ownKeyAction.hidden = false;
+      }
+    };
+    const pollQueue = async () => {
+      if (requestFinished) return;
+      try {
+        const response = await fetch(`/api/lastfm?action=queue-status&requestId=${encodeURIComponent(requestId)}`, {
+          headers: { Accept: 'application/json' },
+        });
+        if (response.ok) showQueueState(await response.json());
+      } catch (_) { /* a chamada principal continua normalmente */ }
+      if (!requestFinished) queuePollTimer = setTimeout(pollQueue, 750);
+    };
     try {
       const serverParams = { ...params };
       delete serverParams.api_key;
+      if (!options.silentQueue) queuePollTimer = setTimeout(pollQueue, 300);
       const response = await fetch('/api/lastfm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ params: serverParams }),
-        signal: combinedSignal(16000),
+        body: JSON.stringify({ params: serverParams, requestId }),
+        signal: combinedSignal(30000),
       });
       const data = await response.json();
       if (!response.ok || data.error) {
         const error = new Error(data.message || data.error || `Last.fm respondeu ${response.status}`);
-        if (data.fallbackRequired || response.status === 503) error.code = 'DEFAULT_LASTFM_KEY_FAILED';
+        if (data.retryable || response.status === 429) {
+          error.code = 'LASTFM_RETRYABLE';
+          error.retryAfterMs = Number(data.retryAfterMs || response.headers.get('Retry-After') * 1000 || 0);
+          keepOwnKeyActionVisible = true;
+          ownKeyAction.hidden = false;
+        } else if (data.fallbackRequired || response.status === 503) {
+          error.code = 'DEFAULT_LASTFM_KEY_FAILED';
+        }
         throw error;
       }
       return data;
@@ -10755,6 +10802,10 @@ async function apiFetch(params) {
       if (error.name === 'AbortError') throw new Error('cancelled');
       if (!error.code) error.code = 'DEFAULT_LASTFM_KEY_FAILED';
       throw error;
+    } finally {
+      requestFinished = true;
+      clearTimeout(queuePollTimer);
+      if (!keepOwnKeyActionVisible) ownKeyAction.hidden = true;
     }
   }
 
@@ -10901,9 +10952,9 @@ function recentScrobbleStableKey(item) {
   return `${prefix}|${recentMetadataRuleKey(original, item?._recentUsername)}`;
 }
 
-async function fetchRecentScrobblePage(user, apikey, limit = 50) {
+async function fetchRecentScrobblePage(user, apikey, limit = 50, options = {}) {
   const safeLimit = Math.max(1, Math.min(200, Number.parseInt(limit, 10) || 50));
-  const data = await apiFetch({ method: 'user.getRecentTracks', user, api_key: apikey, limit: safeLimit, page: 1, extended: 0 });
+  const data = await apiFetch({ method: 'user.getRecentTracks', user, api_key: apikey, limit: safeLimit, page: 1, extended: 0 }, options);
   const raw = data?.recenttracks?.track || [];
   return (Array.isArray(raw) ? raw : (raw ? [raw] : []))
     .map(track => parseRecentScrobbleTrack(track, user))
@@ -11808,23 +11859,33 @@ function stopRecentLiveUpdates() {
   recentLiveBusy = false;
   clearTimeout(recentLiveTimer);
   recentLiveTimer = null;
+  recentLivePoll = null;
 }
 
 function startRecentLiveUpdates(user, apikey) {
   stopRecentLiveUpdates();
   const liveGeneration = recentLiveGeneration;
   const poolSize = Math.max(allFetchedItems.length, getDrawGrid().cols * getDrawGrid().rows + 20);
+  let adaptiveInterval = RECENT_LIVE_MIN_INTERVAL;
 
   const poll = async () => {
     if (liveGeneration !== recentLiveGeneration || getRenderedQueryState()?.mode !== 'recent') return;
+    if (document.hidden) {
+      if (liveGeneration === recentLiveGeneration) recentLiveTimer = setTimeout(poll, RECENT_LIVE_MAX_INTERVAL);
+      return;
+    }
     if (!recentLiveBusy) {
       recentLiveBusy = true;
       try {
         const previousKeys = new Set(allFetchedItems.map(recentScrobbleStableKey));
-        const fresh = await fetchRecentScrobblePage(user, apikey, Math.min(100, poolSize));
+        const fresh = await fetchRecentScrobblePage(user, apikey, Math.min(100, poolSize), { silentQueue: true });
         if (liveGeneration !== recentLiveGeneration) return;
         const newScrobbles = fresh.filter(item => !item._nowPlaying && !previousKeys.has(recentScrobbleStableKey(item)));
-        if (reconcileRecentItems(fresh, poolSize)) {
+        const changed = reconcileRecentItems(fresh, poolSize);
+        adaptiveInterval = changed
+          ? RECENT_LIVE_MIN_INTERVAL
+          : Math.min(RECENT_LIVE_MAX_INTERVAL, Math.round(adaptiveInterval * 1.5));
+        if (changed) {
           await runDraw();
           const visibleIndices = currentItems.map(item => allFetchedItems.indexOf(item));
           loadRecentImageIndices(visibleIndices, apikey, liveGeneration).catch(() => {});
@@ -11837,15 +11898,26 @@ function startRecentLiveUpdates(user, apikey) {
         }
       } catch (error) {
         if (error.message !== 'cancelled') console.warn('Atualização de Recentes:', error.message);
+        adaptiveInterval = Math.min(
+          RECENT_LIVE_MAX_INTERVAL,
+          Math.max(adaptiveInterval * 2, Number(error.retryAfterMs || 0), RECENT_LIVE_MIN_INTERVAL),
+        );
       } finally {
         recentLiveBusy = false;
       }
     }
-    if (liveGeneration === recentLiveGeneration) recentLiveTimer = setTimeout(poll, RECENT_LIVE_INTERVAL);
+    if (liveGeneration === recentLiveGeneration) recentLiveTimer = setTimeout(poll, adaptiveInterval);
   };
 
-  recentLiveTimer = setTimeout(poll, RECENT_LIVE_INTERVAL);
+  recentLivePoll = poll;
+  recentLiveTimer = setTimeout(poll, RECENT_LIVE_MIN_INTERVAL);
 }
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden || !recentLivePoll || getRenderedQueryState()?.mode !== 'recent') return;
+  clearTimeout(recentLiveTimer);
+  recentLiveTimer = setTimeout(recentLivePoll, 250);
+});
 
 async function loadImageUncached(src) {
   if (!src) return null;

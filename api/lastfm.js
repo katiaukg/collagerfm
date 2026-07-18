@@ -1,5 +1,13 @@
 'use strict';
 
+const {
+  cacheTtlForMethod,
+  getQueueStatus,
+  noteLastfmRateLimit,
+  redisConfigured,
+  resilientCachedRequest,
+} = require('./_lastfm-resilience');
+
 const ALLOWED_METHODS = new Set([
   'album.getinfo',
   'artist.getinfo',
@@ -15,10 +23,6 @@ const ALLOWED_PARAMS = new Set([
   'album', 'artist', 'autocorrect', 'extended', 'from', 'lang', 'limit',
   'method', 'page', 'period', 'to', 'track', 'user',
 ]);
-
-const CACHE_TTL = 60 * 1000;
-const RECENT_TRACKS_CACHE_TTL = 2 * 1000;
-const responseCache = new Map();
 
 function getRequestBody(request) {
   if (request.body && typeof request.body === 'object') return request.body;
@@ -51,7 +55,7 @@ function applyCors(request, response) {
   if (origin && isOriginAllowed(request)) {
     response.setHeader('Access-Control-Allow-Origin', origin);
     response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    response.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     response.setHeader('Vary', 'Origin');
   }
 }
@@ -66,6 +70,11 @@ function sendJson(response, status, payload) {
 module.exports = async function handler(request, response) {
   applyCors(request, response);
   if (request.method === 'OPTIONS') return response.status(204).end();
+  if (request.method === 'GET' && String(request.query?.action || '') === 'queue-status') {
+    if (!isOriginAllowed(request)) return sendJson(response, 403, { error: 'Origem nao permitida.' });
+    const queueStatus = await getQueueStatus(request.query?.requestId);
+    return sendJson(response, 200, queueStatus || { state: 'pending', position: 0 });
+  }
   if (request.method !== 'POST') return sendJson(response, 405, { error: 'Metodo nao permitido.' });
   if (!isOriginAllowed(request)) return sendJson(response, 403, { error: 'Origem nao permitida.' });
 
@@ -79,6 +88,7 @@ module.exports = async function handler(request, response) {
 
   try {
     const body = getRequestBody(request);
+    const requestId = String(body.requestId || '').trim();
     const source = body && typeof body.params === 'object' ? body.params : {};
     const method = String(source.method || '').trim().toLowerCase();
     if (!ALLOWED_METHODS.has(method)) return sendJson(response, 403, { error: 'Metodo do Last.fm nao permitido.' });
@@ -93,37 +103,50 @@ module.exports = async function handler(request, response) {
     params.set('api_key', apiKey);
     params.set('format', 'json');
 
-    const cacheKey = params.toString().replace(/api_key=[^&]+&?/, '');
-    const cached = responseCache.get(cacheKey);
-    if (cached && cached.expires > Date.now()) return sendJson(response, 200, cached.payload);
-    if (cached) responseCache.delete(cacheKey);
-
-    const upstream = await fetch(`https://ws.audioscrobbler.com/2.0/?${params.toString()}`, {
-      headers: {
-        Accept: 'application/json',
-        'User-Agent': 'CollagerFM/1.0 (collage generator)',
-      },
-      signal: AbortSignal.timeout(15000),
-    });
-    const payload = await upstream.json();
-    const lastfmError = Number(payload?.error || 0);
-    const fallbackRequired = [10, 26, 29].includes(lastfmError)
-      || [401, 403, 429].includes(upstream.status);
-    if (!upstream.ok || fallbackRequired) {
-      return sendJson(response, upstream.ok ? 502 : upstream.status, {
-        ...payload,
-        fallbackRequired,
+    const resilientParams = Object.fromEntries(params);
+    delete resilientParams.api_key;
+    delete resilientParams.format;
+    const result = await resilientCachedRequest(resilientParams, async () => {
+      const upstream = await fetch(`https://ws.audioscrobbler.com/2.0/?${params.toString()}`, {
+        headers: {
+          Accept: 'application/json',
+          'User-Agent': 'CollagerFM/1.0 (collage generator)',
+        },
+        signal: AbortSignal.timeout(15000),
+      });
+      const payload = await upstream.json().catch(() => ({}));
+      const lastfmError = Number(payload?.error || 0);
+      if (lastfmError === 29 || upstream.status === 429) await noteLastfmRateLimit(60000);
+      if (!upstream.ok || lastfmError) {
+        const error = new Error(payload.message || `Last.fm respondeu ${upstream.status}.`);
+        error.code = lastfmError || upstream.status;
+        error.status = upstream.ok ? 502 : upstream.status;
+        error.payload = payload;
+        throw error;
+      }
+      return payload;
+    }, cacheTtlForMethod(method), { requestId });
+    response.setHeader('X-Collager-Cache', result.cache);
+    response.setHeader('X-Collager-Persistent-Cache', redisConfigured() ? 'enabled' : 'disabled');
+    return sendJson(response, 200, result.payload);
+  } catch (error) {
+    if (error.code === 'LASTFM_QUEUE_BUSY') {
+      response.setHeader('Retry-After', String(Math.max(1, Math.ceil((error.retryAfterMs || 1000) / 1000))));
+      return sendJson(response, 429, {
+        error: error.message,
+        retryable: true,
+        retryAfterMs: error.retryAfterMs || 1000,
       });
     }
-    if (!lastfmError) {
-      const ttl = method === 'user.getrecenttracks' ? RECENT_TRACKS_CACHE_TTL : CACHE_TTL;
-      responseCache.set(cacheKey, { expires: Date.now() + ttl, payload });
-    }
-    return sendJson(response, 200, payload);
-  } catch (error) {
+    const lastfmCode = Number(error.code || 0);
+    const fallbackRequired = [10, 26].includes(lastfmCode) || [401, 403].includes(Number(error.status || 0));
+    const retryable = lastfmCode === 29 || Number(error.status || 0) === 429;
     return sendJson(response, 502, {
-      error: `Falha ao consultar o Last.fm: ${error.message}`,
-      fallbackRequired: true,
+      ...(error.payload || {}),
+      error: error.message || 'Falha ao consultar o Last.fm.',
+      fallbackRequired,
+      retryable,
+      code: lastfmCode,
     });
   }
 };

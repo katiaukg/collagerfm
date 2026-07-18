@@ -1,6 +1,7 @@
 'use strict';
 
 const crypto = require('crypto');
+const { noteLastfmRateLimit, reserveGlobalSlot } = require('./_lastfm-resilience');
 
 const COOKIE_NAME = 'collager_lfm_session';
 
@@ -84,6 +85,7 @@ async function callLastfmWrite(params) {
   const signed = { ...params, api_key: apiKey };
   signed.api_sig = signLastfmParams(signed, apiSecret);
   signed.format = 'json';
+  await reserveGlobalSlot();
   const response = await fetch('https://ws.audioscrobbler.com/2.0/', {
     method: 'POST',
     headers: {
@@ -94,6 +96,7 @@ async function callLastfmWrite(params) {
     signal: AbortSignal.timeout(15000),
   });
   const payload = await response.json().catch(() => ({}));
+  if (Number(payload.error || 0) === 29 || response.status === 429) await noteLastfmRateLimit(60000);
   if (!response.ok || payload.error) {
     const error = new Error(payload.message || `Last.fm respondeu ${response.status}.`);
     error.code = Number(payload.error || response.status);
