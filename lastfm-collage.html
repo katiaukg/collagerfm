@@ -19,6 +19,8 @@
     --track: #426cf5;
     --new: #4caf50;
     --specific: #f4a261;
+    --recent: #99f0da;
+    --obsessions: #c281ee;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -244,6 +246,12 @@
   .type-btn[data-type="tracks"].active  { border-color: var(--track);  color: var(--track);  background: #426cf510; }
   .type-btn[data-type="new_artists"].active { border-color: var(--new); color: var(--new); background: color-mix(in srgb, var(--new) 10%, transparent); }
   .type-btn[data-type="specific_artists"] { grid-column: 1 / -1; }
+  .type-special-row {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
   .type-btn[data-type="new_artists"] .type-btn-label,
   .type-btn[data-type="specific_artists"] .type-btn-label {
     justify-content: center;
@@ -251,6 +259,9 @@
   }
   #new-subtype-row { grid-column: 1 / -1; }
   .type-btn[data-type="specific_artists"].active { border-color: var(--specific); color: var(--specific); background: color-mix(in srgb, var(--specific) 10%, transparent); }
+  .type-btn[data-type="recent"].active { border-color: var(--recent); color: var(--recent); background: color-mix(in srgb, var(--recent) 10%, transparent); }
+  .type-btn[data-type="obsessions"].active { border-color: var(--obsessions); color: var(--obsessions); background: color-mix(in srgb, var(--obsessions) 10%, transparent); }
+  .type-special-row .type-btn-label { justify-content: center; padding-left: 0; }
   .preset-section { position: relative; }
   .preset-controls { display: flex; align-items: stretch; gap: 6px; }
   .preset-select { position: relative; flex: 1; min-width: 0; }
@@ -3053,6 +3064,20 @@
             <input class="swatch-input" type="color" id="color-specific_artists" value="#f4a261">
           </div>
         </button>
+        <div class="type-special-row">
+          <button class="type-btn" data-type="recent" title="Os scrobbles mais recentes da conta">
+            <span class="type-btn-label"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>RECENTES</span>
+            <div class="color-swatch" id="swatch-recent" style="background:#99f0da">
+              <input class="swatch-input" type="color" id="color-recent" value="#99f0da">
+            </div>
+          </button>
+          <button class="type-btn" data-type="obsessions" title="As obsessões mais recentes da conta">
+            <span class="type-btn-label"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 9.8 8.2 4 9l4.2 4-1 5.8L12 16l4.8 2.8-1-5.8L20 9l-5.8-.8Z"/></svg>OBSESSÕES</span>
+            <div class="color-swatch" id="swatch-obsessions" style="background:#c281ee">
+              <input class="swatch-input" type="color" id="color-obsessions" value="#c281ee">
+            </div>
+          </button>
+        </div>
       </div>
 
       <div id="specific-artists-panel" style="display:none;margin-top:8px;">
@@ -3089,6 +3114,14 @@
         <div class="source-toggle-group" id="sources-tracks" data-srctype="tracks">
           <button class="source-btn" data-source="local_folder" draggable="true"><span class="src-num"></span>Pasta local</button>
           <button class="source-btn active" data-source="deezer" draggable="true"><span class="src-num"></span>Deezer</button>
+          <button class="source-btn" data-source="spotify" draggable="true" title="Requer Spotify Premium"><span class="src-num"></span>Spotify<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7z"/><path d="M5 20h14"/></svg></button>
+          <button class="source-btn" data-source="youtube" draggable="true"><span class="src-num"></span>YouTube</button>
+          <button class="source-btn" data-source="fanart" draggable="true"><span class="src-num"></span>Fanart.tv</button>
+        </div>
+        <div class="source-toggle-group" id="sources-recent" data-srctype="recent">
+          <button class="source-btn active" data-source="lastfm" draggable="true"><span class="src-num"></span>Last.fm</button>
+          <button class="source-btn" data-source="local_folder" draggable="true"><span class="src-num"></span>Pasta local</button>
+          <button class="source-btn" data-source="deezer" draggable="true"><span class="src-num"></span>Deezer</button>
           <button class="source-btn" data-source="spotify" draggable="true" title="Requer Spotify Premium"><span class="src-num"></span>Spotify<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7z"/><path d="M5 20h14"/></svg></button>
           <button class="source-btn" data-source="youtube" draggable="true"><span class="src-num"></span>YouTube</button>
           <button class="source-btn" data-source="fanart" draggable="true"><span class="src-num"></span>Fanart.tv</button>
@@ -3147,10 +3180,10 @@
       </div>
     </div>
 
-    <div class="divider"></div>
+    <div class="divider" id="period-section-divider"></div>
 
     <!-- Period -->
-    <div>
+    <div id="period-section-wrap">
       <div class="section-head">
         <span class="section-label">Período</span>
         <button class="reset-btn" onclick="resetPeriod()">redefinir</button>
@@ -3768,7 +3801,7 @@
           </div>
 
           <div>
-            <span class="section-label" style="margin-bottom:5px;display:block;">Posição dos scrobbles</span>
+            <span class="section-label" id="plays-position-label" style="margin-bottom:5px;display:block;">Posição dos scrobbles</span>
             <div class="red-slash-toggle" id="align-plays-toggle">
               <button class="active" data-align="left">Esquerda</button>
               <span class="slash-sep">/</span>
@@ -4093,7 +4126,7 @@
             </div>
             <div>
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">
-                <label style="font-size:10px;color:var(--muted);">Scrobbles</label>
+                <label id="font-family-plays-label" style="font-size:10px;color:var(--muted);">Scrobbles</label>
                 <label class="font-bold-toggle" title="Negrito"><input type="checkbox" id="font-bold-plays">N</label>
               </div>
               <select id="font-family-plays" class="font-family-select"
@@ -4221,7 +4254,7 @@
 
         <div class="slider-row">
           <div class="slider-row-head">
-            <span class="slider-name">Scrobbles</span>
+            <span class="slider-name" id="font-size-plays-label">Scrobbles</span>
             <div style="display:flex;align-items:center;gap:6px;">
               <span class="slider-val" id="val-font-plays">20px</span>
               <div class="mini-swatch-wrap" id="font-plays-color-swatch" style="background:#f5e042">
@@ -4268,7 +4301,7 @@
         </div>
         <div class="slider-row">
           <div class="slider-row-head">
-            <span class="slider-name">Scrobbles</span>
+            <span class="slider-name" id="alpha-plays-label">Scrobbles</span>
             <span class="slider-val" id="val-alpha-plays">100%</span>
           </div>
           <input type="range" id="alpha-plays" min="0" max="100" value="100" step="1">
@@ -4416,7 +4449,7 @@
         </div>
 
         <!-- ════════ SCROBBLES ════════ -->
-        <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.04em;margin-top:6px;">SCROBBLES</div>
+        <div id="effects-heading-plays-label" style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.04em;margin-top:6px;">SCROBBLES</div>
 
         <div class="toggle-row" id="outline-plays-row">
           <span class="toggle-label">Contorno do texto</span>
@@ -4753,7 +4786,10 @@
   <div id="text-edit-modal-box" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;width:320px;max-width:90vw;max-height:88vh;overflow-y:auto;display:flex;flex-direction:column;gap:14px;transition:width .15s;">
 
   <div id="tile-config-view" style="display:flex;flex-direction:column;gap:14px;">
-    <div style="font-size:14px;font-weight:700;color:var(--text);">CONFIGURAÇÕES DO QUADRO</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <div style="font-size:14px;font-weight:700;color:var(--text);">CONFIGURAÇÕES DO QUADRO</div>
+      <button type="button" id="edit-text-close" aria-label="Fechar configurações do quadro" title="Fechar" style="width:30px;height:30px;display:grid;place-items:center;padding:0;border:1px solid var(--border);border-radius:6px;background:var(--surface2,#1a1a1a);color:var(--muted);font:700 17px/1 Inter,Arial,sans-serif;cursor:pointer;">×</button>
+    </div>
 
     <div id="tile-text-fields" style="display:flex;flex-direction:column;gap:14px;">
       <div class="field" style="display:flex;flex-direction:column;gap:6px;" id="edit-text-main-wrap">
@@ -4772,7 +4808,7 @@
       </div>
     </div>
 
-    <div style="display:flex;flex-direction:column;gap:6px;">
+    <div id="tile-image-section" style="display:flex;flex-direction:column;gap:6px;">
       <span class="section-label" style="margin-bottom:0;">Inserir imagem</span>
       <div style="display:flex;gap:6px;">
         <label style="flex:1;display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface2,#1a1a1a);">
@@ -4786,7 +4822,7 @@
       <button type="button" id="fanart-picker-btn" style="display:none;width:100%;padding:9px 10px;border:1px solid #ef444466;border-radius:8px;background:#ef444410;color:#ff8b8b;font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;">LISTAGEM DA FANART.TV</button>
     </div>
 
-    <div style="display:flex;flex-direction:column;gap:6px;">
+    <div id="tile-merge-actions" style="display:flex;flex-direction:column;gap:6px;">
       <span class="section-label" style="margin-bottom:0;">Mesclar quadro</span>
       <div style="display:flex;gap:8px;">
         <button type="button" id="merge-collage-btn" style="flex:1;padding:8px 8px;display:inline-flex;align-items:center;justify-content:center;gap:5px;border-radius:8px;border:1.5px solid #22c55e55;background:transparent;color:#22c55e;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer;line-height:1.3;"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Mesclar com algo da collage</button>
@@ -4794,16 +4830,34 @@
       </div>
       <div id="merge-search-hotkey-hint" class="icon-text" style="font-size:10px;color:var(--muted);line-height:1.4;align-items:flex-start;"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.69.66-1.24 1.16-1.75A6 6 0 1 0 7.75 12.25c.48.48.97 1.05 1.16 1.75"/></svg><span>Você pode arrastar um quadro sobre outro para mesclar. Com o mouse sobre o quadro: pressione <strong>F</strong> para mesclar pesquisando.</span></div>
     </div>
-	<hr style="border:none;border-top:1px solid #2e2e2e;margin:4px 0;">
-    <div style="display:flex;gap:8px;margin-top:6px;">
-      <button type="button" id="edit-text-reset" style="flex:1;padding:10px;border-radius:9px;border:1.5px solid var(--border);background:transparent;color:var(--text);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">Restaurar Texto</button>
-      <button type="button" id="edit-image-reset" style="flex:1;padding:10px;border-radius:9px;border:1.5px solid var(--border);background:transparent;color:var(--text);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">Restaurar Imagem</button>
+    <div id="recent-metadata-actions" style="display:none;flex-direction:column;gap:10px;padding:11px;border:1px solid #22c55e44;border-radius:8px;background:#22c55e09;">
+      <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--text);font-size:11px;line-height:1.35;cursor:pointer;">
+        <span>Substituir por esta edição nos próximos scrobbles</span>
+        <input type="checkbox" id="recent-metadata-future" checked style="width:16px;height:16px;accent-color:#22c55e;">
+      </label>
+      <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--text);font-size:11px;line-height:1.35;cursor:pointer;">
+        <span>Apagar scrobble antigo e manter o atual</span>
+        <input type="checkbox" id="recent-metadata-replace" checked style="width:16px;height:16px;accent-color:#22c55e;">
+      </label>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button type="button" id="recent-metadata-save" style="flex:1;padding:10px;border:1px solid #22c55e88;border-radius:8px;background:#123d24;color:#8af0ad;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">SALVAR</button>
+        <button type="button" id="edit-scrobble-delete" style="flex:1;padding:10px;border:1px solid #ef444488;border-radius:8px;background:#3f1518;color:#ff9b9b;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">EXCLUIR SCROBBLE</button>
+      </div>
+      <button type="button" id="recent-lastfm-authorize" style="display:none;width:100%;padding:9px;border:1px solid #d5100788;border-radius:8px;background:#d5100718;color:#ff8a84;font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;">AUTORIZAR LAST.FM</button>
+      <div id="recent-metadata-status" aria-live="polite" style="display:none;color:var(--muted);font-size:10.5px;line-height:1.4;"></div>
     </div>
-    <div id="restore-hint" class="icon-text" style="font-size:10px;color:var(--muted);line-height:1.4;align-items:flex-start;"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.69.66-1.24 1.16-1.75A6 6 0 1 0 7.75 12.25c.48.48.97 1.05 1.16 1.75"/></svg><span>Com o mouse sobre o quadro: <strong>pressione T</strong> para restaurar o texto e <strong>R</strong> para restaurar a imagem.</span></div>
-    <button type="button" id="edit-lastfm-link" style="width:100%;padding:9px 10px;display:flex;align-items:center;justify-content:center;gap:7px;border:1px solid #ffffff24;border-radius:8px;background:#ffffff08;color:var(--text);font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;">
-      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
-      ABRIR NO LAST.FM NESTE PERÍODO
-    </button>
+    <div id="tile-restore-actions" style="display:flex;flex-direction:column;gap:8px;">
+      <hr style="width:100%;border:none;border-top:1px solid #2e2e2e;margin:4px 0;">
+      <button type="button" id="edit-lastfm-link" style="width:100%;padding:9px 10px;display:flex;align-items:center;justify-content:center;gap:7px;border:1px solid #ffffff24;border-radius:8px;background:#ffffff08;color:var(--text);font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+        ABRIR NO LAST.FM NESTE PERÍODO
+      </button>
+      <div style="display:flex;gap:8px;">
+        <button type="button" id="edit-text-reset" style="flex:1;padding:10px;border-radius:9px;border:1.5px solid var(--border);background:transparent;color:var(--text);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">Restaurar Texto</button>
+        <button type="button" id="edit-image-reset" style="flex:1;padding:10px;border-radius:9px;border:1.5px solid var(--border);background:transparent;color:var(--text);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">Restaurar Imagem</button>
+      </div>
+      <div id="restore-hint" class="icon-text" style="font-size:10px;color:var(--muted);line-height:1.4;align-items:flex-start;"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.69.66-1.24 1.16-1.75A6 6 0 1 0 7.75 12.25c.48.48.97 1.05 1.16 1.75"/></svg><span>Com o mouse sobre o quadro: <strong>pressione T</strong> para restaurar o texto e <strong>R</strong> para restaurar a imagem.</span></div>
+    </div>
     <button type="button" id="edit-text-save" class="gen-btn" style="width:100%;">SALVAR</button>
     <button type="button" id="edit-tile-delete" style="width:100%;padding:10px;border-radius:9px;border:1.5px solid #7f1d1d;background:transparent;color:#ef4444;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">EXCLUIR</button>
     <button type="button" id="edit-text-cancel" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit;">CANCELAR</button>
@@ -5430,7 +5484,7 @@ function fontFamilyCSS(id) {
 const DEFAULTS = {
   type: 'albums',
   specificSubType: 'albums',
-  colors: { artists: '#f5e042', albums: '#f54242', tracks: '#426cf5', new_artists: '#4caf50', specific_artists: '#f4a261' },
+  colors: { artists: '#f5e042', albums: '#f54242', tracks: '#426cf5', new_artists: '#4caf50', specific_artists: '#f4a261', recent: '#99f0da', obsessions: '#c281ee' },
   periodMode: 'preset',
   period: '7day',
   cols: 3, rows: 5, tileDirection: 'ltr',
@@ -5555,7 +5609,7 @@ const DEFAULTS = {
   },
 };
 
-const TYPE_LABELS = { artists: 'Artistas', albums: 'Álbuns', tracks: 'Faixas', new_artists: 'Novos no período', specific_artists: 'Artistas específicos' };
+const TYPE_LABELS = { artists: 'Artistas', albums: 'Álbuns', tracks: 'Faixas', new_artists: 'Novos no período', specific_artists: 'Artistas específicos', recent: 'Recentes', obsessions: 'Obsessões' };
 const TILE_SIZE   = 300;
 
 // ── Fontes de imagem por tipo — a ORDEM DE PRIORIDADE agora é lida
@@ -5566,6 +5620,7 @@ let imageSources = {
   artists: new Set(['deezer']),
   albums:  new Set(['lastfm']),
   tracks:  new Set(['deezer']),
+  recent:  new Set(['lastfm']),
 };
 
 const LOCAL_ARTIST_SOURCE = 'local_folder';
@@ -6250,11 +6305,38 @@ const TILE_LINE_DEFAULTS = {
     { id: 'plays', label: 'Scrobbles', enabled: true },
   ],
 };
+function isTemporalCollageType(type = currentType) {
+  return type === 'recent' || type === 'obsessions';
+}
+function isRecentCollageRendered() {
+  return (getRenderedQueryState()?.mode || currentType) === 'recent';
+}
+function getPlaysUiLabel(type = currentType) {
+  if (type === 'recent') return 'Data de scrobble';
+  if (type === 'obsessions') return 'Data da obsessão';
+  return 'Scrobbles';
+}
+function syncTemporalTextLabels() {
+  const label = getPlaysUiLabel();
+  const lower = label.toLocaleLowerCase('pt-BR');
+  const values = {
+    'plays-position-label': isTemporalCollageType() ? `Posição da ${lower}` : 'Posição dos scrobbles',
+    'font-family-plays-label': label,
+    'font-size-plays-label': label,
+    'alpha-plays-label': label,
+    'effects-heading-plays-label': label.toLocaleUpperCase('pt-BR'),
+  };
+  Object.entries(values).forEach(([id, value]) => {
+    const element = document.getElementById(id);
+    if (element) element.textContent = value;
+  });
+}
 function cloneTileLineDefaults() { return JSON.parse(JSON.stringify(TILE_LINE_DEFAULTS)); }
 let tileLineOrder = cloneTileLineDefaults();
 function getTileLineTypeForUi() {
   if (currentType === 'new_artists') return newSubType;
   if (currentType === 'specific_artists') return specificSubType;
+  if (currentType === 'recent' || currentType === 'obsessions') return 'tracks';
   return currentType;
 }
 
@@ -6284,6 +6366,16 @@ let customImageRefs = {}; // poolIdx -> { kind:'url'|'data'|'local', ... }
 let currentApiKey = '';
 let customTexts   = {}; // { [tileIndex]: { main: '...', sub: '...' } } — sobrescreve nome/artista
 let customPlays   = {}; // { [poolIdx]: number } — sobrescreve scrobbles (usado pela mesclagem de tiles)
+let recentLiveTimer = null;
+let recentLiveGeneration = 0;
+let recentLiveBusy = false;
+const RECENT_LIVE_INTERVAL = 3000;
+const RECENT_METADATA_RULES_STORAGE = 'collagerRecentMetadataRules';
+const recentMetadataRules = new Map();
+try {
+  const savedRecentRules = JSON.parse(localStorage.getItem(RECENT_METADATA_RULES_STORAGE) || '{}');
+  Object.entries(savedRecentRules).forEach(([key, value]) => recentMetadataRules.set(key, value));
+} catch (_) { /* armazenamento indisponível ou inválido */ }
 let scrobblesLabel = DEFAULTS.scrobblesLabel; // texto customizável ao lado do número (Texto 1)
 let numberPos       = DEFAULTS.numberPos;      // left/center/right — posição do número vs texto(s)
 let scrobblesLabel2  = DEFAULTS.scrobblesLabel2; // "Texto 2" — usado só quando numberPos === 'center'
@@ -6723,6 +6815,7 @@ function ensureBehaviorMergeTarget(entry, type) {
 }
 
 function applyGlobalCollageBehavior(context) {
+  if (context.mode === 'recent') return 0;
   const type = context.type;
   const rules = getCombinedBehaviorRules(context);
   let applied = 0;
@@ -6933,6 +7026,8 @@ const TYPE_COLOR_CSS_VARS = {
   tracks: '--track',
   new_artists: '--new',
   specific_artists: '--specific',
+  recent: '--recent',
+  obsessions: '--obsessions',
 };
 const TEXT_TYPE_DEFAULTS = {
   artists: {
@@ -6969,7 +7064,7 @@ function getTypeAccent(type = currentType) {
 }
 Object.keys(TYPE_COLOR_CSS_VARS).forEach(syncTypeColorCssVar);
 
-['artists','albums','tracks','new_artists','specific_artists'].forEach(type => {
+['artists','albums','tracks','new_artists','specific_artists','recent','obsessions'].forEach(type => {
   const input  = document.getElementById('color-' + type);
   const swatch = document.getElementById('swatch-' + type);
   if (!input || !swatch) return;
@@ -7556,7 +7651,10 @@ function renderTileLineOrderControls() {
   Object.values(colorSwatches).forEach(swatch => {
     if (swatch) swatchParking.appendChild(swatch);
   });
-  list.innerHTML = lines.map((line, i) => '<div class="tile-line-chip" draggable="true" data-id="' + line.id + '"><span class="drag-handle">⋮⋮</span><span class="line-num">' + (i + 1) + '.</span><span class="line-name">' + line.label + '</span><span class="line-color-host"></span><label class="toggle-switch" style="transform:scale(.78);"><input type="checkbox" ' + (line.enabled ? 'checked' : '') + ' aria-label="Mostrar ' + line.label + '"><span class="toggle-slider"></span></label></div>').join('');
+  list.innerHTML = lines.map((line, i) => {
+    const displayLabel = line.id === 'plays' ? getPlaysUiLabel() : line.label;
+    return '<div class="tile-line-chip" draggable="true" data-id="' + line.id + '"><span class="drag-handle">⋮⋮</span><span class="line-num">' + (i + 1) + '.</span><span class="line-name">' + displayLabel + '</span><span class="line-color-host"></span><label class="toggle-switch" style="transform:scale(.78);"><input type="checkbox" ' + (line.enabled ? 'checked' : '') + ' aria-label="Mostrar ' + displayLabel + '"><span class="toggle-slider"></span></label></div>';
+  }).join('');
   list.querySelectorAll('.tile-line-chip').forEach(chip => {
     const swatch = colorSwatches[chip.dataset.id];
     const host = chip.querySelector('.line-color-host');
@@ -7593,6 +7691,7 @@ function renderTileLineOrderControls() {
       redrawIfReady();
     },
   });
+  syncTemporalTextLabels();
   syncTextKindControlVisibility();
 }
 function syncTileLineOrderFromDom(type) {
@@ -9616,8 +9715,18 @@ Object.entries(specificSubBtns).forEach(([type, btn]) => {
 function syncTypeSpecificPanels() {
   const newSubRow = document.getElementById('new-subtype-row');
   const specificPanel = document.getElementById('specific-artists-panel');
+  const temporalMode = isTemporalCollageType();
   if (newSubRow) newSubRow.style.display = currentType === 'new_artists' ? 'flex' : 'none';
   if (specificPanel) specificPanel.style.display = currentType === 'specific_artists' ? '' : 'none';
+  const periodSection = document.getElementById('period-section-wrap');
+  const periodDivider = document.getElementById('period-section-divider');
+  if (periodSection) periodSection.style.display = temporalMode ? 'none' : '';
+  if (periodDivider) periodDivider.style.display = temporalMode ? 'none' : '';
+  const recentMode = currentType === 'recent';
+  ['mobile-deleted-list-btn', 'mobile-merged-list-btn', 'desktop-deleted-list-btn', 'desktop-merged-list-btn'].forEach(id => {
+    const button = document.getElementById(id);
+    if (button) button.style.display = recentMode ? 'none' : '';
+  });
   renderSpecificArtistsList();
 }
 
@@ -9846,13 +9955,18 @@ syncTypeSpecificPanels();
 function getEffectiveType() {
   if (currentType === 'new_artists') return newSubType;
   if (currentType === 'specific_artists') return specificSubType;
+  if (isTemporalCollageType()) return 'tracks';
   return currentType;
+}
+
+function getActiveImageSourceType() {
+  return currentType === 'recent' ? 'recent' : getEffectiveType();
 }
 setArtistSubDefaultsForEffectiveType();
 renderTileLineOrderControls();
 
 function updateSourceGroupVisibility() {
-  const effective = getEffectiveType();
+  const effective = getActiveImageSourceType();
   document.querySelectorAll('.source-toggle-group').forEach(group => {
     group.classList.toggle('visible', group.dataset.srctype === effective);
   });
@@ -9889,7 +10003,7 @@ document.querySelectorAll('.source-toggle-group').forEach(group => {
 });
 
 async function refreshImagesFromSelectedSources(type) {
-  if (type !== getEffectiveType()) return;
+  if (type !== getActiveImageSourceType()) return;
   prefetchGen++;
   resolvedImageUrlCache.clear();
   fanartResponseCache.clear();
@@ -9915,7 +10029,7 @@ async function refreshImagesFromSelectedSources(type) {
 }
 
 function isSourceSelectedForEffectiveType(source) {
-  const type = getEffectiveType();
+  const type = getActiveImageSourceType();
   return imageSources[type]?.has(source) || false;
 }
 
@@ -10696,6 +10810,161 @@ async function getTopItems(user, apikey, type, period, limit) {
   return data[top]?.[inner] || [];
 }
 
+function capitalizePtMonth(value) {
+  const text = String(value || '');
+  return text ? text.charAt(0).toLocaleUpperCase('pt-BR') + text.slice(1) : '';
+}
+
+function formatRecentScrobbleDate(timestampSeconds) {
+  const date = new Date(Number(timestampSeconds) * 1000);
+  if (!Number.isFinite(date.getTime())) return '';
+  const parts = new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit', hour12: false,
+  }).formatToParts(date);
+  const get = type => parts.find(part => part.type === type)?.value || '';
+  return `${get('day')} de ${capitalizePtMonth(get('month'))} às ${get('hour')}:${get('minute')}`;
+}
+
+function formatObsessionDate(dateIso, fallback = '') {
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(String(dateIso || ''))
+    ? new Date(`${dateIso}T12:00:00Z`)
+    : new Date(fallback);
+  if (!Number.isFinite(date.getTime())) return String(fallback || '').trim();
+  const parts = new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit', month: 'long', year: 'numeric', timeZone: 'UTC',
+  }).formatToParts(date);
+  const get = type => parts.find(part => part.type === type)?.value || '';
+  return `${get('day')} de ${capitalizePtMonth(get('month'))} de ${get('year')}`;
+}
+
+function getTemporalMetricText(item) {
+  return String(item?._temporalText || '').trim();
+}
+
+function recentMetadataRuleKey(metadata, username = '') {
+  return [username, metadata?.artist, metadata?.track, metadata?.album]
+    .map(value => normalizeMemoryPart(value || ''))
+    .join('|');
+}
+
+function getRecentOriginalMetadata(item) {
+  return item?._lastfmOriginal || {
+    artist: item?.artist?.name || '',
+    track: item?.name || '',
+    album: item?.albumName || '',
+    timestamp: item?._temporalTimestamp || 0,
+  };
+}
+
+function saveRecentMetadataRules() {
+  try { localStorage.setItem(RECENT_METADATA_RULES_STORAGE, JSON.stringify(Object.fromEntries(recentMetadataRules))); }
+  catch (_) { /* a edição continua válida nesta sessão */ }
+}
+
+function applyRecentMetadataRule(item) {
+  const original = getRecentOriginalMetadata(item);
+  const rule = recentMetadataRules.get(recentMetadataRuleKey(original, item?._recentUsername));
+  if (!rule) return item;
+  item.name = String(rule.track || original.track || '');
+  item.albumName = String(rule.album ?? original.album ?? '');
+  item.artist = { ...(item.artist || {}), name: String(rule.artist || original.artist || '') };
+  item._recentMetadataRuleApplied = true;
+  return item;
+}
+
+function parseRecentScrobbleTrack(track, username = '') {
+  if (!track) return null;
+  const nowPlaying = String(track?.['@attr']?.nowplaying || '').toLocaleLowerCase() === 'true';
+  const timestamp = Number(track?.date?.uts || 0);
+  if (!nowPlaying && (!Number.isFinite(timestamp) || timestamp <= 0)) return null;
+  const artist = track.artist?.['#text'] || track.artist?.name || '';
+  const album = track.album?.['#text'] || '';
+  const item = {
+    name: track.name || '',
+    artist: { name: artist },
+    albumName: album,
+    playcount: 1,
+    image: track.image || [],
+    _temporalType: 'recent',
+    _temporalTimestamp: nowPlaying ? 0 : timestamp,
+    _temporalText: nowPlaying ? 'Escutando agora...' : formatRecentScrobbleDate(timestamp),
+    _nowPlaying: nowPlaying,
+    _recentUsername: String(username || '').trim().toLocaleLowerCase(),
+    _lastfmOriginal: { artist, track: track.name || '', album, timestamp: nowPlaying ? 0 : timestamp },
+  };
+  return applyRecentMetadataRule(item);
+}
+
+function recentScrobbleStableKey(item) {
+  const original = getRecentOriginalMetadata(item);
+  const prefix = item?._nowPlaying ? 'now' : `at:${Number(original.timestamp || item?._temporalTimestamp || 0)}`;
+  return `${prefix}|${recentMetadataRuleKey(original, item?._recentUsername)}`;
+}
+
+async function fetchRecentScrobblePage(user, apikey, limit = 50) {
+  const safeLimit = Math.max(1, Math.min(200, Number.parseInt(limit, 10) || 50));
+  const data = await apiFetch({ method: 'user.getRecentTracks', user, api_key: apikey, limit: safeLimit, page: 1, extended: 0 });
+  const raw = data?.recenttracks?.track || [];
+  return (Array.isArray(raw) ? raw : (raw ? [raw] : []))
+    .map(track => parseRecentScrobbleTrack(track, user))
+    .filter(Boolean)
+    .sort((a, b) => Number(Boolean(b._nowPlaying)) - Number(Boolean(a._nowPlaying)));
+}
+
+async function getRecentScrobbleItems(user, apikey, maxItems = 50) {
+  const target = Math.max(1, Number.parseInt(maxItems, 10) || 50);
+  const pageSize = Math.min(200, target);
+  const out = [];
+  let page = 1;
+  let totalPages = 1;
+
+  while (page <= totalPages && out.length < target) {
+    checkCancel();
+    showStatus(`Buscando scrobbles recentes... página ${page}${totalPages > 1 ? '/' + totalPages : ''}`);
+    const data = await apiFetch({
+      method: 'user.getRecentTracks', user, api_key: apikey,
+      limit: pageSize, page, extended: 0,
+    });
+    const container = data?.recenttracks;
+    const raw = container?.track || [];
+    const tracks = Array.isArray(raw) ? raw : (raw ? [raw] : []);
+    totalPages = Number.parseInt(container?.['@attr']?.totalPages || '1', 10) || 1;
+    tracks.forEach(track => {
+      if (out.length >= target) return;
+      const item = parseRecentScrobbleTrack(track, user);
+      if (item) out.push(item);
+    });
+    if (!tracks.length) break;
+    page++;
+  }
+  return out.sort((a, b) => Number(Boolean(b._nowPlaying)) - Number(Boolean(a._nowPlaying)));
+}
+
+async function getRecentObsessionItems(user, maxItems = 50) {
+  checkCancel();
+  showStatus('Buscando obsessões recentes...');
+  const params = new URLSearchParams({ user, limit: String(Math.max(1, Number.parseInt(maxItems, 10) || 50)) });
+  const response = await fetch(`/api/obsessions?${params.toString()}`, {
+    headers: { Accept: 'application/json' },
+    signal: window._genSignal || undefined,
+  });
+  let payload = {};
+  try { payload = await response.json(); }
+  catch (_) { /* resposta inválida tratada abaixo */ }
+  if (!response.ok) throw new Error(payload.error || `Falha ao buscar obsessões (${response.status}).`);
+  return (Array.isArray(payload.obsessions) ? payload.obsessions : []).map(item => ({
+    name: item.name || '',
+    artist: { name: item.artist || '' },
+    albumName: '',
+    playcount: 1,
+    image: item.image ? [{ '#text': item.image, size: 'extralarge' }] : [],
+    url: item.trackUrl || '',
+    _temporalType: 'obsessions',
+    _temporalDate: item.dateIso || '',
+    _temporalText: formatObsessionDate(item.dateIso, item.date),
+  }));
+}
+
 async function getTopItemsPaged(user, apikey, type, period, maxItems = 1000, onPage) {
   const methodMap = { artists:'user.gettopartists', albums:'user.gettopalbums', tracks:'user.gettoptracks' };
   const keyMap = { artists:['topartists','artist'], albums:['topalbums','album'], tracks:['toptracks','track'] };
@@ -10724,6 +10993,7 @@ async function getTopItemsPaged(user, apikey, type, period, maxItems = 1000, onP
 async function enrichItemImages(items, type, apikey) {
   if (type === 'albums') return items;
   const BATCH = 5;
+  const trackInfoRequests = new Map();
   for (let i = 0; i < items.length; i += BATCH) {
     checkCancel();
     const batch = items.slice(i, i + BATCH);
@@ -10744,7 +11014,14 @@ async function enrichItemImages(items, type, apikey) {
           }
         } else if (type === 'tracks') {
           const artistName = item.artist?.name || item.artist?.['#text'] || '';
-          const d = await apiFetch({ method: 'track.getInfo', artist: artistName, track: item.name, api_key: apikey, autocorrect: 1 });
+          const requestKey = `${artistName}|${item.name || ''}`.toLocaleLowerCase();
+          if (!trackInfoRequests.has(requestKey)) {
+            trackInfoRequests.set(requestKey, apiFetch({
+              method: 'track.getInfo', artist: artistName, track: item.name,
+              api_key: apikey, autocorrect: 1,
+            }).catch(() => null));
+          }
+          const d = await trackInfoRequests.get(requestKey);
           const imgs = d?.track?.album?.image || [];
           const albumTitle = d?.track?.album?.title || '';
           if (albumTitle) item.albumName = albumTitle;
@@ -10979,14 +11256,18 @@ async function getSpecificArtistItems(user, apikey, subtype, period, limit) {
 // IMAGE LOADING
 // ─────────────────────────────────────────────────────────────
 
-// Extrai a melhor URL do array image[] da Last.fm (funciona só pra álbuns na prática)
-function extractLastfmImage(item) {
-  const imgs = item.image || [];
+function extractBestLastfmImage(imgs = []) {
   for (const sz of ['extralarge','large','mega']) {
     const f = imgs.find(i => i.size === sz);
-    if (f?.['#text']) return f['#text'];
+    if (f?.['#text'] && !f['#text'].includes(LASTFM_PLACEHOLDER_HASH)) return f['#text'];
   }
-  return imgs[imgs.length - 1]?.['#text'] || '';
+  const fallback = imgs[imgs.length - 1]?.['#text'] || '';
+  return fallback.includes(LASTFM_PLACEHOLDER_HASH) ? '' : fallback;
+}
+
+// Extrai a melhor URL do array image[] da Last.fm (funciona só pra álbuns na prática)
+function extractLastfmImage(item) {
+  return extractBestLastfmImage(item.image || []);
 }
 
 // Busca imagem via Deezer Search (CORS aberto — tenta direto primeiro, depois proxy)
@@ -11054,7 +11335,41 @@ async function fetchTrackImageDeezer(artistName, trackName) {
 
 const LASTFM_PLACEHOLDER_HASH = '2a96cbd8b46e442fc41c2b86b821562f';
 const resolvedImageUrlCache = new Map();
+const sharedResolvedImageCache = new Map();
+const lastfmAlbumImageCache = new Map();
 const fanartResponseCache = new Map();
+
+function getSharedImageKeys(item, type) {
+  const artist = item?.artist?.name || item?.artist?.['#text'] || (type === 'artists' ? item?.name : '') || '';
+  const album = type === 'albums' ? item?.name || '' : item?.albumName || item?.album?.title || item?.album?.['#text'] || '';
+  const track = type === 'tracks' ? item?.name || '' : '';
+  const keys = [];
+  if (album) keys.push(`album|${normalizeMemoryPart(artist)}|${normalizeMemoryPart(album)}`);
+  if (track) keys.push(`track|${normalizeMemoryPart(artist)}|${normalizeMemoryPart(track)}`);
+  if (type === 'artists' && artist) keys.push(`artist|${normalizeMemoryPart(artist)}`);
+  return keys;
+}
+
+function rememberSharedResolvedImage(item, type, source, url) {
+  if (!url || !source) return;
+  getSharedImageKeys(item, type).forEach(key => {
+    if (!sharedResolvedImageCache.has(key)) sharedResolvedImageCache.set(key, new Map());
+    sharedResolvedImageCache.get(key).set(source, url);
+  });
+}
+
+async function getSharedResolvedImage(item, type, sources) {
+  for (const source of sources) {
+    for (const key of getSharedImageKeys(item, type)) {
+      const url = sharedResolvedImageCache.get(key)?.get(source) || '';
+      if (!url) continue;
+      const image = await loadImage(url).catch(() => null);
+      if (image) return url;
+      sharedResolvedImageCache.get(key)?.delete(source);
+    }
+  }
+  return '';
+}
 
 function getFanartApiKey() {
   return document.getElementById('fanart-apikey')?.value?.trim() || '';
@@ -11132,31 +11447,45 @@ async function fetchArtistImageLastfmPage(artistName) {
   return '';
 }
 
-// Fallback final de segurança para tracks — Last.fm track.getInfo (sempre
-// tentado por último, mesmo se "Last.fm" não estiver marcado como fonte
-// de tracks, pra reduzir chance de tile sem imagem nenhuma).
+// Em Recentes o álbum já é conhecido. Consultar album.getInfo diretamente é
+// mais preciso e mais barato do que procurar a faixa em outras plataformas.
+async function fetchAlbumImageLastfmFallback(artistName, albumName, apikey) {
+  if (!artistName || !albumName) return '';
+  const cacheKey = `${normalizeMemoryPart(artistName)}|${normalizeMemoryPart(albumName)}`;
+  if (lastfmAlbumImageCache.has(cacheKey)) return await lastfmAlbumImageCache.get(cacheKey);
+  const request = (async () => {
+    try {
+      const d = await apiFetch({ method: 'album.getInfo', artist: artistName, album: albumName, api_key: apikey, autocorrect: 1 });
+      return extractBestLastfmImage(d?.album?.image || []);
+    } catch(e) { return ''; }
+  })();
+  lastfmAlbumImageCache.set(cacheKey, request);
+  const url = await request;
+  if (!url) lastfmAlbumImageCache.delete(cacheKey);
+  return url;
+}
+
+// Último fallback do Last.fm para faixas cujo álbum não resolveu diretamente.
 async function fetchTrackImageLastfmFallback(artistName, trackName, apikey) {
   try {
     const d = await apiFetch({ method: 'track.getInfo', artist: artistName, track: trackName, api_key: apikey, autocorrect: 1 });
-    const imgs = d?.track?.album?.image || [];
-    for (const sz of ['extralarge','large','mega','medium']) {
-      const f = imgs.find(i => i.size === sz);
-      if (f?.['#text'] && !f['#text'].includes(LASTFM_PLACEHOLDER_HASH)) return f['#text'];
-    }
+    return extractBestLastfmImage(d?.track?.album?.image || []);
   } catch(e) { /* sem imagem */ }
   return '';
 }
 
 // Resolve a URL final da imagem, tentando as fontes selecionadas pelo
 // usuário na ordem configurada (Fontes de Imagem, na sidebar) até uma dar certo.
-function getImageSourceConfigForDraw(type) {
-  const saved = getRenderedQueryState()?.sources?.[type];
-  if (saved) return { order: saved.order || [], active: new Set(saved.active || []) };
-  return { order: getSourceOrder(type), active: imageSources[type] || new Set() };
+function getImageSourceConfigForDraw(type, item = null) {
+  const query = getRenderedQueryState();
+  const sourceType = query?.mode === 'recent' || item?._temporalType === 'recent' ? 'recent' : type;
+  const saved = query?.sources?.[sourceType];
+  if (saved) return { sourceType, order: saved.order || [], active: new Set(saved.active || []) };
+  return { sourceType, order: getSourceOrder(sourceType), active: imageSources[sourceType] || new Set() };
 }
 
-function isImageSourceEnabledForDraw(type, source) {
-  return getImageSourceConfigForDraw(type).active.has(source);
+function isImageSourceEnabledForDraw(type, source, item = null) {
+  return getImageSourceConfigForDraw(type, item).active.has(source);
 }
 
 async function resolveImageUrl(item, type, apikey) {
@@ -11171,10 +11500,50 @@ async function resolveImageUrl(item, type, apikey) {
 
   const artistName = item.artist?.name || item.artist?.['#text'] || item.name || '';
   const itemName = item.name || '';
-  const sourceConfig = getImageSourceConfigForDraw(type);
+  const sourceConfig = getImageSourceConfigForDraw(type, item);
   const sources = sourceConfig.order.filter(source => sourceConfig.active.has(source));
-  const cacheKey = [type, artistName, itemName, sources.join('>')].join('|').toLowerCase();
+  const cacheKey = [sourceConfig.sourceType, type, artistName, item.albumName || '', itemName, sources.join('>')].join('|').toLowerCase();
   if (resolvedImageUrlCache.has(cacheKey)) return resolvedImageUrlCache.get(cacheKey);
+  const sharedUrl = await getSharedResolvedImage(item, type, sources);
+  if (sharedUrl) {
+    resolvedImageUrlCache.set(cacheKey, sharedUrl);
+    return sharedUrl;
+  }
+
+  // Recentes precisa aparecer imediatamente. Primeiro usa a capa devolvida por
+  // user.getRecentTracks; depois consulta o álbum conhecido no Last.fm e só
+  // então usa track.getInfo como último fallback da própria fonte.
+  if (item?._temporalType === 'recent' && sourceConfig.active.has('lastfm')) {
+    const directLastfmUrl = extractLastfmImage(item);
+    if (directLastfmUrl && !directLastfmUrl.includes(LASTFM_PLACEHOLDER_HASH)) {
+      const directImage = await loadImage(directLastfmUrl).catch(() => null);
+      if (directImage) {
+        resolvedImageUrlCache.set(cacheKey, directLastfmUrl);
+        rememberSharedResolvedImage(item, type, 'lastfm', directLastfmUrl);
+        return directLastfmUrl;
+      }
+    }
+    if (item.albumName) {
+      const albumLastfmUrl = await fetchAlbumImageLastfmFallback(artistName, item.albumName, apikey);
+      if (albumLastfmUrl) {
+        const albumImage = await loadImage(albumLastfmUrl).catch(() => null);
+        if (albumImage) {
+          resolvedImageUrlCache.set(cacheKey, albumLastfmUrl);
+          rememberSharedResolvedImage(item, type, 'lastfm', albumLastfmUrl);
+          return albumLastfmUrl;
+        }
+      }
+    }
+    const trackLastfmUrl = await fetchTrackImageLastfmFallback(artistName, itemName, apikey);
+    if (trackLastfmUrl) {
+      const trackImage = await loadImage(trackLastfmUrl).catch(() => null);
+      if (trackImage) {
+        resolvedImageUrlCache.set(cacheKey, trackLastfmUrl);
+        rememberSharedResolvedImage(item, type, 'lastfm', trackLastfmUrl);
+        return trackLastfmUrl;
+      }
+    }
+  }
 
   for (const source of sources) {
     try {
@@ -11206,6 +11575,7 @@ async function resolveImageUrl(item, type, apikey) {
         const verifiedImage = await loadImage(url).catch(() => null);
         if (verifiedImage) {
           resolvedImageUrlCache.set(cacheKey, url);
+          rememberSharedResolvedImage(item, type, source, url);
           return url;
         }
         console.warn(`Imagem da fonte "${source}" não carregou para "${itemName}"; tentando a próxima fonte.`);
@@ -11246,7 +11616,7 @@ async function prefetchPoolImages(type, apikey) {
 
 const decodedImageCache = new Map();
 const imageLoadPromiseCache = new Map();
-const MAX_DECODED_IMAGE_CACHE = 180;
+const MAX_DECODED_IMAGE_CACHE = 512;
 
 async function loadImage(src) {
   if (!src) return null;
@@ -11275,6 +11645,208 @@ async function loadImage(src) {
   }
 }
 
+async function loadRecentImagesProgressively(type, apikey) {
+  const myGen = ++prefetchGen;
+  const visibleIndices = currentItems
+    .map(item => allFetchedItems.indexOf(item))
+    .filter(index => index >= 0);
+  const visibleSet = new Set(visibleIndices);
+  const reserveIndices = allFetchedItems
+    .map((_, index) => index)
+    .filter(index => !visibleSet.has(index));
+  let visibleLoaded = visibleIndices.filter(index => poolImageCache.has(index)).length;
+
+  const loadIndex = async (index, visible) => {
+    if (myGen !== prefetchGen) return;
+    if (deletedPoolIndices.has(index) || poolImageCache.has(index)) return;
+    const item = allFetchedItems[index];
+    try {
+      const url = await resolveImageUrl(item, type, apikey);
+      if (myGen !== prefetchGen) return;
+      const image = url ? await loadImage(url).catch(() => null) : null;
+      if (myGen !== prefetchGen) return;
+      poolImageCache.set(index, image || null);
+    } catch (error) {
+      if (error.message === 'cancelled' || myGen !== prefetchGen) return;
+      poolImageCache.set(index, null);
+    }
+
+    if (visible) {
+      visibleLoaded++;
+      showStatus(`Carregando imagens... ${visibleLoaded}/${visibleIndices.length}`);
+      redrawIfReady();
+      // Entrega um frame ao navegador para a capa aparecer antes de seguir.
+      await new Promise(resolve => requestAnimationFrame(() => resolve()));
+    } else {
+      await new Promise(resolve => setTimeout(resolve, 30));
+    }
+  };
+
+  const runPhase = async (indices, concurrency, visible) => {
+    let cursor = 0;
+    const worker = async () => {
+      while (cursor < indices.length && myGen === prefetchGen) {
+        const index = indices[cursor++];
+        await loadIndex(index, visible);
+      }
+    };
+    const workerCount = Math.min(concurrency, indices.length);
+    await Promise.all(Array.from({ length: workerCount }, () => worker()));
+  };
+
+  // Quatro capas visíveis em paralelo: rápido, mas sem disparar dezenas de
+  // proxies/APIs de uma vez. Reservas seguem depois com apenas dois workers.
+  await runPhase(visibleIndices, 4, true);
+  await runPhase(reserveIndices, 2, false);
+
+  if (myGen === prefetchGen) {
+    redrawIfReady();
+    document.getElementById('status').style.display = 'none';
+  }
+}
+
+function recentItemsSignature(items) {
+  return items.map(item => [
+    recentScrobbleStableKey(item), item.name, item.albumName, item.artist?.name,
+    item._temporalText, Boolean(item._lastfmDeleted),
+  ].join('~')).join('||');
+}
+
+function remapRecentIndexedState(oldItems, newItems) {
+  const newIndexByItem = new Map(newItems.map((item, index) => [item, index]));
+  const remapMap = source => {
+    const target = new Map();
+    source.forEach((value, oldIndex) => {
+      const item = oldItems[Number(oldIndex)];
+      const nextIndex = newIndexByItem.get(item);
+      if (nextIndex !== undefined) target.set(nextIndex, value);
+    });
+    return target;
+  };
+  const remapObject = source => {
+    const target = {};
+    Object.entries(source || {}).forEach(([oldIndex, value]) => {
+      const item = oldItems[Number(oldIndex)];
+      const nextIndex = newIndexByItem.get(item);
+      if (nextIndex !== undefined) target[nextIndex] = value;
+    });
+    return target;
+  };
+  poolImageCache = remapMap(poolImageCache);
+  deletedImagePreviewCache = remapMap(deletedImagePreviewCache);
+  customImages = remapObject(customImages);
+  customImageRefs = remapObject(customImageRefs);
+  customTexts = remapObject(customTexts);
+  customPlays = remapObject(customPlays);
+  deletedPoolIndices = new Set([...deletedPoolIndices]
+    .map(oldIndex => newIndexByItem.get(oldItems[oldIndex]))
+    .filter(index => index !== undefined));
+}
+
+function reconcileRecentItems(freshItems, maximumPoolSize) {
+  const oldItems = allFetchedItems.slice();
+  const before = recentItemsSignature(oldItems);
+  const oldByKey = new Map(oldItems.map(item => [recentScrobbleStableKey(item), item]));
+  const used = new Set();
+  const next = [];
+
+  freshItems.forEach(fresh => {
+    const key = recentScrobbleStableKey(fresh);
+    const existing = oldByKey.get(key);
+    if (existing) {
+      const preserved = { deleted: existing._lastfmDeleted, deleting: existing._lastfmDeleting };
+      Object.assign(existing, fresh);
+      if (preserved.deleted) existing._lastfmDeleted = true;
+      if (preserved.deleting) existing._lastfmDeleting = true;
+      next.push(existing);
+    } else {
+      next.push(fresh);
+    }
+    used.add(key);
+  });
+
+  oldItems.forEach(item => {
+    const key = recentScrobbleStableKey(item);
+    if (used.has(key) || item._nowPlaying) return;
+    next.push(item);
+  });
+
+  const limited = next.slice(0, Math.max(maximumPoolSize, currentItems.length, 1));
+  remapRecentIndexedState(oldItems, limited);
+  allFetchedItems = limited;
+  const { cols, rows } = getDrawGrid();
+  currentItems = limited.slice(0, cols * rows);
+  return before !== recentItemsSignature(limited);
+}
+
+async function loadRecentImageIndices(indices, apikey, liveGeneration) {
+  const queue = [...new Set(indices)].filter(index => index >= 0 && !poolImageCache.has(index));
+  let cursor = 0;
+  const worker = async () => {
+    while (cursor < queue.length && liveGeneration === recentLiveGeneration) {
+      const index = queue[cursor++];
+      const item = allFetchedItems[index];
+      if (!item) continue;
+      try {
+        const url = await resolveImageUrl(item, 'tracks', apikey);
+        if (liveGeneration !== recentLiveGeneration || allFetchedItems[index] !== item) return;
+        const image = url ? await loadImage(url).catch(() => null) : null;
+        if (liveGeneration !== recentLiveGeneration || allFetchedItems[index] !== item) return;
+        poolImageCache.set(index, image);
+      } catch (_) {
+        if (liveGeneration !== recentLiveGeneration) return;
+        poolImageCache.set(index, null);
+      }
+      redrawIfReady();
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(3, queue.length) }, () => worker()));
+}
+
+function stopRecentLiveUpdates() {
+  recentLiveGeneration++;
+  recentLiveBusy = false;
+  clearTimeout(recentLiveTimer);
+  recentLiveTimer = null;
+}
+
+function startRecentLiveUpdates(user, apikey) {
+  stopRecentLiveUpdates();
+  const liveGeneration = recentLiveGeneration;
+  const poolSize = Math.max(allFetchedItems.length, getDrawGrid().cols * getDrawGrid().rows + 20);
+
+  const poll = async () => {
+    if (liveGeneration !== recentLiveGeneration || getRenderedQueryState()?.mode !== 'recent') return;
+    if (!recentLiveBusy) {
+      recentLiveBusy = true;
+      try {
+        const previousKeys = new Set(allFetchedItems.map(recentScrobbleStableKey));
+        const fresh = await fetchRecentScrobblePage(user, apikey, Math.min(100, poolSize));
+        if (liveGeneration !== recentLiveGeneration) return;
+        const newScrobbles = fresh.filter(item => !item._nowPlaying && !previousKeys.has(recentScrobbleStableKey(item)));
+        if (reconcileRecentItems(fresh, poolSize)) {
+          await runDraw();
+          const visibleIndices = currentItems.map(item => allFetchedItems.indexOf(item));
+          loadRecentImageIndices(visibleIndices, apikey, liveGeneration).catch(() => {});
+          scheduleDownloadRefresh();
+          if (newScrobbles.length) {
+            const newest = newScrobbles[0];
+            appendStatusHistoryEntry(`Novo scrobble: ${newest.artist?.name || ''} — ${newest.name || ''}.`);
+            triggerHapticFeedback('short');
+          }
+        }
+      } catch (error) {
+        if (error.message !== 'cancelled') console.warn('Atualização de Recentes:', error.message);
+      } finally {
+        recentLiveBusy = false;
+      }
+    }
+    if (liveGeneration === recentLiveGeneration) recentLiveTimer = setTimeout(poll, RECENT_LIVE_INTERVAL);
+  };
+
+  recentLiveTimer = setTimeout(poll, RECENT_LIVE_INTERVAL);
+}
+
 async function loadImageUncached(src) {
   if (!src) return null;
 
@@ -11288,9 +11860,17 @@ async function loadImageUncached(src) {
   }
 
   const isYouTube = src.includes('yt3.ggpht.com') || src.includes('yt3.googleusercontent.com') || src.includes('ytimg.com');
-  const attempts = isYouTube
+  const isLastfm = /(^|\.)((freetls\.fastly\.net)|(last\.fm)|(lst\.fm)|(akamaized\.net))$/i.test((() => {
+    try { return new URL(src).hostname; } catch (_) { return ''; }
+  })());
+  const localLastfmProxy = isLastfm && location.protocol !== 'file:'
+    ? `/api/lastfm-image?url=${encodeURIComponent(src)}`
+    : '';
+  const attempts = (isYouTube
     ? [ src, `https://corsproxy.io/?${encodeURIComponent(src)}`, `https://api.allorigins.win/raw?url=${encodeURIComponent(src)}` ]
-    : [ src, ...IMAGE_PROXIES.map(fn => fn(src)) ];
+    : isLastfm
+      ? [ localLastfmProxy, src, ...IMAGE_PROXIES.map(fn => fn(src)) ]
+      : [ src, ...IMAGE_PROXIES.map(fn => fn(src)) ]).filter(Boolean);
 
   for (const url of attempts) {
     try {
@@ -11442,7 +12022,10 @@ function getHeaderLabel(type, mode, period, dateFrom, dateTo) {
     dateTo = queryState.dateTo;
   }
   const userLabel = (document.getElementById('username')?.value || '').trim();
-  const labelType = type === 'specific_artists'
+  const temporalMode = type === 'recent' || type === 'obsessions';
+  const labelType = temporalMode
+    ? type
+    : type === 'specific_artists'
     ? (queryState?.specificSubType || specificSubType || 'albums')
     : (queryState?.effectiveType || type);
   const label = headerUseUsernameLabel && headerUsernameOverlayTitle && userLabel
@@ -11451,6 +12034,8 @@ function getHeaderLabel(type, mode, period, dateFrom, dateTo) {
   let subtitle;
   if (headerSubtitleOverride !== null && headerSubtitleOverride.trim() !== '') {
     subtitle = headerSubtitleOverride.trim();
+  } else if (temporalMode) {
+    return label;
   } else if (mode==='custom') {
     const from = dateFrom.split('-').reverse().join('/');
     const to   = dateTo.split('-').reverse().join('/');
@@ -12533,9 +13118,13 @@ async function drawCollage(items, type, cols, rows, headerLabel, apikey, accentO
     type = queryState.effectiveType;
     cols = queryState.cols;
     rows = queryState.rows;
-    accentOverride = queryState.mode === 'new_artists'
-      ? COLORS.new_artists
-      : (queryState.mode === 'specific_artists' ? COLORS.specific_artists : undefined);
+    const modeAccent = {
+      new_artists: COLORS.new_artists,
+      specific_artists: COLORS.specific_artists,
+      recent: COLORS.recent,
+      obsessions: COLORS.obsessions,
+    };
+    accentOverride = modeAccent[queryState.mode];
   }
   updateCutModeExamples(items, type);
   const liveCanvas = document.getElementById('collage-canvas');
@@ -12909,14 +13498,15 @@ async function drawCollage(items, type, cols, rows, headerLabel, apikey, accentO
     ctx.font = `${PLAYS_FONT_WEIGHT} ${fontPlays}px ${PLAYS_FONT_FAMILY}`;
     ctx.textBaseline = 'alphabetic';
     const playsHex   = playsColorOverride ?? accent;
-    const playsNum   = Number(plays).toLocaleString('pt-BR');
+    const temporalMetric = getTemporalMetricText(item);
+    const playsNum   = temporalMetric || Number(plays).toLocaleString('pt-BR');
     // Posição do número em relação ao(s) texto(s): esquerda = número antes
     // (padrão, ex: "16 scrobbles"), direita = texto antes (ex: "scrobbles 16"),
     // centro = número no meio, Texto 1 à esquerda e Texto 2 à direita.
-    const playsText =
+    const playsText = temporalMetric || (
       numberPos === 'right'  ? [scrobblesLabel, playsNum].filter(Boolean).join(' ') :
       numberPos === 'center' ? [scrobblesLabel, playsNum, scrobblesLabel2].filter(Boolean).join(' ') :
-      /* left */               [playsNum, scrobblesLabel].filter(Boolean).join(' ');
+      /* left */               [playsNum, scrobblesLabel].filter(Boolean).join(' '));
     const playsEntry = { text: playsText, drawX: playsDrawX, drawY: textBottom };
 
     let albumLines = [];
@@ -13070,6 +13660,18 @@ async function drawCollage(items, type, cols, rows, headerLabel, apikey, accentO
 
     ctx.font = mainFont; ctx.fillStyle = mainFill; ctx.textAlign = alignByKind.main;
     for (const e of mainEntries) ctx.fillText(e.text, e.drawX, e.drawY);
+
+    if (item._lastfmDeleted) {
+      const overlayFont = Math.max(16, Math.round(tileH * 0.085));
+      ctx.fillStyle = 'rgba(0,0,0,0.76)';
+      ctx.fillRect(x, y, tileW, tileH);
+      drawCanvasTrashIcon(ctx, x + tileW / 2, y + tileH / 2 - overlayFont * 0.8, overlayFont * 1.15, '#ff8b8b');
+      ctx.fillStyle = '#ff8b8b';
+      ctx.font = `bold ${overlayFont}px Inter, Arial, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('Excluído', x + tileW / 2, y + tileH / 2 + overlayFont * 0.72);
+    }
     }
 
     ctx.restore();
@@ -13357,12 +13959,13 @@ function getStandaloneTileTextModel(item, type, accent) {
     ? (override.album !== undefined ? override.album : getItemAlbumName(item, type))
     : type === 'albums' ? mainName : '';
   const plays = getEffectivePoolPlays(item, poolIdx) || '?';
-  const playsNumber = Number(plays).toLocaleString('pt-BR');
-  const playsText = numberPos === 'right'
+  const temporalMetric = getTemporalMetricText(item);
+  const playsNumber = temporalMetric || Number(plays).toLocaleString('pt-BR');
+  const playsText = temporalMetric || (numberPos === 'right'
     ? [scrobblesLabel, playsNumber].filter(Boolean).join(' ')
     : numberPos === 'center'
       ? [scrobblesLabel, playsNumber, scrobblesLabel2].filter(Boolean).join(' ')
-      : [playsNumber, scrobblesLabel].filter(Boolean).join(' ');
+      : [playsNumber, scrobblesLabel].filter(Boolean).join(' '));
 
   const measureContext = document.createElement('canvas').getContext('2d');
   const maxWidth = TILE_SIZE - Math.round(TILE_SIZE * 0.067) * 2;
@@ -13858,12 +14461,15 @@ function getDrawType() {
   if (state) return state.effectiveType;
   if (currentType === 'new_artists') return newSubType || 'artists';
   if (currentType === 'specific_artists') return specificSubType || 'albums';
+  if (isTemporalCollageType()) return 'tracks';
   return currentType;
 }
 function getDrawAccentOverride() {
   const mode = getRenderedQueryState()?.mode || currentType;
   if (mode === 'new_artists') return COLORS.new_artists;
   if (mode === 'specific_artists') return COLORS.specific_artists;
+  if (mode === 'recent') return COLORS.recent;
+  if (mode === 'obsessions') return COLORS.obsessions;
   return undefined;
 }
 
@@ -13937,6 +14543,7 @@ async function generate() {
   const user   = document.getElementById('username').value.trim();
   const apikey = document.getElementById('apikey').value.trim();
   if (!user) { showStatus('Preencha o usuário.', true); return; }
+  stopRecentLiveUpdates();
 
   const cols = parseInt(document.getElementById('cols').value);
   const rows = parseInt(document.getElementById('rows').value);
@@ -13973,11 +14580,20 @@ async function generate() {
     let items = [];
     const isNewMode = currentType === 'new_artists';
     const isSpecificMode = currentType === 'specific_artists';
-    const effectiveType = isNewMode ? newSubType : (isSpecificMode ? specificSubType : currentType);
+    const isRecentMode = currentType === 'recent';
+    const isObsessionsMode = currentType === 'obsessions';
+    const isTemporalMode = isRecentMode || isObsessionsMode;
+    const effectiveType = isNewMode ? newSubType : (isSpecificMode ? specificSubType : (isTemporalMode ? 'tracks' : currentType));
     canonicalLastfmUsername = user;
     const canonicalUsernamePromise = resolveCanonicalLastfmUsername(user, apikey);
 
-    if (isSpecificMode) {
+    if (isRecentMode) {
+      items = await getRecentScrobbleItems(user, apikey, limit);
+    } else if (isObsessionsMode) {
+      items = await getRecentObsessionItems(user, limit);
+      showStatus('Buscando imagens...');
+      items = await enrichItemImages(items, 'tracks', apikey);
+    } else if (isSpecificMode) {
       if (!selectedSpecificArtists.length) { showStatus('Escolha pelo menos um artista específico.', true); setLoading(false); return; }
       items = await getSpecificArtistItems(user, apikey, specificSubType, currentPeriod, limit);
       showStatus('Buscando imagens...');
@@ -14013,9 +14629,17 @@ async function generate() {
     }
 
     if (!items.length) { showStatus('Nenhum dado encontrado para esse período.', true); setLoading(false); return; }
-    canonicalLastfmUsername = await canonicalUsernamePromise;
+    if (isRecentMode) {
+      // A grafia canônica só afeta links; não deve atrasar a primeira pintura.
+      canonicalUsernamePromise.then(canonical => {
+        const activeUser = document.getElementById('username')?.value?.trim().toLocaleLowerCase();
+        if (activeUser === user.toLocaleLowerCase()) canonicalLastfmUsername = canonical;
+      });
+    } else {
+      canonicalLastfmUsername = await canonicalUsernamePromise;
+    }
 
-    showStatus('Carregando imagens...');
+    showStatus(isRecentMode ? 'Montando informações...' : 'Carregando imagens...');
     const dateFrom = periodMode==='custom' ? document.getElementById('date-from').value : null;
     const dateTo   = periodMode==='custom' ? document.getElementById('date-to').value   : null;
     const typeLabels = { artists: 'Artistas', albums: 'Álbuns', tracks: 'Faixas' };
@@ -14049,7 +14673,16 @@ async function generate() {
     _redrawPending = false;
     _isDrawing = true;
     try {
-      await drawCollage(currentItems, effectiveType, cols, rows, header, apikey, isNewMode ? COLORS.new_artists : (isSpecificMode ? COLORS.specific_artists : undefined));
+      await drawCollage(
+        currentItems,
+        effectiveType,
+        cols,
+        rows,
+        header,
+        apikey,
+        getDrawAccentOverride(),
+        isRecentMode ? { cacheOnlyImages: true } : {}
+      );
     } finally {
       _isDrawing = false;
       if (_redrawPending) { _redrawPending = false; runDraw(); }
@@ -14070,9 +14703,15 @@ async function generate() {
     dlBtn.classList.add('visible');
     scheduleDownloadRefresh(0);
 
-    // Pré-carrega em segundo plano as imagens dos itens reserva do pool —
-    // não espera terminar (fire-and-forget), só deixa rodando por trás
-    prefetchPoolImages(effectiveType, apikey);
+    // Recentes mostra textos primeiro e completa as capas visíveis em fila.
+    // Os outros modos mantêm o pré-carregamento tradicional dos reservas.
+    if (isRecentMode) {
+      loadRecentImagesProgressively(effectiveType, apikey).catch(error => {
+        if (error.message !== 'cancelled') console.warn('Carregamento progressivo de Recentes:', error);
+      });
+      startRecentLiveUpdates(user, apikey);
+    }
+    else prefetchPoolImages(effectiveType, apikey);
 
     // Geração deu certo — salva o par usuário/chave pra autocompletar depois
     captureCurrentCollageMemory();
@@ -15149,13 +15788,30 @@ const editTextAlbum   = document.getElementById('edit-text-album');
 const editTextAlbumWrap = document.getElementById('edit-text-album-wrap');
 const editTextSub     = document.getElementById('edit-text-sub');
 const editTextSubWrap = document.getElementById('edit-text-sub-wrap');
+const tileImageSection = document.getElementById('tile-image-section');
+const tileMergeActions = document.getElementById('tile-merge-actions');
+const recentMetadataActions = document.getElementById('recent-metadata-actions');
+const recentMetadataFuture = document.getElementById('recent-metadata-future');
+const recentMetadataReplace = document.getElementById('recent-metadata-replace');
+const recentMetadataSave = document.getElementById('recent-metadata-save');
+const recentScrobbleDelete = document.getElementById('edit-scrobble-delete');
+const recentLastfmAuthorize = document.getElementById('recent-lastfm-authorize');
+const recentMetadataStatus = document.getElementById('recent-metadata-status');
 const fanartPickerBtn = document.getElementById('fanart-picker-btn');
 const editLastfmLinkBtn = document.getElementById('edit-lastfm-link');
 const fanartPickerOverlay = document.getElementById('fanart-picker-overlay');
 const fanartPickerGrid = document.getElementById('fanart-picker-grid');
 const fanartPickerStatus = document.getElementById('fanart-picker-status');
 
-function syncTileConfigTextFields(type) {
+function syncTileConfigTextFields(type, recentMode = false) {
+  if (recentMode) {
+    editTextMainLabel.textContent = 'Faixa';
+    [editTextMainWrap, editTextAlbumWrap, editTextSubWrap].forEach(field => {
+      field.style.display = 'flex';
+      tileTextFields.appendChild(field);
+    });
+    return;
+  }
   const lines = tileLineOrder[type] || TILE_LINE_DEFAULTS[type] || [];
   const fieldsByKind = type === 'tracks'
     ? { main: editTextMainWrap, album: editTextAlbumWrap, sub: editTextSubWrap }
@@ -15206,7 +15862,21 @@ function openTextEditModal(index) {
   } else {
     editTextSub.value = override.sub !== undefined ? override.sub : originalSub;
   }
-  syncTileConfigTextFields(effectiveType);
+  const recentMode = isRecentCollageRendered();
+  syncTileConfigTextFields(effectiveType, recentMode);
+  tileImageSection.style.display = 'flex';
+  tileMergeActions.style.display = recentMode ? 'none' : 'flex';
+  document.getElementById('edit-tile-delete').style.display = recentMode ? 'none' : '';
+  document.getElementById('edit-text-save').style.display = recentMode ? 'none' : '';
+  recentMetadataActions.style.display = recentMode ? 'flex' : 'none';
+  recentMetadataFuture.checked = true;
+  recentMetadataReplace.checked = true;
+  recentMetadataReplace.disabled = Boolean(item._nowPlaying);
+  recentScrobbleDelete.disabled = Boolean(item._nowPlaying || item._lastfmDeleted);
+  recentScrobbleDelete.textContent = item._lastfmDeleted ? 'SCROBBLE EXCLUÍDO' : 'EXCLUIR SCROBBLE';
+  recentMetadataStatus.style.display = item._nowPlaying ? '' : 'none';
+  recentMetadataStatus.textContent = item._nowPlaying ? 'A faixa ainda está sendo escutada; ela poderá ser alterada ou excluída quando virar um scrobble.' : '';
+  if (recentMode) refreshRecentMetadataAuthUi();
   fanartPickerBtn.style.display = effectiveType === 'artists' && isImageSourceEnabledForDraw('artists', 'fanart') ? '' : 'none';
   const lastfmUrl = getLastfmLibraryUrl(item, effectiveType);
   editLastfmLinkBtn.disabled = !lastfmUrl;
@@ -15232,11 +15902,96 @@ function closeTextEditModal() {
 }
 
 document.getElementById('edit-text-cancel').addEventListener('click', closeTextEditModal);
+document.getElementById('edit-text-close').addEventListener('click', closeTextEditModal);
 editLastfmLinkBtn.addEventListener('click', () => {
   const url = editLastfmLinkBtn.dataset.url || getLastfmLibraryUrl(activeClickItem, getDrawType());
   if (!url) return;
   window.open(url, '_blank', 'noopener');
   appendStatusHistoryEntry('Item aberto no Last.fm para o período selecionado.');
+});
+
+let lastfmAuthorizationPromise = null;
+
+function setRecentMetadataStatus(message, error = false) {
+  recentMetadataStatus.style.display = message ? '' : 'none';
+  recentMetadataStatus.style.color = error ? '#ff8b8b' : 'var(--muted)';
+  recentMetadataStatus.textContent = message || '';
+}
+
+async function getLastfmWriteAuthStatus() {
+  const response = await fetch('/api/lastfm-auth?action=status', { headers: { Accept: 'application/json' } });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload.error || 'Não foi possível verificar a autorização do Last.fm.');
+  return payload;
+}
+
+async function refreshRecentMetadataAuthUi() {
+  if (!isRecentCollageRendered()) return;
+  try {
+    const status = await getLastfmWriteAuthStatus();
+    recentLastfmAuthorize.style.display = status.connected ? 'none' : '';
+    if (status.connected && !activeClickItem?._nowPlaying && !recentMetadataStatus.textContent) {
+      setRecentMetadataStatus(`Conta ${status.username} autorizada para editar o histórico.`);
+    }
+  } catch (error) {
+    recentLastfmAuthorize.style.display = '';
+    setRecentMetadataStatus(error.message, true);
+  }
+}
+
+function ensureLastfmWriteAuthorization() {
+  if (lastfmAuthorizationPromise) return lastfmAuthorizationPromise;
+  lastfmAuthorizationPromise = (async () => {
+    const current = await getLastfmWriteAuthStatus().catch(() => ({ connected: false }));
+    if (current.connected) return current;
+    const popup = window.open('/api/lastfm-auth?action=start', 'collager-lastfm-auth', 'popup,width=720,height=760');
+    if (!popup) throw new Error('O navegador bloqueou a janela de autorização do Last.fm.');
+    setRecentMetadataStatus('Autorize o collager.fm na janela do Last.fm.');
+    return await new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        window.removeEventListener('message', onMessage);
+        reject(new Error('A autorização do Last.fm expirou. Tente novamente.'));
+      }, 120000);
+      function onMessage(event) {
+        if (event.origin !== location.origin || event.data?.type !== 'collager-lastfm-auth') return;
+        clearTimeout(timeout);
+        window.removeEventListener('message', onMessage);
+        if (event.data.ok) resolve({ connected: true, username: event.data.username || '' });
+        else reject(new Error(event.data.error || 'A autorização do Last.fm falhou.'));
+      }
+      window.addEventListener('message', onMessage);
+    });
+  })().finally(() => { lastfmAuthorizationPromise = null; });
+  return lastfmAuthorizationPromise;
+}
+
+async function sendLastfmWrite(payload) {
+  await ensureLastfmWriteAuthorization();
+  const response = await fetch('/api/lastfm-write', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...payload, username: getRenderedQueryState()?.username || document.getElementById('username')?.value || '' }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(data.error || 'O Last.fm não concluiu a operação.');
+    error.details = data;
+    throw error;
+  }
+  return data;
+}
+
+recentLastfmAuthorize.addEventListener('click', async () => {
+  recentLastfmAuthorize.disabled = true;
+  try {
+    const status = await ensureLastfmWriteAuthorization();
+    recentLastfmAuthorize.style.display = 'none';
+    setRecentMetadataStatus(`Conta ${status.username} autorizada para editar o histórico.`);
+  } catch (error) {
+    setRecentMetadataStatus(error.message, true);
+  } finally {
+    recentLastfmAuthorize.disabled = false;
+  }
 });
 
 function closeFanartPicker() {
@@ -15463,6 +16218,7 @@ function showTileConfigView() {
 }
 
 function showMergeSearchView() {
+  if (isRecentCollageRendered()) return;
   if (activeClickIndex === null || !activeClickItem) return;
   const type = getDrawType();
   mergeSearchTitleTypeEl.textContent = MERGE_SEARCH_TYPE_LABELS[type] || 'item';
@@ -15877,6 +16633,7 @@ mergeSearchConfirmBtn.addEventListener('click', async () => {
 
 
 document.getElementById('merge-collage-btn').addEventListener('click', () => {
+  if (isRecentCollageRendered()) return;
   if (activeClickIndex === null || !activeClickItem) return;
   mergeSourceIndex   = activeClickIndex;
   mergeSourceItem    = activeClickItem;
@@ -15911,6 +16668,7 @@ document.addEventListener('keydown', e => {
 // IDENTIDADE do item (nunca por índice/posição), então funciona igual não
 // importa como source/target foram escolhidos.
 async function executeMerge(sourceItem, targetItem) {
+  if (isRecentCollageRendered()) return false;
   const { cols, rows } = getDrawGrid();
   const gridSize = cols * rows;
 
@@ -16016,6 +16774,7 @@ function closeMergeConfirm() {
 // Ponto de entrada único usado pelo arraste: decide se mescla direto
 // (preferência "Não perguntar novamente" já ativa) ou abre a confirmação.
 async function confirmAndMerge(sourceItem, targetItem) {
+  if (isRecentCollageRendered()) return;
   if (mergeConfirmSkip) { await executeMerge(sourceItem, targetItem); return; }
   openMergeConfirm(sourceItem, targetItem);
 }
@@ -16039,6 +16798,7 @@ const deleteConfirmSkipChk  = document.getElementById('delete-confirm-skip-chk')
 let pendingDeleteItem = null;
 
 function openDeleteConfirm(item) {
+  if (isRecentCollageRendered()) return;
   pendingDeleteItem = item;
   deleteConfirmQuestion.textContent = `Você quer excluir "${item.name || ''}"?`;
   deleteConfirmSkipChk.checked = false;
@@ -16053,6 +16813,7 @@ function closeDeleteConfirm() {
 // Ponto de entrada único usado pelo arraste-pra-fora: exclui direto se a
 // preferência "Não perguntar novamente" já estiver ativa, senão confirma.
 async function confirmAndDelete(item) {
+  if (isRecentCollageRendered()) return;
   if (deleteConfirmSkip) { await executeDeleteTile(item); return; }
   openDeleteConfirm(item);
 }
@@ -16138,6 +16899,7 @@ function cancelTileDrag() {
 }
 
 mainCanvas.addEventListener('mousedown', e => {
+  if (isRecentCollageRendered()) return;
   if (e.button !== 0) return; // só botão esquerdo
   if (mergePickingActive) return; // não conflita com o modo de seleção por botão
   if (mergeConfirmOverlay.style.display === 'flex') return; // confirmação já aberta
@@ -16342,6 +17104,10 @@ function appendHistoryMetadata(container, item) {
   });
 }
 
+function getHistoryMetricText(item, plays) {
+  return getTemporalMetricText(item) || (plays ? `${Number(plays).toLocaleString('pt-BR')} scrobbles` : '');
+}
+
 async function restoreHistoryPoolIdx(poolIdx) {
   const { cols, rows } = getDrawGrid();
   const restoredItem = allFetchedItems[poolIdx];
@@ -16384,10 +17150,11 @@ function createHistoryCard(poolIdx, kind) {
       label.className = 'mc-label';
       label.textContent = halfItem?.name || '';
       appendHistoryMetadata(label, halfItem);
-      if (plays) {
+      const metricText = getHistoryMetricText(halfItem, plays);
+      if (metricText) {
         const playsEl = document.createElement('div');
         playsEl.className = 'mc-plays';
-        playsEl.textContent = Number(plays).toLocaleString('pt-BR') + ' scrobbles';
+        playsEl.textContent = metricText;
         label.appendChild(playsEl);
       }
       half.appendChild(label);
@@ -16420,10 +17187,11 @@ function createHistoryCard(poolIdx, kind) {
   info.appendChild(name);
   appendHistoryMetadata(info, item);
   const plays = getEffectivePoolPlays(item, poolIdx);
-  if (plays) {
+  const metricText = getHistoryMetricText(item, plays);
+  if (metricText) {
     const playsEl = document.createElement('div');
     playsEl.className = 'dt-plays';
-    playsEl.textContent = Number(plays).toLocaleString('pt-BR') + ' scrobbles';
+    playsEl.textContent = metricText;
     info.appendChild(playsEl);
   }
   tile.appendChild(info);
@@ -16590,6 +17358,7 @@ function renderHistoryModal() {
 }
 
 function openHistoryModal(kind) {
+  if (isRecentCollageRendered()) return;
   historyModalKind = kind;
   historyModalFilter = 'period';
   renderHistoryModal();
@@ -16601,6 +17370,13 @@ function closeHistoryModal() {
 }
 
 function renderDeletedPanel() {
+  const historyPanels = document.getElementById('history-panels');
+  if (isRecentCollageRendered()) {
+    historyPanels.classList.remove('has-items');
+    if (historyModalKind) closeHistoryModal();
+    document.getElementById('empty-grid-msg')?.remove();
+    return;
+  }
   const deleted = getHistoryIndices('deleted');
   const merged = getHistoryIndices('merged');
   const context = activeCollageMemoryContext || getCollageMemoryContext();
@@ -16648,6 +17424,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && historyMod
 // então funciona igual não importa se foi disparada pelo botão do modal
 // ("Excluir tile e puxar próximo") ou pelo arraste pra fora da collage.
 async function executeDeleteTile(deletedItem) {
+  if (isRecentCollageRendered()) return false;
   const { cols, rows } = getDrawGrid();
   const gridSize = cols * rows;
 
@@ -16714,6 +17491,87 @@ document.getElementById('edit-tile-delete').addEventListener('click', async () =
   const deletedItem = activeClickItem;
   closeTextEditModal();
   await executeDeleteTile(deletedItem);
+});
+
+recentMetadataSave.addEventListener('click', async () => {
+  const item = activeClickItem;
+  if (!item || !isRecentCollageRendered()) return;
+  const targetPoolIdx = allFetchedItems.indexOf(item);
+  if (targetPoolIdx < 0) return;
+  const original = { ...getRecentOriginalMetadata(item) };
+  const edited = {
+    track: editTextMain.value.trim(),
+    album: editTextAlbum.value.trim(),
+    artist: editTextSub.value.trim(),
+  };
+  if (!edited.track || !edited.artist) {
+    setRecentMetadataStatus('Informe pelo menos faixa e artista.', true);
+    return;
+  }
+
+  recentMetadataSave.disabled = true;
+  setRecentMetadataStatus('Salvando edição...');
+  const originalRuleKey = recentMetadataRuleKey(original, item._recentUsername);
+  if (recentMetadataFuture.checked) recentMetadataRules.set(originalRuleKey, edited);
+  else recentMetadataRules.delete(originalRuleKey);
+  saveRecentMetadataRules();
+
+  customTexts[targetPoolIdx] = { main: edited.track, album: edited.album, sub: edited.artist };
+  if (recentMetadataFuture.checked) {
+    allFetchedItems.forEach(candidate => {
+      if (recentMetadataRuleKey(getRecentOriginalMetadata(candidate), candidate._recentUsername) === originalRuleKey) applyRecentMetadataRule(candidate);
+    });
+  }
+  await runDraw();
+  scheduleDownloadRefresh();
+
+  try {
+    if (recentMetadataReplace.checked) {
+      if (item._nowPlaying) throw new Error('A faixa ainda está sendo escutada e não possui um scrobble para substituir.');
+      await sendLastfmWrite({ action: 'replace', original, edited, deleteOriginal: true });
+      item.name = edited.track;
+      item.albumName = edited.album;
+      item.artist = { ...(item.artist || {}), name: edited.artist };
+      item._lastfmOriginal = { ...edited, timestamp: original.timestamp };
+      delete customTexts[targetPoolIdx];
+      setRecentMetadataStatus('Metadados atualizados no Last.fm. A tela continuará acompanhando novos scrobbles.');
+      appendStatusHistoryEntry(`Scrobble editado: ${edited.artist} — ${edited.track}.`);
+    } else {
+      setRecentMetadataStatus(recentMetadataFuture.checked
+        ? 'Edição salva no collager.fm e aplicada aos próximos scrobbles correspondentes.'
+        : 'Edição aplicada somente a este quadro.');
+    }
+    await runDraw();
+    scheduleDownloadRefresh();
+  } catch (error) {
+    setRecentMetadataStatus(error.message, true);
+  } finally {
+    recentMetadataSave.disabled = false;
+  }
+});
+
+recentScrobbleDelete.addEventListener('click', async () => {
+  const item = activeClickItem;
+  if (!item || !isRecentCollageRendered() || item._nowPlaying || item._lastfmDeleted) return;
+  const visualIndex = paintedItems.indexOf(item);
+  recentScrobbleDelete.disabled = true;
+  if (visualIndex >= 0) showDeletingOverlay(visualIndex, 'Excluindo...', '#ff8b8b');
+  setRecentMetadataStatus('Excluindo scrobble do Last.fm...');
+  try {
+    await sendLastfmWrite({ action: 'delete', original: getRecentOriginalMetadata(item) });
+    item._lastfmDeleted = true;
+    recentScrobbleDelete.textContent = 'SCROBBLE EXCLUÍDO';
+    setRecentMetadataStatus('Scrobble excluído do Last.fm. O quadro foi mantido nesta collage.');
+    appendStatusHistoryEntry(`Scrobble excluído: ${item.artist?.name || ''} — ${item.name || ''}.`);
+    triggerHapticFeedback('short');
+    await runDraw();
+    scheduleDownloadRefresh();
+  } catch (error) {
+    recentScrobbleDelete.disabled = false;
+    setRecentMetadataStatus(error.message, true);
+  } finally {
+    if (visualIndex >= 0) hideDeletingOverlay(visualIndex);
+  }
 });
 // Clicar fora do modal (no fundo escurecido) NÃO fecha mais — evita fechar
 // sem querer ao arrastar o mouse pra fora do card ou clicar por engano na
@@ -17479,6 +18337,7 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
   // estiver aberto (evita reabrir por cima de outra coisa em andamento).
   mainCanvas.addEventListener('keydown', e => {
     if (e.key !== 'f' && e.key !== 'F') return;
+    if (isRecentCollageRendered()) return;
     if (!lastHoveredHit) return;
     if (textEditOverlay.style.display === 'flex') return;
     const item = currentItems[lastHoveredHit.index];
@@ -17743,11 +18602,13 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
         artists: [...imageSources.artists],
         albums:  [...imageSources.albums],
         tracks:  [...imageSources.tracks],
+        recent:  [...imageSources.recent],
       },
       sourceOrder: {
         artists: getSourceOrder('artists'),
         albums:  getSourceOrder('albums'),
         tracks:  getSourceOrder('tracks'),
+        recent:  getSourceOrder('recent'),
       },
       tileLineOrder: JSON.parse(JSON.stringify(tileLineOrder)),
       headerLogoScales: [headerLogoScale1, headerLogoScale2, headerLogoScale3],
@@ -17833,7 +18694,7 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
     Object.entries(specificSubBtns).forEach(([type, btn]) => btn?.classList.toggle('active', type === specificSubType));
 
     if (js.imageSources) {
-      ['artists', 'albums', 'tracks'].forEach(type => {
+      ['artists', 'albums', 'tracks', 'recent'].forEach(type => {
         const arr = js.imageSources[type];
         if (!Array.isArray(arr) || !arr.length) return;
         const sourceButtons = Array.from(document.querySelectorAll(`#sources-${type} .source-btn`));
@@ -17862,7 +18723,7 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
     }
     if (js.tileLineOrder && typeof js.tileLineOrder === 'object') {
       const restoredOrder = {};
-      ['artists', 'albums', 'tracks'].forEach(type => {
+      ['artists', 'albums', 'tracks', 'recent'].forEach(type => {
         const savedLines = Array.isArray(js.tileLineOrder[type]) ? js.tileLineOrder[type] : [];
         const defaults = TILE_LINE_DEFAULTS[type] || [];
         const savedById = new Map(savedLines.map(line => [line.id, line]));

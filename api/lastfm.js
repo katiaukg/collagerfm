@@ -1,6 +1,7 @@
 'use strict';
 
 const ALLOWED_METHODS = new Set([
+  'album.getinfo',
   'artist.getinfo',
   'track.getinfo',
   'user.getinfo',
@@ -16,6 +17,7 @@ const ALLOWED_PARAMS = new Set([
 ]);
 
 const CACHE_TTL = 60 * 1000;
+const RECENT_TRACKS_CACHE_TTL = 2 * 1000;
 const responseCache = new Map();
 
 function getRequestBody(request) {
@@ -113,7 +115,10 @@ module.exports = async function handler(request, response) {
         fallbackRequired,
       });
     }
-    if (!lastfmError) responseCache.set(cacheKey, { expires: Date.now() + CACHE_TTL, payload });
+    if (!lastfmError) {
+      const ttl = method === 'user.getrecenttracks' ? RECENT_TRACKS_CACHE_TTL : CACHE_TTL;
+      responseCache.set(cacheKey, { expires: Date.now() + ttl, payload });
+    }
     return sendJson(response, 200, payload);
   } catch (error) {
     return sendJson(response, 502, {

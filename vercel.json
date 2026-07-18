@@ -7,6 +7,18 @@
     "api/lastfm.js": {
       "maxDuration": 30
     },
+    "api/lastfm-auth.js": {
+      "maxDuration": 30
+    },
+    "api/lastfm-write.js": {
+      "maxDuration": 30
+    },
+    "api/lastfm-image.js": {
+      "maxDuration": 30
+    },
+    "api/obsessions.js": {
+      "maxDuration": 30
+    },
     "api/deezer.js": {
       "maxDuration": 30
     },
