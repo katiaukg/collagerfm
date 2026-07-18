@@ -36,7 +36,11 @@ module.exports = async function handler(request, response) {
   if (request.method !== 'GET') return send(response, 405, { error: 'Metodo nao permitido.' });
   if (action === 'status') {
     const session = readSession(request);
-    return send(response, 200, { connected: Boolean(session), username: session?.name || '' });
+    return send(response, 200, {
+      configured: Boolean(apiKey && apiSecret),
+      connected: Boolean(session),
+      username: session?.name || '',
+    });
   }
   if (!apiKey || !apiSecret) return send(response, 503, {
     error: 'Configure LASTFM_API_KEY e LASTFM_API_SECRET no servidor para autorizar a escrita no Last.fm.',

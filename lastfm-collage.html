@@ -15872,7 +15872,8 @@ function openTextEditModal(index) {
   recentMetadataFuture.checked = true;
   recentMetadataReplace.checked = true;
   recentMetadataReplace.disabled = Boolean(item._nowPlaying);
-  recentScrobbleDelete.disabled = Boolean(item._nowPlaying || item._lastfmDeleted);
+  recentMetadataSave.disabled = recentMode;
+  recentScrobbleDelete.disabled = recentMode || Boolean(item._nowPlaying || item._lastfmDeleted);
   recentScrobbleDelete.textContent = item._lastfmDeleted ? 'SCROBBLE EXCLUÍDO' : 'EXCLUIR SCROBBLE';
   recentMetadataStatus.style.display = item._nowPlaying ? '' : 'none';
   recentMetadataStatus.textContent = item._nowPlaying ? 'A faixa ainda está sendo escutada; ela poderá ser alterada ou excluída quando virar um scrobble.' : '';
@@ -15911,6 +15912,7 @@ editLastfmLinkBtn.addEventListener('click', () => {
 });
 
 let lastfmAuthorizationPromise = null;
+let recentLastfmAuthState = { configured: false, connected: false, username: '' };
 
 function setRecentMetadataStatus(message, error = false) {
   recentMetadataStatus.style.display = message ? '' : 'none';
@@ -15925,25 +15927,66 @@ async function getLastfmWriteAuthStatus() {
   return payload;
 }
 
+function applyRecentMetadataAuthState(status) {
+  recentLastfmAuthState = {
+    configured: Boolean(status?.configured),
+    connected: Boolean(status?.connected),
+    username: status?.username || '',
+  };
+  const itemUnavailable = Boolean(activeClickItem?._nowPlaying || activeClickItem?._lastfmDeleted);
+  recentMetadataSave.disabled = !recentLastfmAuthState.connected;
+  recentScrobbleDelete.disabled = !recentLastfmAuthState.connected || itemUnavailable;
+  recentLastfmAuthorize.style.display = recentLastfmAuthState.connected ? 'none' : '';
+  recentLastfmAuthorize.disabled = !recentLastfmAuthState.configured;
+  recentLastfmAuthorize.textContent = recentLastfmAuthState.configured
+    ? 'AUTORIZAR LAST.FM'
+    : 'AUTORIZAÇÃO INDISPONÍVEL';
+}
+
+function lastfmAuthorizationRequiredMessage(status = recentLastfmAuthState) {
+  return status.configured
+    ? 'Autorize sua conta do Last.fm antes de salvar uma edição ou excluir um scrobble.'
+    : 'A escrita no Last.fm ainda não está configurada no servidor. Configure LASTFM_API_KEY e LASTFM_API_SECRET.';
+}
+
 async function refreshRecentMetadataAuthUi() {
   if (!isRecentCollageRendered()) return;
   try {
     const status = await getLastfmWriteAuthStatus();
-    recentLastfmAuthorize.style.display = status.connected ? 'none' : '';
+    applyRecentMetadataAuthState(status);
     if (status.connected && !activeClickItem?._nowPlaying && !recentMetadataStatus.textContent) {
       setRecentMetadataStatus(`Conta ${status.username} autorizada para editar o histórico.`);
+    } else if (!status.connected && !activeClickItem?._nowPlaying) {
+      setRecentMetadataStatus(lastfmAuthorizationRequiredMessage(status), true);
     }
   } catch (error) {
+    applyRecentMetadataAuthState({ configured: false, connected: false });
     recentLastfmAuthorize.style.display = '';
     setRecentMetadataStatus(error.message, true);
+  }
+}
+
+async function requireLastfmWriteAuthorization() {
+  try {
+    const status = await getLastfmWriteAuthStatus();
+    applyRecentMetadataAuthState(status);
+    if (status.connected) return true;
+    setRecentMetadataStatus(lastfmAuthorizationRequiredMessage(status), true);
+    return false;
+  } catch (error) {
+    applyRecentMetadataAuthState({ configured: false, connected: false });
+    setRecentMetadataStatus(error.message, true);
+    return false;
   }
 }
 
 function ensureLastfmWriteAuthorization() {
   if (lastfmAuthorizationPromise) return lastfmAuthorizationPromise;
   lastfmAuthorizationPromise = (async () => {
-    const current = await getLastfmWriteAuthStatus().catch(() => ({ connected: false }));
+    const current = await getLastfmWriteAuthStatus();
+    applyRecentMetadataAuthState(current);
     if (current.connected) return current;
+    if (!current.configured) throw new Error(lastfmAuthorizationRequiredMessage(current));
     const popup = window.open('/api/lastfm-auth?action=start', 'collager-lastfm-auth', 'popup,width=720,height=760');
     if (!popup) throw new Error('O navegador bloqueou a janela de autorização do Last.fm.');
     setRecentMetadataStatus('Autorize o collager.fm na janela do Last.fm.');
@@ -15985,7 +16028,7 @@ recentLastfmAuthorize.addEventListener('click', async () => {
   recentLastfmAuthorize.disabled = true;
   try {
     const status = await ensureLastfmWriteAuthorization();
-    recentLastfmAuthorize.style.display = 'none';
+    applyRecentMetadataAuthState(status);
     setRecentMetadataStatus(`Conta ${status.username} autorizada para editar o histórico.`);
   } catch (error) {
     setRecentMetadataStatus(error.message, true);
@@ -17496,6 +17539,7 @@ document.getElementById('edit-tile-delete').addEventListener('click', async () =
 recentMetadataSave.addEventListener('click', async () => {
   const item = activeClickItem;
   if (!item || !isRecentCollageRendered()) return;
+  if (!await requireLastfmWriteAuthorization()) return;
   const targetPoolIdx = allFetchedItems.indexOf(item);
   if (targetPoolIdx < 0) return;
   const original = { ...getRecentOriginalMetadata(item) };
@@ -17553,6 +17597,7 @@ recentMetadataSave.addEventListener('click', async () => {
 recentScrobbleDelete.addEventListener('click', async () => {
   const item = activeClickItem;
   if (!item || !isRecentCollageRendered() || item._nowPlaying || item._lastfmDeleted) return;
+  if (!await requireLastfmWriteAuthorization()) return;
   const visualIndex = paintedItems.indexOf(item);
   recentScrobbleDelete.disabled = true;
   if (visualIndex >= 0) showDeletingOverlay(visualIndex, 'Excluindo...', '#ff8b8b');
