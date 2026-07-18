@@ -891,6 +891,12 @@
   .status-msg { color: var(--muted); font-size: 14px; text-align: center; max-width: 360px; line-height: 1.6; }
   .status-msg.error { color: #f54242; }
   .status-msg a { color: #888; }
+  #lastfm-queue-feedback {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    width: min(100%, 360px);
+  }
+  #lastfm-queue-feedback[hidden], #lastfm-queue-status[hidden] { display: none !important; }
+  #lastfm-queue-status { font-size: 12px; line-height: 1.45; }
   #status-history-dock {
     position: sticky; top: 50vh; transform: translateY(-50%);
     grid-area: status; z-index: 40; width: 100%; align-self: flex-start; justify-self: start;
@@ -4585,9 +4591,12 @@
     <div class="status-msg" id="status">
       Informe seu usuário do Last.fm para começar.
     </div>
-    <button type="button" id="lastfm-own-key-action" hidden style="max-width:360px;padding:9px 12px;border:1px solid #ffffff24;border-radius:8px;background:#ffffff08;color:var(--muted);font:700 10.5px/1.35 inherit;cursor:pointer;">
-      Caso não queira depender de filas, você deve usar sua própria chave API
-    </button>
+    <div id="lastfm-queue-feedback" hidden>
+      <div class="status-msg" id="lastfm-queue-status" hidden aria-live="polite"></div>
+      <button type="button" id="lastfm-own-key-action" hidden style="max-width:360px;padding:9px 12px;border:1px solid #ffffff24;border-radius:8px;background:#ffffff08;color:var(--muted);font:700 10.5px/1.35 inherit;cursor:pointer;">
+        Caso não queira depender de filas, você deve usar sua própria chave API
+      </button>
+    </div>
     <button type="button" id="mobile-account-error-action">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/></svg>
       Informar conta Last.fm
@@ -10737,7 +10746,9 @@ function resetFonts() {
 // ─────────────────────────────────────────────────────────────
 // API HELPERS
 // ─────────────────────────────────────────────────────────────
-document.getElementById('lastfm-own-key-action').addEventListener('click', () => {
+document.getElementById('lastfm-own-key-action').addEventListener('click', event => {
+  event.preventDefault();
+  event.stopPropagation();
   window.openLastfmApiSettings?.();
 });
 
@@ -10746,23 +10757,30 @@ async function apiFetch(params, options = {}) {
   if (!suppliedApiKey) {
     const requestId = globalThis.crypto?.randomUUID?.() || `lfm_${Date.now()}_${Math.random().toString(36).slice(2)}`;
     const ownKeyAction = document.getElementById('lastfm-own-key-action');
+    const queueFeedback = document.getElementById('lastfm-queue-feedback');
+    const queueStatus = document.getElementById('lastfm-queue-status');
     let requestFinished = false;
     let queuePollTimer = 0;
     let keepOwnKeyActionVisible = Boolean(options.keepOwnKeyActionVisible);
+    const syncQueueFeedback = () => {
+      queueFeedback.hidden = ownKeyAction.hidden && queueStatus.hidden;
+    };
+    const showOwnKeyAction = () => {
+      ownKeyAction.hidden = false;
+      syncQueueFeedback();
+    };
     const showQueueState = queue => {
       if (options.silentQueue || requestFinished || !queue) return;
-      const status = document.getElementById('status');
       if (queue.state === 'queued' && Number(queue.position) > 0) {
-        status.style.display = '';
-        status.className = 'status-msg';
-        status.textContent = `Aguardando Last.fm — posição ${queue.position} da fila.`;
-        ownKeyAction.hidden = false;
+        queueStatus.hidden = false;
+        queueStatus.textContent = `Aguardando Last.fm — posição ${queue.position} da fila.`;
+        showOwnKeyAction();
       } else if (queue.state === 'deduplicated') {
-        status.style.display = '';
-        status.className = 'status-msg';
-        status.textContent = 'Aguardando uma solicitação igual que já está em andamento...';
-        ownKeyAction.hidden = false;
+        queueStatus.hidden = false;
+        queueStatus.textContent = 'Aguardando uma solicitação igual que já está em andamento...';
+        showOwnKeyAction();
       }
+      syncQueueFeedback();
     };
     const pollQueue = async () => {
       if (requestFinished) return;
@@ -10791,7 +10809,7 @@ async function apiFetch(params, options = {}) {
           error.code = 'LASTFM_RETRYABLE';
           error.retryAfterMs = Number(data.retryAfterMs || response.headers.get('Retry-After') * 1000 || 0);
           keepOwnKeyActionVisible = true;
-          ownKeyAction.hidden = false;
+          showOwnKeyAction();
         } else if (data.fallbackRequired || response.status === 503) {
           error.code = 'DEFAULT_LASTFM_KEY_FAILED';
         }
@@ -10805,7 +10823,10 @@ async function apiFetch(params, options = {}) {
     } finally {
       requestFinished = true;
       clearTimeout(queuePollTimer);
+      queueStatus.hidden = true;
+      queueStatus.textContent = '';
       if (!keepOwnKeyActionVisible) ownKeyAction.hidden = true;
+      syncQueueFeedback();
     }
   }
 
