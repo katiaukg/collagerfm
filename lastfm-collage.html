@@ -341,6 +341,52 @@
   .header-logo-choice-toggle img { display:block;max-width:100%;height:17px;object-fit:contain;pointer-events:none; }
   .header-logo-choice-toggle button[data-logo="collager"] img { width:105px; }
   .header-logo-choice-toggle button[data-logo="lastfm"] img { width:72px; }
+  .secondary-action-btn {
+    min-height: 34px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface2);
+    color: var(--text);
+    font: 600 11px/1 inherit;
+    cursor: pointer;
+  }
+  .secondary-action-btn:hover { border-color: #ffffff38; background: #ffffff0b; }
+  .header-image-action-grid { display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px; }
+  .header-image-square-btn {
+    width:34px;height:34px;min-height:34px;padding:0;display:inline-flex;align-items:center;justify-content:center;
+    border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--muted);cursor:pointer;
+  }
+  .header-image-square-btn:hover { color:#fff;border-color:#666;background:#ffffff0b; }
+  .header-image-square-btn.danger:hover { color:#ff7777;border-color:#ef4444;background:#ef444416; }
+  .header-image-square-btn svg { width:17px;height:17px;pointer-events:none; }
+  #header-image-adjustments { display:none;flex-direction:column;gap:8px; }
+  #header-image-adjustments.visible { display:flex; }
+  #header-image-editor-layer {
+    position:absolute;z-index:32;display:none;pointer-events:none;
+  }
+  #header-image-editor-layer.active { display:block;pointer-events:auto; }
+  #header-image-editor-hit {
+    position:absolute;box-sizing:border-box;border:1px dashed #fff;background:#00000012;
+    cursor:grab;touch-action:none;user-select:none;overflow:hidden;
+  }
+  #header-image-editor-hit.dragging { cursor:grabbing;background:#00000020; }
+  #header-image-editor-hit::after {
+    content:'';position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(90deg,transparent calc(50% - .5px),#ffffff55 50%,transparent calc(50% + .5px)),linear-gradient(0deg,transparent calc(50% - .5px),#ffffff55 50%,transparent calc(50% + .5px));
+  }
+  #header-image-editor-actions {
+    display:none;width:min(100%,620px);box-sizing:border-box;margin-top:8px;padding:8px 10px;
+    align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--border);border-radius:7px;background:var(--surface2);
+  }
+  #header-image-editor-actions.visible { display:flex; }
+  .header-image-editor-hint { min-width:0;color:var(--muted);font-size:10px;line-height:1.35; }
+  .header-image-editor-hint-mobile { display:none; }
+  #header-image-editor-save { min-width:92px;flex-shrink:0; }
+  @media (max-width: 47.999rem) {
+    .header-image-editor-hint-desktop { display:none; }
+    .header-image-editor-hint-mobile { display:inline; }
+    #header-image-editor-actions { width:100%;padding:7px 8px; }
+  }
   .source-key-box { margin-top: 8px; display: none; flex-direction: column; gap: 6px; }
   .source-key-box.visible { display: flex; }
   .source-key-label { font-size: 10px; color: var(--muted); font-weight: 600; }
@@ -495,6 +541,23 @@
   }
   .toggle-switch input:checked + .toggle-slider { background: #d51007; }
   .toggle-switch input:checked + .toggle-slider::before { transform: translateX(16px); }
+  .header-interactive-settings {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .header-interactive-settings .toggle-row {
+    padding: 9px 12px;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+  }
+  .header-interactive-settings .toggle-row + .toggle-row {
+    border-top: 1px solid var(--border);
+  }
 
   /* ── RATIO SEGMENTED ── */
   .ratio-seg { display: flex; border-radius: 7px; overflow: hidden; border: 1px solid var(--border); flex-shrink: 0; }
@@ -909,6 +972,212 @@
     display: block; width: auto; height: auto;
     min-width: min(300px, 100%); max-width: 100%; max-height: calc(100vh - 80px);
     object-fit: contain; cursor: pointer;
+  }
+  #interactive-header-layer {
+    --interactive-guide-color: #fff;
+    --interactive-guide-color-40: rgba(255,255,255,.4);
+    position: absolute;
+    z-index: 24;
+    display: none;
+    pointer-events: none;
+    opacity: 1;
+    transition: opacity .45s ease;
+  }
+  #interactive-header-layer.visible { display: block; }
+  #interactive-header-layer.idle { opacity: .3; }
+  #interactive-header-items { position: absolute; inset: 0; pointer-events: none; }
+  #interactive-header-guides {
+    position: absolute;
+    display: none;
+    pointer-events: none;
+  }
+  #interactive-header-guides.visible { display: block; }
+  .interactive-header-guide {
+    position: absolute;
+    background: var(--interactive-guide-color);
+    opacity: .4;
+    pointer-events: none;
+  }
+  .interactive-header-guide-x { left: 50%; top: 0; width: 1px; height: 100%; }
+  .interactive-header-guide-y { left: 0; top: 50%; width: 100%; height: 1px; }
+  .interactive-header-item {
+    position: absolute;
+    box-sizing: border-box;
+    min-width: 34px;
+    min-height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px dashed var(--interactive-guide-color-40);
+    background: #11111120;
+    color: #fff;
+    cursor: grab;
+    pointer-events: auto;
+    touch-action: none;
+    user-select: none;
+    transition: left .26s cubic-bezier(.2, .8, .2, 1), top .26s cubic-bezier(.2, .8, .2, 1), opacity .2s ease, border-color .2s ease, background .2s ease;
+  }
+  .interactive-header-item.selected {
+    z-index: 4;
+    border-color: var(--interactive-guide-color);
+    background: #11111170;
+  }
+  .interactive-header-item.dragging {
+    z-index: 5;
+    cursor: grabbing;
+    border-color: var(--interactive-guide-color);
+    transition: none;
+  }
+  .interactive-header-item.long-press-pending {
+    border-style: solid;
+    border-color: var(--interactive-guide-color);
+  }
+  .interactive-header-item.locked { cursor: default; border-style: solid; }
+  .interactive-header-item-label {
+    max-width: calc(100% - 12px);
+    overflow: hidden;
+    color: #fff;
+    font: 700 8px/1 Inter, sans-serif;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-shadow: 0 1px 2px #000;
+    pointer-events: none;
+  }
+  .interactive-header-item-handle {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    min-height: 0 !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid #ffffff30;
+    border-radius: 4px;
+    background: #111111d9;
+    color: #fff;
+    font: 800 11px/1 Inter, sans-serif;
+    cursor: pointer;
+    pointer-events: none;
+    touch-action: none;
+    opacity: 0;
+    transition: opacity .18s ease, border-color .18s ease, background .18s ease;
+  }
+  .interactive-header-item.selected .interactive-header-item-handle { opacity: 1; pointer-events: auto; }
+  .interactive-header-rotate-handle { left: -10px; top: -10px; }
+  .interactive-header-lock-handle { left: -10px; bottom: -10px; }
+  .interactive-header-resize-handle { right: -10px; bottom: -10px; cursor: nwse-resize; }
+  .interactive-header-item-handle svg { width: 13px; height: 13px; pointer-events: none; }
+  .interactive-header-size-editor {
+    position: absolute;
+    top: -10px;
+    left: calc(100% + 6px);
+    right: auto;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 1px;
+    padding: 0 4px;
+    border: 1px solid #ffffff30;
+    border-radius: 4px;
+    background: #111111e8;
+    color: #fff;
+    font: 700 9px/1 Inter, sans-serif;
+    opacity: .78;
+    pointer-events: none;
+    touch-action: manipulation;
+  }
+  .interactive-header-item.interactive-header-controls-left .interactive-header-rotate-handle {
+    left: auto;
+    right: -10px;
+  }
+  .interactive-header-item.interactive-header-controls-left .interactive-header-size-editor {
+    left: auto;
+    right: calc(100% + 6px);
+  }
+  .interactive-header-item.selected .interactive-header-size-editor { opacity: 1; pointer-events: auto; }
+  .interactive-header-size-editor input {
+    width: 27px;
+    height: 18px;
+    min-height: 0 !important;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: right;
+    appearance: textfield;
+  }
+  .interactive-header-size-editor input::-webkit-inner-spin-button,
+  .interactive-header-size-editor input::-webkit-outer-spin-button { margin: 0; appearance: none; }
+  .interactive-header-item.resizing {
+    z-index: 5;
+    border-color: var(--interactive-guide-color);
+    transition: none;
+  }
+  .interactive-header-item.locked .interactive-header-rotate-handle,
+  .interactive-header-item.locked .interactive-header-resize-handle,
+  .interactive-header-item.locked .interactive-header-size-editor { display: none; }
+  .interactive-header-tool {
+    width: 28px;
+    height: 28px;
+    min-height: 0 !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid #ffffff30;
+    border-radius: 4px;
+    background: #111111d9;
+    color: #fff;
+    cursor: pointer;
+    pointer-events: auto;
+    touch-action: manipulation;
+  }
+  #interactive-header-control-panel {
+    position: absolute;
+    z-index: 8;
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    padding: 4px;
+    border: 1px solid #ffffff18;
+    border-radius: 5px;
+    background: #111111e6;
+    box-shadow: 0 8px 24px #0008;
+    pointer-events: auto;
+  }
+  #interactive-header-control-panel.visible { display: flex; }
+  .interactive-header-tool { position: relative; width: 28px; height: 28px; z-index: 8; }
+  .interactive-header-tool svg { width: 15px; height: 15px; }
+  #interactive-header-grid-toggle.active,
+  #interactive-header-guides-toggle.active { border-color: var(--interactive-guide-color); color: var(--interactive-guide-color); }
+  #interactive-header-guides-toggle:disabled { opacity: .35; cursor: default; }
+  #interactive-header-layer.grid-hidden .interactive-header-item {
+    border-color: transparent;
+    background: transparent;
+    pointer-events: none;
+  }
+  #interactive-header-layer.grid-hidden .interactive-header-item-label,
+  #interactive-header-layer.grid-hidden .interactive-header-item-handle,
+  #interactive-header-layer.grid-hidden .interactive-header-size-editor { opacity: 0; pointer-events: none; }
+  #interactive-header-resize { cursor: ns-resize; touch-action: none; }
+  #interactive-header-resize.vertical { cursor: ew-resize; }
+  @media (max-width: 47.999rem) {
+    #interactive-header-control-panel {
+      flex-direction: row;
+      gap: 4px;
+      padding: 4px;
+    }
+    #interactive-header-guides-toggle { order: 1; }
+    #interactive-header-grid-toggle { order: 2; }
+    #interactive-header-resize { order: 3; }
+    #interactive-header-items.has-selection .interactive-header-item:not(.selected) { opacity: .2; }
+    #interactive-header-items.has-selection .interactive-header-item:not(.selected) .interactive-header-item-handle {
+      opacity: 0;
+      pointer-events: none;
+    }
   }
   #desktop-preview-zoom {
     display: none;
@@ -2812,7 +3081,7 @@
         <div class="source-toggle-group visible" id="sources-albums" data-srctype="albums">
           <button class="source-btn" data-source="local_folder" draggable="true"><span class="src-num"></span>Pasta local</button>
           <button class="source-btn active" data-source="lastfm" draggable="true"><span class="src-num"></span>Last.fm</button>
-          <button class="source-btn active" data-source="deezer" draggable="true"><span class="src-num"></span>Deezer</button>
+          <button class="source-btn" data-source="deezer" draggable="true"><span class="src-num"></span>Deezer</button>
           <button class="source-btn" data-source="spotify" draggable="true" title="Requer Spotify Premium"><span class="src-num"></span>Spotify<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7z"/><path d="M5 20h14"/></svg></button>
           <button class="source-btn" data-source="youtube" draggable="true"><span class="src-num"></span>YouTube</button>
           <button class="source-btn" data-source="fanart" draggable="true"><span class="src-num"></span>Fanart.tv</button>
@@ -2996,6 +3265,17 @@
           </div>
         </div>
 
+        <div class="header-interactive-settings" id="header-interactive-settings">
+          <div class="toggle-row" id="header-interactive-row">
+            <span class="toggle-label">Cabeçalho interativo</span>
+            <label class="toggle-switch"><input type="checkbox" id="header-interactive-enabled" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row" id="header-interactive-grid-row" style="display:none;">
+            <span class="toggle-label">Personalizar caixas do cabeçalho</span>
+            <label class="toggle-switch"><input type="checkbox" id="header-interactive-grid-enabled"><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+
         <!-- Header sub-panel -->
         <div class="indent-panel" id="header-sub-panel" style="display:none;">
           <!-- This panel is shown when header is OFF — nothing needed -->
@@ -3010,6 +3290,21 @@
                 <button class="active" data-pos="top">Topo</button>
                 <span class="slash-sep">/</span>
                 <button data-pos="bottom">Fundo</button>
+                <span class="slash-sep">/</span>
+                <button data-pos="left">Esquerda</button>
+                <span class="slash-sep">/</span>
+                <button data-pos="right">Direita</button>
+              </div>
+            </div>
+
+            <div style="padding:0 2px;display:none;" id="header-text-rotation-row">
+              <span class="section-label" style="margin-bottom:5px;display:block;">Rotação da escrita</span>
+              <div class="red-slash-toggle" id="header-text-rotation-toggle">
+                <button class="active" data-rotation="none">Normal</button>
+                <span class="slash-sep">/</span>
+                <button data-rotation="cw">90° horário</button>
+                <span class="slash-sep">/</span>
+                <button data-rotation="ccw">90° anti-horário</button>
               </div>
             </div>
 
@@ -3038,7 +3333,7 @@
             </div>
 
             <div class="toggle-row" id="header-logo-outline-row">
-              <span class="toggle-label">Contorno da logo do cabeçalho</span>
+              <span class="toggle-label">Contorno do usuário e logo do cabeçalho</span>
               <label class="toggle-switch"><input type="checkbox" id="header-logo-outline-enabled"><span class="toggle-slider"></span></label>
             </div>
             <div class="indent-panel" id="header-logo-outline-panel">
@@ -3078,6 +3373,23 @@
               </div>
             </div>
 
+            <div id="header-image-row" style="padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;gap:8px;">
+              <span class="section-label" style="margin:0;display:block;color:var(--text);">Imagem do cabeçalho</span>
+              <input type="file" id="header-image-input" accept="image/*" style="display:none;">
+              <div class="header-image-action-grid">
+                <button type="button" id="header-image-select" class="secondary-action-btn" style="min-width:0;">Escolher imagem...</button>
+                <button type="button" id="header-image-edit" class="header-image-square-btn" title="Ajustar imagem" aria-label="Ajustar imagem do cabeçalho" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></button>
+                <button type="button" id="header-image-remove" class="header-image-square-btn danger" title="Remover imagem" aria-label="Remover imagem" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg></button>
+              </div>
+              <span id="header-image-size-hint" class="slider-hint" style="margin:0;">Tamanho recomendado: 900px × 100px</span>
+              <span id="header-image-border-size-hint" class="slider-hint" style="display:none;margin:0;">Tamanho para cabeçalho + bordas: 930px × 1630px</span>
+              <div id="header-image-adjustments">
+                <div class="slider-row"><div class="slider-row-head"><span class="slider-name">Mover para os lados</span><span class="slider-val" id="val-header-image-x">0%</span></div><input type="range" id="header-image-x" min="-100" max="100" value="0" step="1"></div>
+                <div class="slider-row"><div class="slider-row-head"><span class="slider-name">Mover de cima para baixo</span><span class="slider-val" id="val-header-image-y">0%</span></div><input type="range" id="header-image-y" min="-100" max="100" value="0" step="1"></div>
+                <div class="slider-row"><div class="slider-row-head"><span class="slider-name">Zoom da imagem</span><span class="slider-val" id="val-header-image-zoom">100%</span></div><input type="range" id="header-image-zoom" min="100" max="400" value="100" step="1"></div>
+              </div>
+            </div>
+
             <div id="header-standard-options" style="display:flex;flex-direction:column;gap:10px;">
             <!-- Header subtitle edit -->
             <div>
@@ -3111,12 +3423,16 @@
               </div>
             </div>
 
-            <div class="toggle-row">
+            <div class="toggle-row" id="header-use-username-row">
               <span class="toggle-label">Mostrar usuário no cabeçalho</span>
-              <label class="toggle-switch">
-                <input type="checkbox" id="header-use-username-label">
-                <span class="toggle-slider"></span>
-              </label>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <button id="header-username-color-reset" title="Restaurar automático" style="background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;padding:0;">auto</button>
+                <div class="mini-swatch-wrap" id="header-username-color-swatch" style="background:#ffffff"><input type="color" id="header-username-color" value="#ffffff" aria-label="Cor do usuário no cabeçalho"></div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="header-use-username-label">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
             </div>
 
             <div style="padding:0 2px;" id="header-username-placement-row">
@@ -3143,9 +3459,9 @@
             <div class="slider-row" id="header-username-size-row">
               <div class="slider-row-head">
                 <span class="slider-name">Tamanho da fonte usuário</span>
-                <span class="slider-val" id="val-header-username-size">100%</span>
+                <span class="slider-val" id="val-header-username-size">28px</span>
               </div>
-              <input type="range" id="header-username-size" min="60" max="180" value="100" step="5">
+              <input type="range" id="header-username-size" min="8" max="160" value="28" step="1">
             </div>
 
             <div class="toggle-row">
@@ -3198,9 +3514,9 @@
             <div class="slider-row" id="header-default-logo-size-row">
               <div class="slider-row-head">
                 <span class="slider-name">Tamanho da fonte logo</span>
-                <span class="slider-val" id="val-header-default-logo-size">100%</span>
+                <span class="slider-val" id="val-header-default-logo-size">28px</span>
               </div>
-              <input type="range" id="header-default-logo-size" min="50" max="180" value="100" step="5">
+              <input type="range" id="header-default-logo-size" min="8" max="160" value="28" step="1">
             </div>
 
             <div style="padding:0 2px;" id="header-default-logopos-row">
@@ -3393,7 +3709,7 @@
                 <span class="slider-name">Tamanho da fonte</span>
                 <span class="slider-val" id="val-header-font">auto</span>
               </div>
-              <input type="range" id="header-font" min="0" max="80" value="0" step="1">
+              <input type="range" id="header-font" min="0" max="160" value="0" step="1">
             </div>
           </div>
         </div>
@@ -3423,7 +3739,9 @@
             </div>
           </div>
 
-          <div class="slider-row" id="tile-shading-alpha-row"><div class="slider-row-head"><span class="slider-name">Transparência do sombreamento</span><span class="slider-val" id="val-tile-shading-alpha">100%</span></div><input type="range" id="tile-shading-alpha" min="0" max="100" value="100" step="1"></div>
+          <div class="slider-row" id="tile-shading-alpha-row"><div class="slider-row-head"><span class="slider-name" id="tile-shading-alpha-label">Transparência do sombreamento</span><span class="slider-val" id="val-tile-shading-alpha">80%</span></div><input type="range" id="tile-shading-alpha" min="0" max="100" value="80" step="1"></div>
+          <div class="slider-row" id="tile-shading-alpha-top-row" style="display:none;"><div class="slider-row-head"><span class="slider-name">Transparência do topo</span><span class="slider-val" id="val-tile-shading-alpha-top">80%</span></div><input type="range" id="tile-shading-alpha-top" min="0" max="100" value="80" step="1"></div>
+          <div class="slider-row" id="tile-shading-alpha-bottom-row" style="display:none;"><div class="slider-row-head"><span class="slider-name">Transparência do fundo</span><span class="slider-val" id="val-tile-shading-alpha-bottom">80%</span></div><input type="range" id="tile-shading-alpha-bottom" min="0" max="100" value="80" step="1"></div>
 
           <div>
             <span class="section-label" style="margin-bottom:5px;display:block;">Posição da faixa</span>
@@ -3505,7 +3823,7 @@
           <!-- Texto 2 — só faz sentido (e só aparece) quando o número está Centralizado -->
           <div id="scrobbles-text2-wrap" style="display:none;">
             <span class="section-label" style="margin-bottom:5px;display:block;">Texto 2</span>
-            <input id="scrobbles-label2-input" type="text" placeholder="vezes" value=""
+            <input id="scrobbles-label2-input" type="text" placeholder="scrobbles" value=""
               style="width:100%;box-sizing:border-box;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--text);font-family:inherit;font-size:12px;outline:none;">
           </div>
 
@@ -3564,7 +3882,10 @@
           <div style="display:flex;flex-direction:column;gap:10px;">
 
             <div>
-              <span class="section-label" style="margin-bottom:5px;display:block;">Fonte do número</span>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+                <span class="section-label" style="margin:0;display:block;">Fonte do número</span>
+                <label class="font-bold-toggle" title="Negrito na fonte do número"><input type="checkbox" id="badge-font-bold" checked>N</label>
+              </div>
               <select id="badge-font-family" class="font-family-select"
                 style="width:100%;box-sizing:border-box;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--text);font-family:inherit;font-size:12px;outline:none;"></select>
             </div>
@@ -3654,10 +3975,13 @@
                   </div>
                 </div>
               </div>
+              <button type="button" id="tile-border-header-gradient-link" class="secondary-action-btn" style="display:none;width:100%;">Configurar gradiente no cabeçalho</button>
+              <button type="button" id="tile-border-header-image-link" class="secondary-action-btn" style="display:none;width:100%;">Configurar imagem no cabeçalho</button>
               <div class="toggle-row" id="tile-border-follow-header-row">
-                <span class="toggle-label">Seguir cor do cabeçalho</span>
+                <span class="toggle-label" id="tile-border-follow-header-label">Seguir cor do cabeçalho</span>
                 <label class="toggle-switch"><input type="checkbox" id="tile-border-follow-header"><span class="toggle-slider"></span></label>
               </div>
+              <span id="tile-border-header-image-size-hint" class="slider-hint" style="display:none;margin:0;">Tamanho recomendado com a borda: 930px × 1630px</span>
               <div class="toggle-row" id="tile-corner-radius-enabled-row">
                 <span class="toggle-label">Curvatura do quadro</span>
                 <label class="toggle-switch"><input type="checkbox" id="tile-corner-radius-enabled"><span class="toggle-slider"></span></label>
@@ -3713,14 +4037,14 @@
             
             <button class="cut-opt active" data-mode="ellipsis" style="display:flex; flex-direction:column; justify-content:center; align-items:center; padding:8px 4px; line-height:1.2;">
               <span style="font-size:12px;">Reticências</span>
-              <span id="cut-example-ellipsis" style="font-size:9px; font-weight:400; opacity:0.75; margin-top:4px;">Never Gonna Give<br>You Up (Rickr...</span>
+              <span id="cut-example-ellipsis" style="font-size:9px;font-weight:400;opacity:0.75;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:clip;">Never Gonna Give...</span>
             </button>
             
             <span class="slash-sep" style="display:flex; align-items:center;">/</span>
             
             <button class="cut-opt" data-mode="hard" style="display:flex; flex-direction:column; justify-content:center; align-items:center; padding:8px 4px; line-height:1.2;">
               <span style="font-size:12px;">Corte seco</span>
-              <span id="cut-example-hard" style="font-size:9px; font-weight:400; opacity:0.75; margin-top:4px;">Never Gonna Give<br>You Up (Rickro</span>
+              <span id="cut-example-hard" style="font-size:9px;font-weight:400;opacity:0.75;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:clip;">Never Gonna Give Yo</span>
             </button>
 
           </div>
@@ -3841,7 +4165,7 @@
             </div>
             <input type="range" id="min-font-main" min="6" max="40" value="18" step="1">
           </div>
-          <div class="slider-hint">Se nem no mínimo couber, corta de acordo com o modo de corte.</div>
+          <div class="slider-hint">Se não caber no mínimo, aplica o modo de corte.</div>
         </div>
 
         <div class="slider-row" id="font-album-row">
@@ -3852,7 +4176,7 @@
         <div class="indent-panel" id="auto-font-album-panel">
           <div class="slider-row"><div class="slider-row-head"><span class="slider-name">Tamanho máximo</span><span class="slider-val" id="val-font-album-auto">22px</span></div><input type="range" id="font-album-auto" min="8" max="40" value="22" step="1"></div>
           <div class="slider-row"><div class="slider-row-head"><span class="slider-name">Tamanho mínimo</span><span class="slider-val" id="val-min-font-album">8px</span></div><input type="range" id="min-font-album" min="6" max="36" value="8" step="1"></div>
-          <div class="slider-hint">Busca o maior tamanho que faça o nome do álbum caber nas linhas configuradas. Se não couber no mínimo, aplica o modo de corte escolhido.</div>
+          <div class="slider-hint">Se não caber no mínimo, aplica o modo de corte.</div>
         </div>
 
         <!-- ── ARTISTA / SUB ── -->
@@ -3892,7 +4216,7 @@
             </div>
             <input type="range" id="min-font-sub" min="6" max="36" value="16" step="1">
           </div>
-          <div class="slider-hint">Busca o maior tamanho, entre o mínimo e o máximo, que faça o nome do artista caber inteiro nas linhas configuradas. Se nem no mínimo couber, corta com reticências/corte seco.</div>
+          <div class="slider-hint">Se não caber no mínimo, aplica o modo de corte.</div>
         </div>
 
         <div class="slider-row">
@@ -4237,6 +4561,32 @@
       <canvas id="collage-overlay-canvas" style="position:absolute;top:0;left:0;pointer-events:none;"></canvas>
       <canvas id="drag-pulse-overlay"></canvas>
       <canvas id="deleting-overlay-canvas"></canvas>
+      <div id="interactive-header-layer" aria-hidden="true">
+        <div id="interactive-header-guides" aria-hidden="true">
+          <span class="interactive-header-guide interactive-header-guide-x"></span>
+          <span class="interactive-header-guide interactive-header-guide-y"></span>
+        </div>
+        <div id="interactive-header-items"></div>
+        <div id="interactive-header-control-panel">
+          <button type="button" class="interactive-header-tool" id="interactive-header-grid-toggle" title="Personalizar caixas do cabeçalho" aria-label="Personalizar caixas do cabeçalho">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.4 2.6a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
+          </button>
+          <button type="button" class="interactive-header-tool" id="interactive-header-guides-toggle" title="Guias de centralização" aria-label="Guias de centralização">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20 20 4"/><path d="m14 5 5 5M11 8l2 2M8 11l2 2M5 14l5 5"/><path d="M3 21h6M15 3h6"/></svg>
+          </button>
+          <button type="button" class="interactive-header-tool" id="interactive-header-resize" title="Alterar tamanho do cabeçalho" aria-label="Alterar tamanho do cabeçalho">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 7 4-4 4 4M8 17l4 4 4-4M12 3v18"/></svg>
+          </button>
+        </div>
+      </div>
+      <div id="header-image-editor-layer" aria-hidden="true">
+        <div id="header-image-editor-hit" aria-label="Área para posicionar a imagem do cabeçalho"></div>
+      </div>
+      <div id="header-image-editor-actions">
+        <span class="header-image-editor-hint header-image-editor-hint-desktop">Mouse1: arrastar · Mouse2 ou Mouse3: arrastar para aplicar zoom</span>
+        <span class="header-image-editor-hint header-image-editor-hint-mobile">1 toque: arrastar · 2 toques: aplicar zoom</span>
+        <button type="button" id="header-image-editor-save" class="secondary-action-btn">Salvar ajuste</button>
+      </div>
     </div>
   </div>
   <div id="history-panels">
@@ -4372,6 +4722,17 @@
     <div class="compact-dialog-actions">
       <button type="button" class="dialog-secondary" id="preset-save-cancel">CANCELAR</button>
       <button type="button" class="dialog-primary" id="preset-save-confirm">SALVAR</button>
+    </div>
+  </div>
+</div>
+
+<div id="header-background-conflict-overlay" class="compact-dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="header-background-conflict-title">
+  <div class="compact-dialog">
+    <div class="compact-dialog-title" id="header-background-conflict-title">Fundo do cabeçalho</div>
+    <div id="header-background-conflict-message" style="color:var(--text);font-size:13px;line-height:1.5;"></div>
+    <div class="compact-dialog-actions">
+      <button type="button" class="dialog-secondary" id="header-background-conflict-cancel">CANCELAR</button>
+      <button type="button" class="dialog-primary" id="header-background-conflict-confirm">DESATIVAR</button>
     </div>
   </div>
 </div>
@@ -5077,7 +5438,9 @@ const DEFAULTS = {
   mainVPos: 'bottom', albumVPos: 'bottom', subVPos: 'bottom', playsVPos: 'bottom',
   tileShadingEnabled: true,
   tileShadingColor: '#000000',
-  tileShadingAlpha: 100,
+  tileShadingAlpha: 80,
+  tileShadingAlphaTop: 80,
+  tileShadingAlphaBottom: 80,
   tileShadingPosition: 'bottom',
   tileCornerRadiusEnabled: false,
   tileCornerRadius: 10,
@@ -5102,7 +5465,11 @@ const DEFAULTS = {
   tileRatio: 1,
   fitMode: 'cover',
   showHeader: true,
-  headerPosition: 'top', // 'top' | 'bottom'
+  headerPosition: 'top', // 'top' | 'bottom' | 'left' | 'right'
+  headerInteractiveEnabled: true,
+  headerInteractiveGridVisible: false,
+  headerInteractiveGuidesEnabled: true,
+  headerTextRotation: 'none',
   headerTextAlign: 'center',
   headerTextColorOverride: null,
   headerTextOutline: { enabled: false, color: '#000000', width: 3 },
@@ -5132,11 +5499,12 @@ const DEFAULTS = {
   headerDefaultLogoType: 'collager',
   headerDefaultLogoColor: null,
   headerDefaultLogoPos: 'right',
-  headerDefaultLogoScale: 100,
+  headerDefaultLogoScale: 28,
   headerUseUsernameLabel: false,
+  headerUsernameColor: null,
   headerUsernamePlacement: 'right',
   headerUsernameRelativeToLogo: true,
-  headerUsernameScale: 100,
+  headerUsernameScale: 28,
   headerUsernameOverlayTitle: false,
   headerSeparatorMode: 'dot',
   headerText2Enabled1: false, headerText2Enabled2: false, headerText2Enabled3: false,
@@ -5148,6 +5516,7 @@ const DEFAULTS = {
   numberPos: 'left', // posição do número de scrobbles em relação ao(s) texto(s): left/center/right
   scrobblesLabel2: '', // "Texto 2" — só usado quando numberPos === 'center'
   showRank: false,
+  badgeFontBold: true,
   badgeFontSize: 0,        // 0 = auto (proportional to square)
   badgeAlpha: 255,
   badgeBgColor: null,
@@ -5165,9 +5534,9 @@ const DEFAULTS = {
   autoFontMain: false,
   autoFontAlbum: false,
   autoFontSub: false,
-  minFontMain: 10,
-  minFontAlbum: 8,
-  minFontSub: 8,
+  minFontMain: 18,
+  minFontAlbum: 12,
+  minFontSub: 16,
 
   // ── Outline (contorno) — por tipo de texto ──
   outline: {
@@ -5195,7 +5564,7 @@ const TILE_SIZE   = 300;
 const SOURCES_NEEDING_KEY = { youtube: true, spotify: true };
 let imageSources = {
   artists: new Set(['deezer']),
-  albums:  new Set(['lastfm', 'deezer']),
+  albums:  new Set(['lastfm']),
   tracks:  new Set(['deezer']),
 };
 
@@ -5840,6 +6209,8 @@ let tileShadingEnabled = DEFAULTS.tileShadingEnabled;
 let tileShadingAutoDisabled = false;
 let tileShadingColor = DEFAULTS.tileShadingColor;
 let tileShadingAlpha = DEFAULTS.tileShadingAlpha;
+let tileShadingAlphaTop = DEFAULTS.tileShadingAlphaTop;
+let tileShadingAlphaBottom = DEFAULTS.tileShadingAlphaBottom;
 let tileShadingPosition = DEFAULTS.tileShadingPosition;
 let tileCornerRadiusEnabled = DEFAULTS.tileCornerRadiusEnabled;
 let tileCornerRadius = DEFAULTS.tileCornerRadius;
@@ -5924,6 +6295,26 @@ let subFontFamily    = DEFAULTS.subFontFamily;
 let playsFontFamily  = DEFAULTS.playsFontFamily;
 let headerFontBold   = DEFAULTS.headerFontBold;
 let headerPosition       = DEFAULTS.headerPosition;
+let headerInteractiveEnabled = DEFAULTS.headerInteractiveEnabled;
+let headerInteractiveGridVisible = DEFAULTS.headerInteractiveGridVisible;
+let headerInteractiveGuidesEnabled = DEFAULTS.headerInteractiveGuidesEnabled;
+let headerTextRotation = DEFAULTS.headerTextRotation;
+let headerInteractiveLayout = {};
+let lastInteractiveHeaderModel = null;
+
+const HAPTIC_PATTERNS = Object.freeze({
+  short: 18,
+  medium: 48,
+});
+
+function triggerHapticFeedback(kind = 'short') {
+  if (typeof navigator === 'undefined' || typeof navigator.vibrate !== 'function') return false;
+  try {
+    return navigator.vibrate(HAPTIC_PATTERNS[kind] || HAPTIC_PATTERNS.short);
+  } catch {
+    return false;
+  }
+}
 let headerTextAlign      = DEFAULTS.headerTextAlign;
 let headerTextColorOverride = DEFAULTS.headerTextColorOverride;
 let headerTextOutlineState = { ...DEFAULTS.headerTextOutline };
@@ -5951,16 +6342,23 @@ let headerDefaultLogoColor = DEFAULTS.headerDefaultLogoColor;
 let headerDefaultLogoPos = DEFAULTS.headerDefaultLogoPos;
 let headerDefaultLogoScale = DEFAULTS.headerDefaultLogoScale;
 let headerUseUsernameLabel = DEFAULTS.headerUseUsernameLabel;
+let headerUsernameColor = DEFAULTS.headerUsernameColor;
 let headerUsernamePlacement = DEFAULTS.headerUsernamePlacement;
 let headerUsernameRelativeToLogo = DEFAULTS.headerUsernameRelativeToLogo;
 let headerUsernameScale = DEFAULTS.headerUsernameScale;
 let headerUsernameOverlayTitle = DEFAULTS.headerUsernameOverlayTitle;
 let headerSeparatorMode = DEFAULTS.headerSeparatorMode;
+let headerImage = null;
+let headerImageDataUrl = '';
+let headerImageTransform = { x: 0, y: 0, zoom: 100 };
+let headerImageDominantColor = '#0d0d0d';
+let headerImageEditing = false;
 let headerTypeLabelOverrides = {};
 let mainFontBold     = DEFAULTS.mainFontBold;
 let albumFontBold    = DEFAULTS.albumFontBold;
 let subFontBold      = DEFAULTS.subFontBold;
 let playsFontBold    = DEFAULTS.playsFontBold;
+let badgeFontBold    = DEFAULTS.badgeFontBold;
 let syncFonts       = false; // "Usar a mesma fonte para tudo"
 let syncAlpha       = false; // "Usar a mesma transparência para tudo"
 let syncOutlineBox  = false; // "Usar as mesmas configs de contorno/caixa para tudo"
@@ -6543,6 +6941,7 @@ const TEXT_TYPE_DEFAULTS = {
     lines: { sub: 2 },
     bold: { sub: false, plays: true },
     colors: { sub: '#ffffff', plays: null },
+    auto: { sub: { max: 24, min: 18 } },
   },
   albums: {
     sizes: { album: 24, sub: 22, plays: 20 },
@@ -6550,6 +6949,7 @@ const TEXT_TYPE_DEFAULTS = {
     lines: { album: 2, sub: 1 },
     bold: { album: true, sub: false, plays: true },
     colors: { album: '#ffffff', sub: '#b8b8b8', plays: null },
+    auto: { album: { max: 24, min: 18 }, sub: { max: 22, min: 16 } },
   },
   tracks: {
     sizes: { main: 24, album: 14, sub: 22, plays: 20 },
@@ -6557,6 +6957,7 @@ const TEXT_TYPE_DEFAULTS = {
     lines: { main: 2, album: 1, sub: 1 },
     bold: { main: true, album: false, sub: false, plays: true },
     colors: { main: '#ffffff', album: '#ffffff', sub: '#b8b8b8', plays: null },
+    auto: { main: { max: 24, min: 18 }, album: { max: 14, min: 12 }, sub: { max: 22, min: 16 } },
   },
 };
 function syncTypeColorCssVar(type) {
@@ -6918,12 +7319,25 @@ const tileShadingColorInput = document.getElementById('tile-shading-color');
 const tileShadingAlphaSlider = document.getElementById('tile-shading-alpha');
 const tileShadingAlphaVal = document.getElementById('val-tile-shading-alpha');
 const tileShadingAlphaRow = document.getElementById('tile-shading-alpha-row');
+const tileShadingAlphaTopSlider = document.getElementById('tile-shading-alpha-top');
+const tileShadingAlphaTopVal = document.getElementById('val-tile-shading-alpha-top');
+const tileShadingAlphaTopRow = document.getElementById('tile-shading-alpha-top-row');
+const tileShadingAlphaBottomSlider = document.getElementById('tile-shading-alpha-bottom');
+const tileShadingAlphaBottomVal = document.getElementById('val-tile-shading-alpha-bottom');
+const tileShadingAlphaBottomRow = document.getElementById('tile-shading-alpha-bottom-row');
 const tileShadingPositionRow = document.getElementById('tile-shading-position-row');
 function syncTileShadingUi() {
+  const splitAlpha = tileShadingEnabled && tileShadingPosition === 'both';
   if (tileShadingPositionRow) tileShadingPositionRow.style.display = tileShadingEnabled ? '' : 'none';
-  if (tileShadingAlphaRow) tileShadingAlphaRow.style.display = tileShadingEnabled ? '' : 'none';
+  if (tileShadingAlphaRow) tileShadingAlphaRow.style.display = tileShadingEnabled && !splitAlpha ? '' : 'none';
+  if (tileShadingAlphaTopRow) tileShadingAlphaTopRow.style.display = splitAlpha ? '' : 'none';
+  if (tileShadingAlphaBottomRow) tileShadingAlphaBottomRow.style.display = splitAlpha ? '' : 'none';
   if (tileShadingAlphaSlider) tileShadingAlphaSlider.value = tileShadingAlpha;
   if (tileShadingAlphaVal) tileShadingAlphaVal.textContent = tileShadingAlpha + '%';
+  if (tileShadingAlphaTopSlider) tileShadingAlphaTopSlider.value = tileShadingAlphaTop;
+  if (tileShadingAlphaTopVal) tileShadingAlphaTopVal.textContent = tileShadingAlphaTop + '%';
+  if (tileShadingAlphaBottomSlider) tileShadingAlphaBottomSlider.value = tileShadingAlphaBottom;
+  if (tileShadingAlphaBottomVal) tileShadingAlphaBottomVal.textContent = tileShadingAlphaBottom + '%';
   document.querySelectorAll('#tile-shading-position-toggle button').forEach(button => {
     button.classList.toggle('active', button.dataset.position === tileShadingPosition);
   });
@@ -6936,6 +7350,8 @@ if (tileShadingChk) tileShadingChk.addEventListener('change', () => {
 });
 if (tileShadingColorInput) tileShadingColorInput.addEventListener('input', () => { tileShadingColor = tileShadingColorInput.value; document.getElementById('tile-shading-color-swatch').style.background = tileShadingColor; redrawIfReady(); });
 if (tileShadingAlphaSlider) tileShadingAlphaSlider.addEventListener('input', () => { tileShadingAlpha = parseInt(tileShadingAlphaSlider.value); syncTileShadingUi(); redrawIfReady(); });
+if (tileShadingAlphaTopSlider) tileShadingAlphaTopSlider.addEventListener('input', () => { tileShadingAlphaTop = parseInt(tileShadingAlphaTopSlider.value); syncTileShadingUi(); redrawIfReady(); });
+if (tileShadingAlphaBottomSlider) tileShadingAlphaBottomSlider.addEventListener('input', () => { tileShadingAlphaBottom = parseInt(tileShadingAlphaBottomSlider.value); syncTileShadingUi(); redrawIfReady(); });
 document.getElementById('tile-shading-position-toggle')?.addEventListener('click', event => {
   const button = event.target.closest('button[data-position]');
   if (!button) return;
@@ -6965,6 +7381,8 @@ const tileBorderColor3Input = document.getElementById('tile-border-color3');
 const tileBorderGradientThirdChk = document.getElementById('tile-border-gradient-third-enabled');
 const tileBorderGradientAngleSlider = document.getElementById('tile-border-gradient-angle');
 const tileBorderGradientAngleNumber = document.getElementById('tile-border-gradient-angle-number');
+const tileBorderHeaderGradientLink = document.getElementById('tile-border-header-gradient-link');
+const tileBorderHeaderImageLink = document.getElementById('tile-border-header-image-link');
 function setTileBorderGradientAngle(value) {
   const parsed = parseInt(value);
   if (Number.isNaN(parsed)) return;
@@ -6975,6 +7393,9 @@ function setTileBorderGradientAngle(value) {
 function syncTileBorderUi() {
   const headerVisible = document.getElementById('show-header')?.checked !== false;
   const effectiveFollowHeader = headerVisible && tileBorderFollowHeader;
+  const followsHeaderImage = headerVisible && Boolean(headerImage);
+  const followLabel = document.getElementById('tile-border-follow-header-label');
+  const borderImageSizeHint = document.getElementById('tile-border-header-image-size-hint');
   tileCornerRadiusEnabledChk.checked = tileCornerRadiusEnabled;
   tileCornerRadiusSlider.value = tileCornerRadius;
   tileCornerRadiusVal.textContent = tileCornerRadius + 'px';
@@ -6985,6 +7406,14 @@ function syncTileBorderUi() {
   tileBorderWidthVal.textContent = tileBorderWidth + 'px';
   tileBorderFollowHeaderChk.checked = tileBorderFollowHeader;
   tileBorderFollowHeaderRow.style.display = headerVisible ? '' : 'none';
+  if (followLabel) followLabel.textContent = followsHeaderImage ? 'Seguir imagem do cabeçalho' : 'Seguir cor do cabeçalho';
+  if (tileBorderHeaderGradientLink) tileBorderHeaderGradientLink.style.display = headerVisible && tileBorderEnabled && tileBorderFollowHeader && !followsHeaderImage ? '' : 'none';
+  if (tileBorderHeaderImageLink) tileBorderHeaderImageLink.style.display = headerVisible && tileBorderEnabled && tileBorderFollowHeader && followsHeaderImage ? '' : 'none';
+  if (borderImageSizeHint) {
+    const sizes = getHeaderImageRecommendedSizes();
+    borderImageSizeHint.textContent = `Tamanho recomendado com a borda: ${sizes.withBorders.width}px × ${sizes.withBorders.height}px`;
+    borderImageSizeHint.style.display = headerVisible && tileBorderEnabled && followsHeaderImage ? '' : 'none';
+  }
   tileBorderGradientGroup.style.display = headerVisible ? 'none' : '';
   tileBorderGradientChk.checked = tileBorderGradientEnabled;
   tileBorderGradientOptions.classList.toggle('visible', !headerVisible && tileBorderGradientEnabled);
@@ -7009,7 +7438,15 @@ tileCornerRadiusSlider.addEventListener('input', () => { tileCornerRadius = pars
 tileBorderEnabledChk.addEventListener('change', () => { tileBorderEnabled = tileBorderEnabledChk.checked; syncTileBorderUi(); redrawIfReady(); });
 tileBorderWidthSlider.addEventListener('input', () => { tileBorderWidth = parseInt(tileBorderWidthSlider.value); syncTileBorderUi(); redrawIfReady(); });
 tileBorderColorInput.addEventListener('input', () => { tileBorderColor = tileBorderColorInput.value; syncTileBorderUi(); redrawIfReady(); });
-tileBorderFollowHeaderChk.addEventListener('change', () => { tileBorderFollowHeader = tileBorderFollowHeaderChk.checked; syncTileBorderUi(); redrawIfReady(); });
+tileBorderFollowHeaderChk.addEventListener('change', () => {
+  tileBorderFollowHeader = tileBorderFollowHeaderChk.checked;
+  if (tileBorderFollowHeader && headerImage && !headerImageMatchesSize(getHeaderImageRecommendedSizes().withBorders)) {
+    tileBorderColor = headerImageDominantColor;
+    tileBorderColorInput.value = tileBorderColor;
+  }
+  syncTileBorderUi();
+  redrawIfReady();
+});
 tileBorderGradientChk.addEventListener('change', () => { tileBorderGradientEnabled = tileBorderGradientChk.checked; syncTileBorderUi(); redrawIfReady(); });
 tileBorderColor2Input.addEventListener('input', () => { tileBorderColor2 = tileBorderColor2Input.value; syncTileBorderUi(); redrawIfReady(); });
 tileBorderColor3Input.addEventListener('input', () => { tileBorderColor3 = tileBorderColor3Input.value; syncTileBorderUi(); redrawIfReady(); });
@@ -7017,6 +7454,60 @@ tileBorderGradientThirdChk.addEventListener('change', () => { tileBorderGradient
 tileBorderGradientAngleSlider.addEventListener('input', () => { setTileBorderGradientAngle(tileBorderGradientAngleSlider.value); redrawIfReady(); });
 tileBorderGradientAngleNumber.addEventListener('input', () => { setTileBorderGradientAngle(tileBorderGradientAngleNumber.value); redrawIfReady(); });
 tileBorderGradientAngleNumber.addEventListener('change', () => { setTileBorderGradientAngle(tileBorderGradientAngleNumber.value); redrawIfReady(); });
+
+async function applyTileBorderGradientToHeader() {
+  if (!tileBorderGradientEnabled) return false;
+  if (headerImage || headerImageDataUrl) {
+    const confirmed = await askHeaderBackgroundConflict('Deseja desativar a imagem do cabeçalho para colocar o gradiente?');
+    if (!confirmed) return false;
+    clearHeaderImage();
+  }
+  headerBgColor1 = tileBorderColor;
+  headerBgColor2 = tileBorderColor2;
+  headerBgColor3 = tileBorderColor3;
+  headerGradientEnabled = true;
+  headerGradientThirdEnabled = tileBorderGradientThirdEnabled;
+  headerGradientAngle = tileBorderGradientAngle;
+  tileBorderFollowHeader = true;
+  if (headerBgColor1Input) headerBgColor1Input.value = headerBgColor1;
+  if (headerBgColor2Input) headerBgColor2Input.value = headerBgColor2;
+  if (headerBgColor3Input) headerBgColor3Input.value = headerBgColor3;
+  syncHeaderGradientUI();
+  syncTileBorderUi();
+  return true;
+}
+
+tileBorderHeaderGradientLink?.addEventListener('click', async () => {
+  const applied = await applyTileBorderGradientToHeader();
+  if (!applied) return;
+  const headerSection = document.getElementById('custom-header-section');
+  if (window.matchMedia('(max-width: 899px)').matches) {
+    document.body.dataset.mobileView = 'edit';
+    document.body.dataset.mobileEditPanel = 'header';
+    document.querySelectorAll('#mobile-edit-tabs button[data-mobile-panel]').forEach(button => {
+      button.classList.toggle('active', button.dataset.mobilePanel === 'header');
+    });
+  } else {
+    setCustomizationSectionCollapsed(headerSection, false);
+  }
+  requestAnimationFrame(() => document.getElementById('header-gradient-group')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+  redrawIfReady();
+});
+
+tileBorderHeaderImageLink?.addEventListener('click', () => {
+  const headerSection = document.getElementById('custom-header-section');
+  if (window.matchMedia('(max-width: 899px)').matches) {
+    document.body.dataset.mobileView = 'edit';
+    document.body.dataset.mobileEditPanel = 'header';
+    document.querySelectorAll('#mobile-edit-tabs button[data-mobile-panel]').forEach(button => {
+      button.classList.toggle('active', button.dataset.mobilePanel === 'header');
+    });
+  } else {
+    setCustomizationSectionCollapsed(headerSection, false);
+  }
+  startHeaderImageEditing();
+  requestAnimationFrame(() => document.getElementById('header-image-row')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+});
 syncTileBorderUi();
 
 function attachTileVPosToggle(id, setter) {
@@ -7126,6 +7617,7 @@ function organizeCustomizationSections() {
 
   // Header: exibição e aparência, conteúdo, logo/usuário e tipografia própria.
   move(headerContent, document.getElementById('header-toggle-row'));
+  move(headerContent, document.getElementById('header-interactive-row'));
   move(headerContent, document.getElementById('header-sub-panel'));
   move(headerContent, document.getElementById('header-options-panel'));
 
@@ -7166,6 +7658,7 @@ function organizeCustomizationSections() {
 
     const positionBox = makeHeaderTopic('header-topic-position', 'Posição');
     moveBlock(positionBox, document.getElementById('header-position-toggle')?.parentElement);
+    moveBlock(positionBox, document.getElementById('header-text-rotation-row'));
     moveBlock(positionBox, document.getElementById('header-text-align-toggle')?.parentElement);
 
     const recordBox = makeHeaderTopic('header-topic-record', 'Registro');
@@ -7175,12 +7668,13 @@ function organizeCustomizationSections() {
     moveBlock(recordBox, document.getElementById('header-separator-toggle')?.parentElement);
 
     const personalizeBox = makeHeaderTopic('header-topic-personalize', 'Personalização e cores');
+    moveBlock(personalizeBox, document.getElementById('header-height')?.closest('.slider-row'));
+    moveBlock(personalizeBox, document.getElementById('header-gradient-group'));
+    moveBlock(personalizeBox, document.getElementById('header-font')?.closest('.slider-row'));
+    moveBlock(personalizeBox, document.getElementById('header-image-row'));
     moveBlock(personalizeBox, document.getElementById('header-text-color-row'));
     moveBlock(personalizeBox, document.getElementById('header-text-outline-row'));
     moveBlock(personalizeBox, document.getElementById('header-text-outline-panel'));
-    moveBlock(personalizeBox, document.getElementById('header-gradient-group'));
-    moveBlock(personalizeBox, document.getElementById('header-height')?.closest('.slider-row'));
-    moveBlock(personalizeBox, document.getElementById('header-font')?.closest('.slider-row'));
     moveBlock(personalizeBox, document.getElementById('custom-header-font-panel'));
     moveBlock(personalizeBox, rowForInput('header-use-username-label'));
     moveBlock(personalizeBox, document.getElementById('header-username-placement-row'));
@@ -7261,6 +7755,8 @@ function organizeCustomizationSections() {
     moveTileBlock(shadingBox, document.getElementById('tile-shading-row'));
     moveTileBlock(shadingBox, document.getElementById('tile-shading-position-row'));
     moveTileBlock(shadingBox, document.getElementById('tile-shading-alpha-row'));
+    moveTileBlock(shadingBox, document.getElementById('tile-shading-alpha-top-row'));
+    moveTileBlock(shadingBox, document.getElementById('tile-shading-alpha-bottom-row'));
 
     const rankBox = makeTileTopic('tile-topic-rank', 'Ranque');
     moveTileBlock(rankBox, document.getElementById('rank-toggle-row'));
@@ -7362,20 +7858,19 @@ function updateCutModeExamples(items = currentItems, type = getDrawType?.() || c
   const lineOrder = tileLineOrder[type] || TILE_LINE_DEFAULTS[type] || [];
   const enabled = id => lineOrder.some(line => line.id === id && line.enabled);
   const fields = [
-    { id: 'main', count: parseInt(mainLinesSlider.value), getText: item => item?.name },
-    { id: 'album', count: parseInt(albumLinesSlider.value), getText: item => item?.albumName || item?.album?.title || item?.album?.['#text'] },
-    { id: 'sub', count: parseInt(subLinesSlider.value), getText: item => item?.artist?.name },
+    { id: 'main', getText: item => item?.name },
+    { id: 'album', getText: item => item?.albumName || item?.album?.title || item?.album?.['#text'] },
   ];
-  let chosen = null;
+  let chosen = '';
   for (const field of fields) {
-    if (field.count < 2 || !enabled(field.id)) continue;
-    const item = (items || []).find(entry => String(field.getText(entry) || '').trim().length >= 19);
+    if (!enabled(field.id)) continue;
+    const item = (items || []).find(entry => String(field.getText(entry) || '').trim().length > 19);
     if (item) {
-      chosen = { count: field.count, text: String(field.getText(item)).trim() };
+      chosen = String(field.getText(item)).trim();
       break;
     }
   }
-  const text = chosen?.text || 'Never Gonna Give You Up';
+  const text = chosen || 'Never Gonna Give You Up';
   document.getElementById('cut-example-ellipsis').textContent = text.slice(0, 16) + '...';
   document.getElementById('cut-example-hard').textContent = text.slice(0, 19);
 }
@@ -7456,6 +7951,7 @@ function updateAutoFontUI() {
     fontSubAutoSlider.value = document.getElementById('font-sub').value;
     fontSubAutoVal.textContent = fontSubAutoSlider.value + 'px';
   }
+  syncTextKindControlVisibility();
 }
 autoFontMainChk.addEventListener('change', () => { updateAutoFontUI(); redrawIfReady(); });
 autoFontSubChk.addEventListener('change',  () => { updateAutoFontUI(); redrawIfReady(); });
@@ -7477,6 +7973,7 @@ function updateAutoAlbumFontUI() {
     fontAlbumAutoSlider.value = document.getElementById('font-album').value;
     fontAlbumAutoVal.textContent = fontAlbumAutoSlider.value + 'px';
   }
+  syncTextKindControlVisibility();
 }
 document.getElementById('font-album').addEventListener('input', e => {
   fontAlbumAutoSlider.value = e.target.value;
@@ -7620,6 +8117,20 @@ function setArtistSubDefaultsForEffectiveType(effectiveType = getEffectiveType()
     if (autoSlider) autoSlider.value = value;
     if (autoLabel) autoLabel.textContent = value + 'px';
   });
+  Object.entries(config.auto || {}).forEach(([kind, limits]) => {
+    const maxSlider = document.getElementById('font-' + kind + '-auto');
+    const maxLabel = document.getElementById('val-font-' + kind + '-auto');
+    const manualSlider = document.getElementById('font-' + kind);
+    const manualLabel = document.getElementById('val-font-' + kind);
+    const minSlider = document.getElementById('min-font-' + kind);
+    const minLabel = document.getElementById('val-min-font-' + kind);
+    if (maxSlider) maxSlider.value = limits.max;
+    if (maxLabel) maxLabel.textContent = limits.max + 'px';
+    if (manualSlider) manualSlider.value = limits.max;
+    if (manualLabel) manualLabel.textContent = limits.max + 'px';
+    if (minSlider) minSlider.value = limits.min;
+    if (minLabel) minLabel.textContent = limits.min + 'px';
+  });
   Object.entries(config.alpha).forEach(([kind, value]) => {
     const slider = document.getElementById('alpha-' + kind);
     const label = document.getElementById('val-alpha-' + kind);
@@ -7728,6 +8239,9 @@ const headerDefaultLogoChk = document.getElementById('header-default-logo-enable
 const headerDefaultLogoColorInput = document.getElementById('header-logo-color');
 const headerDefaultLogoColorSwatch = document.getElementById('header-logo-color-swatch');
 const headerDefaultLogoColorReset = document.getElementById('header-logo-color-reset');
+const headerUsernameColorInput = document.getElementById('header-username-color');
+const headerUsernameColorSwatch = document.getElementById('header-username-color-swatch');
+const headerUsernameColorReset = document.getElementById('header-username-color-reset');
 const headerDefaultLogoSizeSlider = document.getElementById('header-default-logo-size');
 const headerDefaultLogoSizeVal = document.getElementById('val-header-default-logo-size');
 const headerDefaultLogoSizeRow = document.getElementById('header-default-logo-size-row');
@@ -7745,6 +8259,54 @@ const headerUsernameSizeVal = document.getElementById('val-header-username-size'
 const headerUsernameSizeRow = document.getElementById('header-username-size-row');
 const headerUsernameOverlayRow = document.getElementById('header-username-overlay-row');
 const headerDefaultLogoPosRow = document.getElementById('header-default-logopos-row');
+const headerImageInput = document.getElementById('header-image-input');
+const headerImageSelect = document.getElementById('header-image-select');
+const headerImageRemove = document.getElementById('header-image-remove');
+const headerImageEdit = document.getElementById('header-image-edit');
+const headerImageSizeHint = document.getElementById('header-image-size-hint');
+const headerImageBorderSizeHint = document.getElementById('header-image-border-size-hint');
+const headerImageAdjustments = document.getElementById('header-image-adjustments');
+const headerImageXSlider = document.getElementById('header-image-x');
+const headerImageYSlider = document.getElementById('header-image-y');
+const headerImageZoomSlider = document.getElementById('header-image-zoom');
+const headerImageXVal = document.getElementById('val-header-image-x');
+const headerImageYVal = document.getElementById('val-header-image-y');
+const headerImageZoomVal = document.getElementById('val-header-image-zoom');
+const headerImageEditorLayer = document.getElementById('header-image-editor-layer');
+const headerImageEditorHit = document.getElementById('header-image-editor-hit');
+const headerImageEditorActions = document.getElementById('header-image-editor-actions');
+const headerImageEditorSave = document.getElementById('header-image-editor-save');
+const headerBackgroundConflictOverlay = document.getElementById('header-background-conflict-overlay');
+const headerBackgroundConflictMessage = document.getElementById('header-background-conflict-message');
+let headerBackgroundConflictResolver = null;
+function closeHeaderBackgroundConflict(result) {
+  if (headerBackgroundConflictOverlay) headerBackgroundConflictOverlay.style.display = 'none';
+  const resolve = headerBackgroundConflictResolver;
+  headerBackgroundConflictResolver = null;
+  if (resolve) resolve(result);
+}
+function askHeaderBackgroundConflict(message) {
+  if (!headerBackgroundConflictOverlay || !headerBackgroundConflictMessage) return Promise.resolve(false);
+  if (headerBackgroundConflictResolver) closeHeaderBackgroundConflict(false);
+  headerBackgroundConflictMessage.textContent = message;
+  headerBackgroundConflictOverlay.style.display = 'flex';
+  return new Promise(resolve => { headerBackgroundConflictResolver = resolve; });
+}
+document.getElementById('header-background-conflict-cancel')?.addEventListener('click', () => closeHeaderBackgroundConflict(false));
+document.getElementById('header-background-conflict-confirm')?.addEventListener('click', () => closeHeaderBackgroundConflict(true));
+headerBackgroundConflictOverlay?.addEventListener('click', event => {
+  if (event.target === headerBackgroundConflictOverlay) closeHeaderBackgroundConflict(false);
+});
+function clearHeaderImage() {
+  headerImage = null;
+  headerImageDataUrl = '';
+  headerImageTransform = { x: 0, y: 0, zoom: 100 };
+  headerImageDominantColor = '#0d0d0d';
+  headerImageEditing = false;
+  if (headerImageInput) headerImageInput.value = '';
+  syncHeaderImageUi();
+  syncTileBorderUi();
+}
 function getDefaultBlockedUsernamePlace() {
   if (!headerDefaultLogoEnabled || !headerUseUsernameLabel || headerUsernameOverlayTitle) return '';
   if (!headerUsernameRelativeToLogo) return headerDefaultLogoPos;
@@ -7810,6 +8372,8 @@ function syncHeaderLogoControls() {
   const line2LogoVisible = headerCustomEnabled && headerLine2Enabled && headerLogoEnabled2;
   const line3LogoVisible = headerCustomEnabled && headerLine3Enabled && headerLogoEnabled3;
   const standardLogoVisible = !headerCustomEnabled && headerDefaultLogoEnabled;
+  const standardUsernameVisible = !headerCustomEnabled && headerUseUsernameLabel;
+  const standardIdentityVisible = standardLogoVisible || standardUsernameVisible;
   if (headerDefaultLogoTypeRow) {
     headerDefaultLogoTypeRow.style.display = (standardLogoVisible || line1LogoVisible) ? '' : 'none';
     const label = headerDefaultLogoTypeRow.querySelector('.section-label');
@@ -7820,21 +8384,21 @@ function syncHeaderLogoControls() {
   syncHeaderLogoTypeToggle(headerDefaultLogoTypeToggle, headerCustomEnabled ? headerLogoType1 : headerDefaultLogoType);
   syncHeaderLogoTypeToggle(headerLogoType2Toggle, headerLogoType2);
   syncHeaderLogoTypeToggle(headerLogoType3Toggle, headerLogoType3);
-  headerDefaultLogoSizeRow.style.display = (!headerCustomEnabled && headerDefaultLogoEnabled) ? '' : 'none';
-  if (headerDefaultLogoPosRow) headerDefaultLogoPosRow.style.display = (!headerCustomEnabled && headerDefaultLogoEnabled) ? '' : 'none';
-  headerUsernameSizeRow.style.display = headerUseUsernameLabel ? '' : 'none';
+  headerDefaultLogoSizeRow.style.display = (!headerCustomEnabled && headerDefaultLogoEnabled && !headerInteractiveEnabled) ? '' : 'none';
+  if (headerDefaultLogoPosRow) headerDefaultLogoPosRow.style.display = (!headerCustomEnabled && headerDefaultLogoEnabled && !headerInteractiveEnabled) ? '' : 'none';
+  headerUsernameSizeRow.style.display = headerUseUsernameLabel && !headerInteractiveEnabled ? '' : 'none';
   headerUsernameOverlayRow.style.display = headerUseUsernameLabel ? '' : 'none';
-  if (headerUsernameRelativeRow) headerUsernameRelativeRow.style.display = canRelateToLogo ? '' : 'none';
+  if (headerUsernameRelativeRow) headerUsernameRelativeRow.style.display = canRelateToLogo && !headerInteractiveEnabled ? '' : 'none';
   if (headerUsernameRelativeChk) headerUsernameRelativeChk.checked = headerUsernameRelativeToLogo;
-  headerUsernamePlacementRow.style.display = separateUsername ? '' : 'none';
+  headerUsernamePlacementRow.style.display = separateUsername && !headerInteractiveEnabled ? '' : 'none';
   if (logoOutlineRow) {
-    logoOutlineRow.style.display = (standardLogoVisible || line1LogoVisible) ? '' : 'none';
+    logoOutlineRow.style.display = (standardIdentityVisible || line1LogoVisible) ? '' : 'none';
     const label = logoOutlineRow.querySelector('.toggle-label');
     if (label) label.textContent = headerCustomEnabled
       ? 'Contorno da logo do cabeçalho - Linha 1'
-      : 'Contorno da logo do cabeçalho';
+      : 'Contorno do usuário e logo do cabeçalho';
   }
-  if (logoOutlinePanel) logoOutlinePanel.style.display = (standardLogoVisible || line1LogoVisible) ? '' : 'none';
+  if (logoOutlinePanel) logoOutlinePanel.style.display = (standardIdentityVisible || line1LogoVisible) ? '' : 'none';
   [['logo-l2', line2LogoVisible], ['logo-l3', line3LogoVisible]].forEach(([prefix, visible]) => {
     const row = document.getElementById(`header-${prefix}-outline-row`);
     const panel = document.getElementById(`header-${prefix}-outline-panel`);
@@ -7867,11 +8431,367 @@ if (headerDefaultLogoColorReset) headerDefaultLogoColorReset.addEventListener('c
   syncHeaderLogoColorUi();
   redrawIfReady();
 });
+function syncHeaderUsernameColorUi(autoColor = headerTextColorOverride || '#ffffff') {
+  const color = headerUsernameColor || autoColor;
+  if (headerUsernameColorInput) headerUsernameColorInput.value = color;
+  if (headerUsernameColorSwatch) headerUsernameColorSwatch.style.background = color;
+}
+if (headerUsernameColorInput) {
+  headerUsernameColorInput.addEventListener('input', () => {
+    headerUsernameColor = headerUsernameColorInput.value;
+    syncHeaderUsernameColorUi();
+    redrawIfReady();
+  });
+}
+if (headerUsernameColorReset) headerUsernameColorReset.addEventListener('click', () => {
+  headerUsernameColor = null;
+  syncHeaderUsernameColorUi();
+  redrawIfReady();
+});
+syncHeaderUsernameColorUi();
+
+function getHeaderImageRecommendedSizes() {
+  const cols = Math.max(1, parseInt(document.getElementById('cols')?.value || DEFAULTS.cols));
+  const rows = Math.max(1, parseInt(document.getElementById('rows')?.value || DEFAULTS.rows));
+  const tileHeight = Math.round(TILE_SIZE * tileRatio);
+  const headerSize = Math.max(0, parseInt(document.getElementById('header-height')?.value || DEFAULTS.headerHeight));
+  const rawGridWidth = cols * TILE_SIZE;
+  const rawGridHeight = rows * tileHeight;
+  const borderX = tileBorderEnabled ? (cols + 1) * tileBorderWidth : 0;
+  const borderY = tileBorderEnabled ? (rows + 1) * tileBorderWidth : 0;
+  const gridWidth = rawGridWidth + borderX;
+  const gridHeight = rawGridHeight + borderY;
+  const lateral = isLateralHeaderPosition();
+  return {
+    header: lateral
+      ? { width: headerSize, height: rawGridHeight }
+      : { width: rawGridWidth, height: headerSize },
+    headerWithGridBorders: lateral
+      ? { width: headerSize, height: gridHeight }
+      : { width: gridWidth, height: headerSize },
+    withBorders: lateral
+      ? { width: gridWidth + headerSize, height: gridHeight }
+      : { width: gridWidth, height: gridHeight + headerSize },
+  };
+}
+
+function headerImageMatchesSize(size) {
+  return Boolean(headerImage && size
+    && (headerImage.naturalWidth || headerImage.width) === size.width
+    && (headerImage.naturalHeight || headerImage.height) === size.height);
+}
+
+function extractHeaderImageDominantColor(image) {
+  try {
+    const sample = document.createElement('canvas');
+    sample.width = 32;
+    sample.height = 32;
+    const sampleCtx = sample.getContext('2d', { willReadFrequently: true });
+    sampleCtx.drawImage(image, 0, 0, sample.width, sample.height);
+    const pixels = sampleCtx.getImageData(0, 0, sample.width, sample.height).data;
+    const buckets = new Map();
+    for (let i = 0; i < pixels.length; i += 4) {
+      if (pixels[i + 3] < 96) continue;
+      const key = `${pixels[i] >> 4},${pixels[i + 1] >> 4},${pixels[i + 2] >> 4}`;
+      buckets.set(key, (buckets.get(key) || 0) + pixels[i + 3] / 255);
+    }
+    const winner = [...buckets.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+    if (!winner) return '#0d0d0d';
+    const [r, g, b] = winner.split(',').map(value => (Number(value) << 4) + 8);
+    return `#${[r, g, b].map(value => value.toString(16).padStart(2, '0')).join('')}`;
+  } catch {
+    return '#0d0d0d';
+  }
+}
+
+function syncHeaderImageSizeHint() {
+  const sizes = getHeaderImageRecommendedSizes();
+  if (headerImageSizeHint) {
+    headerImageSizeHint.textContent = `Tamanho recomendado: ${sizes.header.width}px × ${sizes.header.height}px`;
+  }
+  if (headerImageBorderSizeHint) {
+    headerImageBorderSizeHint.textContent = `Tamanho para cabeçalho + bordas: ${sizes.withBorders.width}px × ${sizes.withBorders.height}px`;
+    headerImageBorderSizeHint.style.display = tileBorderEnabled ? '' : 'none';
+  }
+  const borderHint = document.getElementById('tile-border-header-image-size-hint');
+  if (borderHint) borderHint.textContent = `Tamanho recomendado com a borda: ${sizes.withBorders.width}px × ${sizes.withBorders.height}px`;
+}
+
+function syncHeaderImageTransformUi() {
+  if (headerImageXSlider) headerImageXSlider.value = headerImageTransform.x;
+  if (headerImageYSlider) headerImageYSlider.value = headerImageTransform.y;
+  if (headerImageZoomSlider) headerImageZoomSlider.value = headerImageTransform.zoom;
+  if (headerImageXVal) headerImageXVal.textContent = `${Math.round(headerImageTransform.x)}%`;
+  if (headerImageYVal) headerImageYVal.textContent = `${Math.round(headerImageTransform.y)}%`;
+  if (headerImageZoomVal) headerImageZoomVal.textContent = `${Math.round(headerImageTransform.zoom)}%`;
+}
+
+function setHeaderImageTransform(next, { editing = true } = {}) {
+  headerImageTransform = {
+    x: Math.max(-100, Math.min(100, Number(next.x ?? headerImageTransform.x) || 0)),
+    y: Math.max(-100, Math.min(100, Number(next.y ?? headerImageTransform.y) || 0)),
+    zoom: Math.max(100, Math.min(400, Number(next.zoom ?? headerImageTransform.zoom) || 100)),
+  };
+  if (editing && headerImage) headerImageEditing = true;
+  syncHeaderImageTransformUi();
+  syncHeaderImageEditor();
+  redrawIfReady();
+}
+
+function positionHeaderImageEditor() {
+  if (!headerImageEditorLayer || !headerImageEditorHit) return;
+  const canvas = document.getElementById('collage-canvas');
+  if (!canvas?.width || !canvas?.height) return;
+  positionCanvasOverlay(headerImageEditorLayer);
+  const rect = getInteractiveHeaderCssRect(headerImageEditorLayer);
+  if (!rect) return;
+  headerImageEditorHit.style.left = `${rect.x}px`;
+  headerImageEditorHit.style.top = `${rect.y}px`;
+  headerImageEditorHit.style.width = `${rect.w}px`;
+  headerImageEditorHit.style.height = `${rect.h}px`;
+  const mobileEdit = window.matchMedia('(max-width: 899px)').matches && document.body.dataset.mobileView === 'edit';
+  if (headerImageEditorActions) {
+    if (mobileEdit) {
+      headerImageEditorActions.style.position = 'absolute';
+      headerImageEditorActions.style.zIndex = '33';
+      headerImageEditorActions.style.left = `${Math.max(4, rect.x)}px`;
+      headerImageEditorActions.style.top = `${Math.max(4, rect.y + rect.h + 6)}px`;
+      headerImageEditorActions.style.width = `${Math.max(0, Math.min(rect.w, headerImageEditorLayer.clientWidth - Math.max(4, rect.x)))}px`;
+      headerImageEditorActions.style.marginTop = '0';
+    } else {
+      headerImageEditorActions.style.position = '';
+      headerImageEditorActions.style.zIndex = '';
+      headerImageEditorActions.style.left = '';
+      headerImageEditorActions.style.top = '';
+      headerImageEditorActions.style.width = '';
+      headerImageEditorActions.style.marginTop = '';
+    }
+  }
+}
+
+function syncHeaderImageEditor() {
+  const hasVisibleCollage = document.getElementById('collage-wrap')?.classList.contains('visible');
+  const headerIsVisible = document.getElementById('show-header')?.checked !== false;
+  const active = Boolean(headerImage && headerImageEditing && headerIsVisible && hasVisibleCollage);
+  headerImageEditorLayer?.classList.toggle('active', active);
+  headerImageEditorLayer?.setAttribute('aria-hidden', active ? 'false' : 'true');
+  headerImageEditorActions?.classList.toggle('visible', active);
+  if (active) requestAnimationFrame(positionHeaderImageEditor);
+}
+
+function startHeaderImageEditing() {
+  if (!headerImage) return;
+  headerImageEditing = true;
+  syncHeaderImageEditor();
+}
+
+function saveHeaderImageEditing({ automatic = false } = {}) {
+  if (!headerImage) return;
+  headerImageEditing = false;
+  syncHeaderImageEditor();
+  if (!automatic) {
+    recordTimelineAction('Imagem do cabeçalho ajustada.');
+    triggerHapticFeedback('short');
+  }
+}
+function syncHeaderImageUi() {
+  if (headerImageSelect) headerImageSelect.textContent = headerImage ? 'Trocar imagem...' : 'Escolher imagem...';
+  if (headerImageRemove) headerImageRemove.style.display = headerImage ? '' : 'none';
+  if (headerImageEdit) headerImageEdit.style.display = headerImage ? '' : 'none';
+  headerImageAdjustments?.classList.toggle('visible', Boolean(headerImage));
+  syncHeaderImageTransformUi();
+  syncHeaderImageSizeHint();
+  syncHeaderImageEditor();
+  syncTileBorderUi();
+}
+if (headerImageSelect) headerImageSelect.addEventListener('click', () => headerImageInput?.click());
+if (headerImageEdit) headerImageEdit.addEventListener('click', startHeaderImageEditing);
+if (headerImageInput) headerImageInput.addEventListener('change', async () => {
+  const file = headerImageInput.files?.[0];
+  if (!file) return;
+  if (headerGradientEnabled) {
+    const confirmed = await askHeaderBackgroundConflict('Deseja desativar o gradiente do cabeçalho para colocar a imagem?');
+    if (!confirmed) {
+      headerImageInput.value = '';
+      return;
+    }
+    headerGradientEnabled = false;
+    if (headerGradientChk) headerGradientChk.checked = false;
+    syncHeaderGradientUI();
+  }
+  try {
+    headerImageDataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = () => reject(reader.error || new Error('Falha ao ler a imagem.'));
+      reader.readAsDataURL(file);
+    });
+    headerImage = await loadImage(headerImageDataUrl);
+    headerImageTransform = { x: 0, y: 0, zoom: 100 };
+    headerImageDominantColor = extractHeaderImageDominantColor(headerImage);
+    const sizes = getHeaderImageRecommendedSizes();
+    const expected = tileBorderEnabled && tileBorderFollowHeader ? sizes.withBorders : sizes.header;
+    const exactSize = headerImageMatchesSize(expected);
+    headerImageEditing = !exactSize;
+    if (tileBorderEnabled && tileBorderFollowHeader && !exactSize) {
+      tileBorderColor = headerImageDominantColor;
+      if (tileBorderColorInput) tileBorderColorInput.value = tileBorderColor;
+    }
+    syncHeaderImageUi();
+    redrawIfReady();
+    if (exactSize) saveHeaderImageEditing({ automatic: true });
+  } catch (error) {
+    showStatus(`Não foi possível abrir a imagem do cabeçalho: ${error.message}`, true);
+  }
+});
+if (headerImageRemove) headerImageRemove.addEventListener('click', () => {
+  clearHeaderImage();
+  redrawIfReady();
+});
+headerImageEditorSave?.addEventListener('click', () => saveHeaderImageEditing());
+[headerImageXSlider, headerImageYSlider, headerImageZoomSlider].forEach(control => {
+  control?.addEventListener('input', () => setHeaderImageTransform({
+    x: headerImageXSlider.value,
+    y: headerImageYSlider.value,
+    zoom: headerImageZoomSlider.value,
+  }));
+});
+
+const headerImageEditorPointers = new Map();
+let headerImageEditorGesture = null;
+
+function getHeaderImagePointerPoint(event) {
+  return { x: event.clientX, y: event.clientY };
+}
+function getHeaderImagePointerDistance(a, b) {
+  return Math.hypot(b.x - a.x, b.y - a.y);
+}
+function getHeaderImagePointerMidpoint(a, b) {
+  return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+}
+function beginHeaderImageTouchGesture() {
+  const points = [...headerImageEditorPointers.values()];
+  if (points.length >= 2) {
+    const a = points[0];
+    const b = points[1];
+    headerImageEditorGesture = {
+      mode: 'pinch',
+      startDistance: Math.max(1, getHeaderImagePointerDistance(a, b)),
+      startMidpoint: getHeaderImagePointerMidpoint(a, b),
+      startTransform: { ...headerImageTransform },
+    };
+  } else if (points.length === 1) {
+    headerImageEditorGesture = {
+      mode: 'pan-touch',
+      startPoint: { ...points[0] },
+      startTransform: { ...headerImageTransform },
+    };
+  } else {
+    headerImageEditorGesture = null;
+  }
+}
+function applyHeaderImagePan(startTransform, dx, dy) {
+  const rect = headerImageEditorHit?.getBoundingClientRect();
+  if (!rect?.width || !rect?.height) return;
+  setHeaderImageTransform({
+    x: startTransform.x - (dx / rect.width) * 180,
+    y: startTransform.y - (dy / rect.height) * 180,
+    zoom: startTransform.zoom,
+  });
+}
+
+headerImageEditorHit?.addEventListener('pointerdown', event => {
+  if (!headerImage || !headerImageEditing) return;
+  if (event.pointerType === 'mouse' && ![0, 1, 2].includes(event.button)) return;
+  event.preventDefault();
+  headerImageEditorHit.setPointerCapture?.(event.pointerId);
+  headerImageEditorHit.classList.add('dragging');
+  if (event.pointerType === 'touch') {
+    headerImageEditorPointers.set(event.pointerId, getHeaderImagePointerPoint(event));
+    beginHeaderImageTouchGesture();
+    return;
+  }
+  headerImageEditorGesture = {
+    mode: event.button === 0 ? 'pan-mouse' : 'zoom-mouse',
+    pointerId: event.pointerId,
+    startPoint: getHeaderImagePointerPoint(event),
+    startTransform: { ...headerImageTransform },
+  };
+});
+
+headerImageEditorHit?.addEventListener('pointermove', event => {
+  if (!headerImageEditorGesture) return;
+  if (event.pointerType === 'touch') {
+    if (!headerImageEditorPointers.has(event.pointerId)) return;
+    event.preventDefault();
+    headerImageEditorPointers.set(event.pointerId, getHeaderImagePointerPoint(event));
+    const points = [...headerImageEditorPointers.values()];
+    if (headerImageEditorGesture.mode === 'pinch' && points.length >= 2) {
+      const a = points[0];
+      const b = points[1];
+      const midpoint = getHeaderImagePointerMidpoint(a, b);
+      const zoom = headerImageEditorGesture.startTransform.zoom
+        * getHeaderImagePointerDistance(a, b) / headerImageEditorGesture.startDistance;
+      const rect = headerImageEditorHit.getBoundingClientRect();
+      setHeaderImageTransform({
+        x: headerImageEditorGesture.startTransform.x - ((midpoint.x - headerImageEditorGesture.startMidpoint.x) / Math.max(1, rect.width)) * 180,
+        y: headerImageEditorGesture.startTransform.y - ((midpoint.y - headerImageEditorGesture.startMidpoint.y) / Math.max(1, rect.height)) * 180,
+        zoom,
+      });
+    } else if (headerImageEditorGesture.mode === 'pan-touch' && points.length === 1) {
+      applyHeaderImagePan(
+        headerImageEditorGesture.startTransform,
+        points[0].x - headerImageEditorGesture.startPoint.x,
+        points[0].y - headerImageEditorGesture.startPoint.y
+      );
+    }
+    return;
+  }
+  if (event.pointerId !== headerImageEditorGesture.pointerId) return;
+  event.preventDefault();
+  const point = getHeaderImagePointerPoint(event);
+  const dx = point.x - headerImageEditorGesture.startPoint.x;
+  const dy = point.y - headerImageEditorGesture.startPoint.y;
+  if (headerImageEditorGesture.mode === 'pan-mouse') {
+    applyHeaderImagePan(headerImageEditorGesture.startTransform, dx, dy);
+  } else if (headerImageEditorGesture.mode === 'zoom-mouse') {
+    setHeaderImageTransform({
+      ...headerImageEditorGesture.startTransform,
+      zoom: headerImageEditorGesture.startTransform.zoom - dy * .7 + dx * .25,
+    });
+  }
+});
+
+function finishHeaderImagePointer(event) {
+  if (event.pointerType === 'touch') {
+    headerImageEditorPointers.delete(event.pointerId);
+    beginHeaderImageTouchGesture();
+  } else if (headerImageEditorGesture?.pointerId === event.pointerId) {
+    headerImageEditorGesture = null;
+  }
+  if (!headerImageEditorPointers.size && !headerImageEditorGesture) {
+    headerImageEditorHit?.classList.remove('dragging');
+  }
+}
+headerImageEditorHit?.addEventListener('pointerup', finishHeaderImagePointer);
+headerImageEditorHit?.addEventListener('pointercancel', finishHeaderImagePointer);
+headerImageEditorHit?.addEventListener('contextmenu', event => {
+  if (headerImageEditing) event.preventDefault();
+});
+
+syncHeaderImageUi();
+['cols', 'rows', 'tile-ratio', 'tile-border-enabled', 'tile-border-width', 'header-height'].forEach(id => {
+  const control = document.getElementById(id);
+  control?.addEventListener(['tile-border-width', 'header-height'].includes(id) ? 'input' : 'change', () => {
+    syncHeaderImageSizeHint();
+    syncTileBorderUi();
+  });
+});
 headerDefaultLogoSizeSlider.value = DEFAULTS.headerDefaultLogoScale;
-headerDefaultLogoSizeVal.textContent = DEFAULTS.headerDefaultLogoScale + '%';
+headerDefaultLogoSizeVal.textContent = DEFAULTS.headerDefaultLogoScale + 'px';
 headerDefaultLogoSizeSlider.addEventListener('input', () => {
   headerDefaultLogoScale = parseInt(headerDefaultLogoSizeSlider.value);
-  headerDefaultLogoSizeVal.textContent = headerDefaultLogoScale + '%';
+  headerDefaultLogoSizeVal.textContent = headerDefaultLogoScale + 'px';
   redrawIfReady();
 });
 if (headerUsernameRelativeChk) {
@@ -7883,10 +8803,10 @@ if (headerUsernameRelativeChk) {
   });
 }
 headerUsernameSizeSlider.value = DEFAULTS.headerUsernameScale;
-headerUsernameSizeVal.textContent = DEFAULTS.headerUsernameScale + '%';
+headerUsernameSizeVal.textContent = DEFAULTS.headerUsernameScale + 'px';
 headerUsernameSizeSlider.addEventListener('input', () => {
   headerUsernameScale = parseInt(headerUsernameSizeSlider.value);
-  headerUsernameSizeVal.textContent = headerUsernameScale + '%';
+  headerUsernameSizeVal.textContent = headerUsernameScale + 'px';
   redrawIfReady();
 });
 const headerUseUsernameChk = document.getElementById('header-use-username-label');
@@ -7930,12 +8850,22 @@ document.getElementById('header-username-placement-toggle').addEventListener('cl
 });
 syncHeaderLogoControls();
 
-// ── Posição do header: topo ou fundo da collage ──
+// ── Posição do cabeçalho ao redor da collage ──
 document.getElementById('header-position-toggle').addEventListener('click', e => {
   const btn = e.target.closest('button');
   if (!btn) return;
   headerPosition = btn.dataset.pos;
   document.querySelectorAll('#header-position-toggle button').forEach(b => b.classList.toggle('active', b === btn));
+  syncHeaderImageSizeHint();
+  syncHeaderInteractiveUi();
+  redrawIfReady();
+});
+
+document.getElementById('header-text-rotation-toggle')?.addEventListener('click', event => {
+  const button = event.target.closest('button[data-rotation]');
+  if (!button) return;
+  headerTextRotation = button.dataset.rotation;
+  document.querySelectorAll('#header-text-rotation-toggle button').forEach(item => item.classList.toggle('active', item === button));
   redrawIfReady();
 });
 
@@ -7955,6 +8885,7 @@ function syncHeaderTextColorUi(autoColor = '#ffffff') {
   if (headerTextColorInput) headerTextColorInput.value = color;
   if (headerTextColorSwatch) headerTextColorSwatch.style.background = color;
   if (headerDefaultLogoColor === null) syncHeaderLogoColorUi(color);
+  if (headerUsernameColor === null) syncHeaderUsernameColorUi(color);
 }
 if (headerTextColorInput) headerTextColorInput.addEventListener('input', () => {
   headerTextColorOverride = headerTextColorInput.value;
@@ -8074,8 +9005,20 @@ function syncHeaderGradientUI() {
 if (headerBgColor1Input) headerBgColor1Input.addEventListener('input', () => { headerBgColor1 = headerBgColor1Input.value; syncHeaderGradientUI(); redrawIfReady(); });
 if (headerBgColor2Input) headerBgColor2Input.addEventListener('input', () => { headerBgColor2 = headerBgColor2Input.value; syncHeaderGradientUI(); redrawIfReady(); });
 if (headerBgColor3Input) headerBgColor3Input.addEventListener('input', () => { headerBgColor3 = headerBgColor3Input.value; syncHeaderGradientUI(); redrawIfReady(); });
-if (headerGradientChk) headerGradientChk.addEventListener('change', () => {
-  headerGradientEnabled = headerGradientChk.checked;
+if (headerGradientChk) headerGradientChk.addEventListener('change', async () => {
+  const wantsGradient = headerGradientChk.checked;
+  if (wantsGradient && (headerImage || headerImageDataUrl)) {
+    const confirmed = await askHeaderBackgroundConflict('Deseja desativar a imagem do cabeçalho para colocar o gradiente?');
+    if (!confirmed) {
+      headerGradientChk.checked = false;
+      headerGradientEnabled = false;
+      syncHeaderGradientUI();
+      redrawIfReady();
+      return;
+    }
+    clearHeaderImage();
+  }
+  headerGradientEnabled = wantsGradient;
   if (!headerBgColor2) headerBgColor2 = headerBgColor2Input?.value || '#d51007';
   syncHeaderGradientUI();
   redrawIfReady();
@@ -8174,11 +9117,11 @@ function syncHeaderStandardVisibility() {
   const standard = document.getElementById('header-standard-options');
   if (standard) standard.style.display = headerCustomEnabled ? 'none' : 'flex';
   const textAlignRow = document.getElementById('header-text-align-toggle')?.parentElement;
-  if (textAlignRow) textAlignRow.style.display = headerCustomEnabled ? 'none' : '';
+  if (textAlignRow) textAlignRow.style.display = headerCustomEnabled || headerInteractiveEnabled ? 'none' : '';
   const positionBox = document.getElementById('header-topic-position');
-  if (positionBox) positionBox.style.display = headerCustomEnabled ? 'none' : '';
+  if (positionBox) positionBox.style.display = headerCustomEnabled && !headerInteractiveEnabled ? 'none' : '';
   const headerFontSizeRow = document.getElementById('header-font')?.closest('.slider-row');
-  if (headerFontSizeRow) headerFontSizeRow.style.display = headerCustomEnabled ? 'none' : '';
+  if (headerFontSizeRow) headerFontSizeRow.style.display = headerInteractiveEnabled ? 'none' : '';
 
   // No modo personalizado, o registro e os controles de usuário/logo do
   // cabeçalho padrão não fazem parte da composição e ficam completamente
@@ -8232,7 +9175,7 @@ function syncHeaderLogoScaleUi(n) {
   const input = document.getElementById('header-logo-size-l' + n);
   const val = document.getElementById('val-header-logo-size-l' + n);
   const scale = getHeaderLogoScaleValue(n);
-  if (row) row.style.display = getHeaderLogoEnabledValue(n) ? '' : 'none';
+  if (row) row.style.display = getHeaderLogoEnabledValue(n) && !headerInteractiveEnabled ? '' : 'none';
   if (input) input.value = scale;
   if (val) val.textContent = scale + '%';
 }
@@ -8321,7 +9264,11 @@ function syncHeaderCustomLogoRows() {
     normalizeHeaderCustomLogoToggle(n);
     const enabled = getHeaderLogoEnabledValue(n);
     const row = document.getElementById('header-logopos-l' + n + '-row');
-    if (row) row.style.display = enabled ? '' : 'none';
+    if (row) row.style.display = enabled && !headerInteractiveEnabled ? '' : 'none';
+    const text1Row = document.getElementById('header-text1pos-l' + n + '-toggle')?.parentElement;
+    const text2Row = document.getElementById('header-text2pos-l' + n + '-toggle')?.parentElement;
+    if (text1Row) text1Row.style.display = headerInteractiveEnabled ? 'none' : '';
+    if (text2Row) text2Row.style.display = headerInteractiveEnabled ? 'none' : '';
     syncHeaderLogoScaleUi(n);
   });
   syncHeaderCustomPositionLocks();
@@ -8428,13 +9375,30 @@ headerLine3Chk.addEventListener('change', () => {
 });
 
 const headerHeightVal    = document.getElementById('val-header-h');
-headerHeightSlider.addEventListener('input', () => { headerHeightVal.textContent = headerHeightSlider.value + 'px'; redrawIfReady(); });
+headerHeightSlider.addEventListener('input', () => {
+  headerHeightVal.textContent = headerHeightSlider.value + 'px';
+  syncHeaderImageSizeHint();
+  redrawIfReady();
+});
 
 const headerFontSlider = document.getElementById('header-font');
 const headerFontVal    = document.getElementById('val-header-font');
 headerFontSlider.addEventListener('input', () => {
   const v = parseInt(headerFontSlider.value);
   headerFontVal.textContent = v === 0 ? 'auto' : v + 'px';
+  if (headerInteractiveEnabled && lastInteractiveHeaderModel?.components) {
+    const lineCount = headerCustomEnabled
+      ? 1 + Number(headerLine2Enabled) + Number(headerLine3Enabled)
+      : 1;
+    const rowHeight = Math.max(24, parseInt(headerHeightSlider.value) / Math.max(1, lineCount));
+    const size = resolveHeaderFontPx(rowHeight, v);
+    lastInteractiveHeaderModel.components.forEach(component => {
+      if (component.kind !== 'text' || component.key === 'standard-username') return;
+      const layout = headerInteractiveLayout[component.key] || (headerInteractiveLayout[component.key] = {});
+      layout.size = size;
+      component.size = size;
+    });
+  }
   redrawIfReady();
 });
 
@@ -8444,6 +9408,41 @@ headerFontSlider.addEventListener('input', () => {
 const showHeaderChk       = document.getElementById('show-header');
 const headerOptionsPanel  = document.getElementById('header-options-panel');
 const headerToggleRow     = document.getElementById('header-toggle-row');
+const headerInteractiveSettings = document.getElementById('header-interactive-settings');
+const headerInteractiveRow = document.getElementById('header-interactive-row');
+const headerInteractiveChk = document.getElementById('header-interactive-enabled');
+const headerInteractiveGridRow = document.getElementById('header-interactive-grid-row');
+const headerInteractiveGridChk = document.getElementById('header-interactive-grid-enabled');
+const headerTextRotationRow = document.getElementById('header-text-rotation-row');
+
+function syncHeaderInteractiveUi() {
+  const headerOn = showHeaderChk?.checked !== false;
+  if (headerInteractiveChk) headerInteractiveChk.checked = headerInteractiveEnabled;
+  if (headerInteractiveGridChk) headerInteractiveGridChk.checked = headerInteractiveGridVisible;
+  if (headerInteractiveSettings) headerInteractiveSettings.style.display = headerOn ? '' : 'none';
+  if (headerInteractiveRow) headerInteractiveRow.style.display = headerOn ? '' : 'none';
+  if (headerInteractiveGridRow) headerInteractiveGridRow.style.display = headerOn && headerInteractiveEnabled ? '' : 'none';
+  if (headerTextRotationRow) headerTextRotationRow.style.display = headerOn && isLateralHeaderPosition() ? '' : 'none';
+  document.querySelectorAll('#header-text-rotation-toggle button').forEach(button => {
+    button.classList.toggle('active', button.dataset.rotation === headerTextRotation);
+  });
+  syncHeaderStandardVisibility();
+  syncHeaderCustomLogoRows();
+  syncHeaderLogoControls();
+  syncInteractiveHeaderEditor();
+}
+
+headerInteractiveChk?.addEventListener('change', () => {
+  headerInteractiveEnabled = headerInteractiveChk.checked;
+  syncHeaderInteractiveUi();
+  redrawIfReady();
+});
+
+headerInteractiveGridChk?.addEventListener('change', () => {
+  headerInteractiveGridVisible = headerInteractiveGridChk.checked;
+  syncInteractiveHeaderEditor();
+  wakeInteractiveHeaderEditor();
+});
 
 document.getElementById('scrobbles-label-input').addEventListener('input', e => {
   const val = e.target.value.trim();
@@ -8465,14 +9464,17 @@ document.getElementById('number-pos-toggle').addEventListener('click', e => {
   redrawIfReady();
 });
 
-showHeaderChk.addEventListener('change', () => {
+showHeaderChk.addEventListener('change', async () => {
   const on = showHeaderChk.checked;
+  if (on && tileBorderGradientEnabled) await applyTileBorderGradientToHeader();
   headerOptionsPanel.classList.toggle('visible', on);
   headerOptionsPanel.style.display = on ? '' : 'none';
   headerToggleRow.style.borderRadius = on ? '8px 8px 0 0' : '8px';
+  syncHeaderInteractiveUi();
   syncTileBorderUi();
   redrawIfReady();
 });
+syncHeaderInteractiveUi();
 
 // ─────────────────────────────────────────────────────────────
 // RANK TOGGLE
@@ -8483,6 +9485,7 @@ const rankToggleRow = document.getElementById('rank-toggle-row');
 const badgePositionRow = document.getElementById('badge-position-row');
 const badgeAlphaLabel = document.getElementById('badge-alpha-label');
 const badgeBgLabel = document.getElementById('badge-bg-label');
+const badgeFontBoldChk = document.getElementById('badge-font-bold');
 
 function syncBadgeShapeUi() {
   document.querySelectorAll('#badge-shape-toggle button').forEach(button => {
@@ -8503,6 +9506,10 @@ function syncRankUi() {
 
 showRankChk.addEventListener('change', () => {
   syncRankUi();
+  redrawIfReady();
+});
+badgeFontBoldChk?.addEventListener('change', () => {
+  badgeFontBold = badgeFontBoldChk.checked;
   redrawIfReady();
 });
 
@@ -9017,7 +10024,7 @@ function syncTextKindControlVisibility() {
   };
 
   Object.entries(configs).forEach(([kind, config]) => {
-    const visible = isEnabled(kind);
+    const visible = isEnabled(kind) && (kind !== 'main' || type === 'tracks');
     setVisible(document.getElementById(config.align)?.parentElement, visible);
     setVisible(row(config.line), visible);
     setVisible(document.getElementById(config.family)?.parentElement, visible);
@@ -9309,6 +10316,7 @@ function resetGrid() {
   document.querySelectorAll('#tile-dir-toggle button').forEach(b =>
     b.classList.toggle('active', b.dataset.dir === DEFAULTS.tileDirection));
   tileDirection = DEFAULTS.tileDirection;
+  syncHeaderImageSizeHint();
 }
 
 const belowGridBody   = document.getElementById('below-grid-body');
@@ -9343,7 +10351,14 @@ function resetVisual() {
   headerFontSlider.value = DEFAULTS.headerFont;
   headerFontVal.textContent = 'auto';
   headerPosition = DEFAULTS.headerPosition;
+  headerInteractiveEnabled = DEFAULTS.headerInteractiveEnabled;
+  headerInteractiveGridVisible = DEFAULTS.headerInteractiveGridVisible;
+  headerInteractiveGuidesEnabled = DEFAULTS.headerInteractiveGuidesEnabled;
+  headerTextRotation = DEFAULTS.headerTextRotation;
+  headerInteractiveLayout = {};
+  if (headerInteractiveChk) headerInteractiveChk.checked = headerInteractiveEnabled;
   document.querySelectorAll('#header-position-toggle button').forEach(b => b.classList.toggle('active', b.dataset.pos === DEFAULTS.headerPosition));
+  document.querySelectorAll('#header-text-rotation-toggle button').forEach(b => b.classList.toggle('active', b.dataset.rotation === DEFAULTS.headerTextRotation));
   headerTextAlign = DEFAULTS.headerTextAlign;
   document.querySelectorAll('#header-text-align-toggle button').forEach(b => b.classList.toggle('active', b.dataset.align === DEFAULTS.headerTextAlign));
   headerTextColorOverride = DEFAULTS.headerTextColorOverride;
@@ -9372,6 +10387,15 @@ function resetVisual() {
   syncHeaderTypeInput();
   headerUseUsernameLabel = DEFAULTS.headerUseUsernameLabel;
   headerUseUsernameChk.checked = DEFAULTS.headerUseUsernameLabel;
+  headerUsernameColor = DEFAULTS.headerUsernameColor;
+  syncHeaderUsernameColorUi();
+  headerImage = null;
+  headerImageDataUrl = '';
+  headerImageTransform = { x: 0, y: 0, zoom: 100 };
+  headerImageDominantColor = '#0d0d0d';
+  headerImageEditing = false;
+  if (headerImageInput) headerImageInput.value = '';
+  syncHeaderImageUi();
   headerUsernameOverlayTitle = DEFAULTS.headerUsernameOverlayTitle;
   headerUsernameOverlayChk.checked = DEFAULTS.headerUsernameOverlayTitle;
   headerDefaultLogoEnabled = DEFAULTS.headerDefaultLogoEnabled;
@@ -9386,11 +10410,13 @@ function resetVisual() {
   document.querySelectorAll('#header-separator-toggle button').forEach(b => b.classList.toggle('active', b.dataset.sep === DEFAULTS.headerSeparatorMode));
   headerDefaultLogoScale = DEFAULTS.headerDefaultLogoScale;
   headerDefaultLogoSizeSlider.value = DEFAULTS.headerDefaultLogoScale;
-  headerDefaultLogoSizeVal.textContent = DEFAULTS.headerDefaultLogoScale + '%';
+  headerDefaultLogoSizeVal.textContent = DEFAULTS.headerDefaultLogoScale + 'px';
   headerUsernameScale = DEFAULTS.headerUsernameScale;
   headerUsernameSizeSlider.value = DEFAULTS.headerUsernameScale;
-  headerUsernameSizeVal.textContent = DEFAULTS.headerUsernameScale + '%';
+  headerUsernameSizeVal.textContent = DEFAULTS.headerUsernameScale + 'px';
   headerUsernamePlacement = DEFAULTS.headerUsernamePlacement;
+  headerUsernameRelativeToLogo = DEFAULTS.headerUsernameRelativeToLogo;
+  if (headerUsernameRelativeChk) headerUsernameRelativeChk.checked = headerUsernameRelativeToLogo;
   document.querySelectorAll('#header-username-placement-toggle button').forEach(b => b.classList.toggle('active', b.dataset.place === DEFAULTS.headerUsernamePlacement));
   headerCustomEnabled = DEFAULTS.headerCustomEnabled;
   headerCustomChk.checked = DEFAULTS.headerCustomEnabled;
@@ -9400,6 +10426,7 @@ function resetVisual() {
   syncHeaderStandardVisibility();
   syncHeaderCustomLogoRows();
   syncHeaderLogoControls();
+  syncHeaderInteractiveUi();
 
   // Rank
   showRankChk.checked = DEFAULTS.showRank;
@@ -9407,6 +10434,8 @@ function resetVisual() {
 
   badgeFontFamily = DEFAULTS.badgeFontFamily;
   document.getElementById('badge-font-family').value = DEFAULTS.badgeFontFamily;
+  badgeFontBold = DEFAULTS.badgeFontBold;
+  if (badgeFontBoldChk) badgeFontBoldChk.checked = badgeFontBold;
 
   // Badge font size
   badgeFontSlider.value = DEFAULTS.badgeFontSize;
@@ -9434,6 +10463,8 @@ function resetVisual() {
   tileShadingEnabled = DEFAULTS.tileShadingEnabled;
   tileShadingColor = DEFAULTS.tileShadingColor;
   tileShadingAlpha = DEFAULTS.tileShadingAlpha;
+  tileShadingAlphaTop = DEFAULTS.tileShadingAlphaTop;
+  tileShadingAlphaBottom = DEFAULTS.tileShadingAlphaBottom;
   tileShadingPosition = DEFAULTS.tileShadingPosition;
   if (tileShadingChk) tileShadingChk.checked = DEFAULTS.tileShadingEnabled;
   if (tileShadingColorInput) tileShadingColorInput.value = DEFAULTS.tileShadingColor;
@@ -9563,12 +10594,20 @@ function resetFonts() {
   autoFontMainChk.checked = DEFAULTS.autoFontMain;
   autoFontAlbumChk.checked = DEFAULTS.autoFontAlbum;
   autoFontSubChk.checked  = DEFAULTS.autoFontSub;
-  minFontMainSlider.value = DEFAULTS.minFontMain;
-  minFontMainVal.textContent = DEFAULTS.minFontMain + 'px';
-  minFontAlbumSlider.value = DEFAULTS.minFontAlbum;
-  minFontAlbumVal.textContent = DEFAULTS.minFontAlbum + 'px';
-  minFontSubSlider.value = DEFAULTS.minFontSub;
-  minFontSubVal.textContent = DEFAULTS.minFontSub + 'px';
+  Object.entries(config.auto || {}).forEach(([kind, limits]) => {
+    const maxSlider = document.getElementById('font-' + kind + '-auto');
+    const maxLabel = document.getElementById('val-font-' + kind + '-auto');
+    const manualSlider = document.getElementById('font-' + kind);
+    const manualLabel = document.getElementById('val-font-' + kind);
+    const minSlider = document.getElementById('min-font-' + kind);
+    const minLabel = document.getElementById('val-min-font-' + kind);
+    if (maxSlider) maxSlider.value = limits.max;
+    if (maxLabel) maxLabel.textContent = limits.max + 'px';
+    if (manualSlider) manualSlider.value = limits.max;
+    if (manualLabel) manualLabel.textContent = limits.max + 'px';
+    if (minSlider) minSlider.value = limits.min;
+    if (minLabel) minLabel.textContent = limits.min + 'px';
+  });
   updateAutoFontUI(); // isso já realinha os sliders "máximo" com os manuais
   updateAutoAlbumFontUI();
 
@@ -10295,6 +11334,32 @@ function drawCover(ctx, img, x, y, w, h) {
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 }
 
+function drawCoverTransformed(ctx, img, x, y, w, h, transform = headerImageTransform) {
+  const iw = img.naturalWidth || img.width;
+  const ih = img.naturalHeight || img.height;
+  if (!iw || !ih || !w || !h) return;
+  const imageAspect = iw / ih;
+  const targetAspect = w / h;
+  let coverW, coverH;
+  if (imageAspect > targetAspect) {
+    coverH = ih;
+    coverW = coverH * targetAspect;
+  } else {
+    coverW = iw;
+    coverH = coverW / targetAspect;
+  }
+  const zoom = Math.max(1, Math.min(4, Number(transform?.zoom || 100) / 100));
+  const sourceW = Math.max(1, coverW / zoom);
+  const sourceH = Math.max(1, coverH / zoom);
+  const panX = Math.max(-1, Math.min(1, Number(transform?.x || 0) / 100));
+  const panY = Math.max(-1, Math.min(1, Number(transform?.y || 0) / 100));
+  const maxX = Math.max(0, (iw - sourceW) / 2);
+  const maxY = Math.max(0, (ih - sourceH) / 2);
+  const sx = Math.max(0, Math.min(iw - sourceW, (iw - sourceW) / 2 + panX * maxX));
+  const sy = Math.max(0, Math.min(ih - sourceH, (ih - sourceH) / 2 + panY * maxY));
+  ctx.drawImage(img, sx, sy, sourceW, sourceH, x, y, w, h);
+}
+
 function drawExtend(ctx, img, x, y, w, h, position = 'center') {
   ctx.save();
   ctx.beginPath();
@@ -10404,7 +11469,9 @@ function getHeaderSubtitlePart(headerLabel) {
   if (headerSeparatorMode === 'none') {
     const typeLabels = Object.values(TYPE_LABELS).sort((a, b) => b.length - a.length);
     const found = typeLabels.find(label => text.startsWith(label + '  '));
-    return found ? text.slice(found.length).trim() : text;
+    if (found) return text.slice(found.length).trim();
+    const separated = text.match(/^(.+?)\s{2,}(.+)$/);
+    return separated ? separated[2].trim() : text;
   }
   const sep = headerSeparatorMode === 'bar' ? '|' : '\u00b7';
   return text.split(sep).slice(1).join(sep).trim();
@@ -10505,13 +11572,23 @@ function fitFontSize(ctx, text, fontWeight, fontFamily, startSize, minSize, maxW
 // ─────────────────────────────────────────────────────────────
 // CANVAS RENDERING
 // ─────────────────────────────────────────────────────────────
-// Onde os tiles começam verticalmente: logo abaixo do header (quando ele
-// está no topo, como sempre foi) ou direto do topo do canvas (quando o
-// header está no fundo — nesse caso ele é desenhado DEPOIS de todos os
-// tiles, colado na base). A altura total do canvas continua a mesma nos
-// dois casos; só a ORDEM vertical muda.
-function getTilesTopOffset(headerH) {
-  return headerPosition === 'bottom' ? 0 : headerH;
+function isLateralHeaderPosition(position = headerPosition) {
+  return position === 'left' || position === 'right';
+}
+function getTilesOffset(headerSize, position = headerPosition) {
+  return {
+    x: position === 'left' ? headerSize : 0,
+    y: position === 'top' ? headerSize : 0,
+  };
+}
+function getTilesTopOffset(headerH, position = headerPosition) {
+  return getTilesOffset(headerH, position).y;
+}
+function getHeaderRect(canvasW, canvasH, headerSize, position = headerPosition) {
+  if (position === 'bottom') return { x: 0, y: canvasH - headerSize, w: canvasW, h: headerSize };
+  if (position === 'left') return { x: 0, y: 0, w: headerSize, h: canvasH };
+  if (position === 'right') return { x: canvasW - headerSize, y: 0, w: headerSize, h: canvasH };
+  return { x: 0, y: 0, w: canvasW, h: headerSize };
 }
 
 const LASTFM_AS_LOGO_PATH = 'm158.431 165.498-8.354-22.708s-13.575 15.14-33.932 15.14c-18.013 0-30.802-15.662-30.802-40.721 0-32.106 16.182-43.591 32.107-43.591 22.969 0 30.277 14.878 36.543 33.934l8.354 26.103c8.351 25.318 24.013 45.678 69.17 45.678 32.37 0 54.295-9.918 54.295-36.02 0-21.143-12.009-32.107-34.458-37.328l-16.705-3.654c-11.484-2.61-14.877-7.309-14.877-15.14 0-8.875 7.046-14.096 18.533-14.096 12.529 0 19.315 4.699 20.36 15.923l26.102-3.133c-2.088-23.492-18.271-33.15-44.896-33.15-23.491 0-46.462 8.875-46.462 37.327 0 17.75 8.614 28.975 30.277 34.195l17.752 4.175c13.312 3.133 17.748 8.614 17.748 16.185 0 9.656-9.396 13.572-27.146 13.572-26.364 0-37.325-13.834-43.591-32.89l-8.614-26.101c-10.961-33.934-28.452-46.463-63.169-46.463-38.37 0-58.731 24.275-58.731 65.517 0 39.677 20.361 61.08 56.906 61.08 29.492 0 43.59-13.834 43.59-13.834zM46.726 153.229c-2.61.784-5.221 1.306-8.614 1.306-6.265 0-10.703-2.87-10.703-10.442V1.827H0v148.792c0 19.577 13.575 27.672 29.497 27.672 5.221 0 10.181-.785 16.446-2.349l.783-22.713zm330.185-4.176c-6.787 4.701-12.529 7.051-20.36 7.051-9.92 0-15.401-5.221-15.401-18.012V77.006h36.023V55.603H341.41V26.625l-27.669 3.394v25.583h-17.49v21.403h17.49v66.826c0 24.02 13.834 35.5 36.284 35.5 12.269 0 23.232-2.346 31.847-7.305l-4.961-22.973zm23.807 9.396c0 10.705 8.354 19.318 19.056 19.318 11.226 0 19.578-8.613 19.578-19.318 0-10.963-8.353-19.313-19.578-19.313-10.702 0-19.056 8.35-19.056 19.313zm67.009-81.443v99.195h27.409V77.006h30.803V55.603h-30.803V44.638c0-16.444 7.049-21.665 18.534-21.665 8.092 0 13.574 1.825 19.839 5.221l4.437-22.974C530.638 1.827 522.023 0 511.582 0c-22.973 0-43.855 10.963-43.855 43.593v12.01h-17.489v21.403h17.489zm167.427 2.352c-3.133-19.578-15.923-26.629-32.63-26.629-16.706 0-31.062 7.571-37.329 26.104l-3.393-23.23h-22.188v120.598h27.409v-68.129c0-23.235 12.008-32.11 24.799-32.11 13.312 0 18.795 8.875 18.795 23.232V176.2h27.147v-68.39c0-22.974 12.269-31.849 25.061-31.849 13.052 0 18.532 8.875 18.532 23.232v77.006h27.409v-86.66c0-25.843-15.14-36.81-35.24-36.81-16.965 0-32.107 7.571-38.372 26.629z';
@@ -10556,6 +11633,18 @@ function drawHeaderTextWithOutline(ctx, text, x, y) {
     ctx.miterLimit = 2;
     ctx.strokeStyle = headerTextOutlineState.color;
     ctx.lineWidth = headerTextOutlineState.width;
+    ctx.strokeText(text, x, y);
+    ctx.restore();
+  }
+  ctx.fillText(text, x, y);
+}
+function drawHeaderUsernameWithOutline(ctx, text, x, y) {
+  if (headerLogoOutlineState.enabled) {
+    ctx.save();
+    ctx.lineJoin = 'round';
+    ctx.miterLimit = 2;
+    ctx.strokeStyle = headerLogoOutlineState.color;
+    ctx.lineWidth = headerLogoOutlineState.width;
     ctx.strokeText(text, x, y);
     ctx.restore();
   }
@@ -10792,8 +11881,7 @@ function drawDefaultHeaderLogo(ctx, W, headerY, headerH, headerLabel, headerFont
 }
 
 function getDefaultHeaderLogoHeight(headerH, headerFontPx) {
-  const base = Math.max(10, Math.min(Math.round(headerH * 0.26), Math.round(headerFontPx * 0.58)));
-  return Math.max(8, Math.round(base * headerDefaultLogoScale / 100));
+  return Math.max(8, Math.min(Math.round(headerH * 0.82), Math.round(headerDefaultLogoScale)));
 }
 
 function getHeaderUsernameText() {
@@ -10818,8 +11906,17 @@ function isUsernamePlacementBottom(pos) {
 }
 
 function getHeaderUsernameFontSize(headerH, headerFontPx) {
-  const base = Math.max(8, Math.min(Math.round(headerH * 0.26), Math.round(headerFontPx * 0.58)));
-  return Math.max(5, Math.round(base * headerUsernameScale / 100));
+  return Math.max(5, Math.min(Math.round(headerH * 0.82), Math.round(headerUsernameScale)));
+}
+
+function fitHeaderUsernameFont(ctx, text, desiredPx, maxWidth, headerFontCss, headerWeight) {
+  let size = Math.max(3, desiredPx);
+  while (size > 3) {
+    ctx.font = `${headerWeight} ${size}px ${headerFontCss}`;
+    if (ctx.measureText(text || '').width <= maxWidth) break;
+    size--;
+  }
+  return size;
 }
 
 function splitHeaderLabel(headerLabel) {
@@ -10838,16 +11935,26 @@ function getDefaultHeaderTextBounds(ctx, W, headerH, headerFontPx, options = {})
   const pad = Math.max(14, Math.round(headerH * 0.18));
   const logoH = getDefaultHeaderLogoHeight(headerH, headerFontPx);
   const logoW = measureHeaderLogo(ctx, logoH);
-  const userFontPx = getHeaderUsernameFontSize(headerH, headerFontPx);
+  const headerFontCss = fontFamilyCSS(headerFontFamily);
+  const headerWeight = headerFontBold ? 'bold' : '500';
+  const userFontPx = fitHeaderUsernameFont(
+    ctx,
+    usernameText,
+    getHeaderUsernameFontSize(headerH, headerFontPx),
+    W - pad * 2,
+    headerFontCss,
+    headerWeight
+  );
   ctx.save();
-  ctx.font = `${headerFontBold ? 'bold' : '500'} ${userFontPx}px ${fontFamilyCSS(headerFontFamily)}`;
+  ctx.font = `${headerWeight} ${userFontPx}px ${headerFontCss}`;
   const userW = usernameText ? ctx.measureText(usernameText).width : 0;
   ctx.restore();
   const gap = Math.max(14, Math.round(headerFontPx * 0.55));
-  const sideBySide = usernameText && (headerUsernamePlacement === 'left' || headerUsernamePlacement === 'right');
+  const relativeSideStack = usernameText && headerUsernameRelativeToLogo && isCenterUsernamePlacement(headerUsernamePlacement);
+  const sideBySide = usernameText && !relativeSideStack && (headerUsernamePlacement === 'left' || headerUsernamePlacement === 'right');
   const clusterW = logoW + (sideBySide ? userW + gap : 0);
   const stackW = Math.max(logoW, userW);
-  const reservedW = usernameText && (headerUsernamePlacement === 'above' || headerUsernamePlacement === 'below') ? stackW : clusterW;
+  const reservedW = relativeSideStack ? stackW : clusterW;
   const leftBound = logoPos === 'left' ? pad + reservedW + gap : pad;
   const rightBound = logoPos === 'right' ? W - pad - reservedW - gap : W - pad;
   return { left: leftBound, right: rightBound, center: (leftBound + rightBound) / 2 };
@@ -10861,8 +11968,19 @@ function getHeaderAlignedTextPoint(bounds) {
   return { x: bounds.center, align: 'center' };
 }
 
-function drawHeaderLabelAligned(ctx, headerLabel, bounds, y) {
+function drawHeaderLabelAligned(ctx, headerLabel, bounds, y, options = {}) {
   const point = getHeaderAlignedTextPoint(bounds);
+  const availableWidth = Math.max(1, bounds.right - bounds.left);
+  const measuredWidth = ctx.measureText(headerLabel).width;
+  if (options.fitWidth && measuredWidth > availableWidth) {
+    ctx.save();
+    ctx.translate(point.x, y);
+    ctx.scale(availableWidth / measuredWidth, 1);
+    ctx.textAlign = point.align;
+    drawHeaderTextWithOutline(ctx, headerLabel, 0, 0);
+    ctx.restore();
+    return;
+  }
   ctx.textAlign = point.align;
   drawHeaderTextWithOutline(ctx, headerLabel, point.x, y);
 }
@@ -10879,7 +11997,14 @@ function fitHeaderFont(ctx, headerLabel, W, headerH, startFontPx, headerFontCss,
     ctx.font = `${headerWeight} ${fontPx}px ${headerFontCss}`;
     const logoH = getDefaultHeaderLogoHeight(headerH, fontPx);
     const logoW = logoEnabled ? measureHeaderLogo(ctx, logoH) : 0;
-    const userFontPx = getHeaderUsernameFontSize(headerH, fontPx);
+    const userFontPx = fitHeaderUsernameFont(
+      ctx,
+      usernameText,
+      getHeaderUsernameFontSize(headerH, fontPx),
+      W - pad * 2,
+      headerFontCss,
+      headerWeight
+    );
     const gap = Math.max(12, Math.round(fontPx * 0.48));
     const labelW = ctx.measureText(headerLabel).width;
     ctx.font = `${headerWeight} ${userFontPx}px ${headerFontCss}`;
@@ -10893,16 +12018,17 @@ function fitHeaderFont(ctx, headerLabel, W, headerH, startFontPx, headerFontCss,
     }
     if (logoEnabled) {
       if (isCenterLogoPos(logoPos)) {
-        const clusterW = logoW + (usernameW ? usernameW + gap : 0);
-        const logoBand = logoH;
+        const centeredUsername = usernameText && isCenterUsernamePlacement(headerUsernamePlacement);
+        const clusterW = centeredUsername ? Math.max(logoW, usernameW) : logoW + (usernameW ? usernameW + gap : 0);
+        const stackGap = Math.max(4, Math.round(userFontPx * 0.22));
+        const logoBand = logoH + (centeredUsername ? userFontPx + stackGap : 0);
         const labelBand = fontPx;
         fits = labelW <= W - pad * 2
           && clusterW <= W - pad * 2
           && logoBand + labelBand + Math.max(4, Math.round(headerH * 0.06)) <= headerH;
-      } else if (usernameText && (headerUsernamePlacement === 'above' || headerUsernamePlacement === 'below')) {
+      } else if (usernameText && headerUsernameRelativeToLogo && isCenterUsernamePlacement(headerUsernamePlacement)) {
         const stackGap = Math.max(4, Math.round(userFontPx * 0.22));
-        fits = labelW <= W - pad * 2
-          && Math.max(logoW, usernameW) <= W - pad * 2
+        fits = labelW + Math.max(logoW, usernameW) + gap <= W - pad * 2
           && logoH + userFontPx + stackGap <= headerH - Math.max(4, Math.round(headerH * 0.08));
       } else {
         const clusterW = logoW + (usernameW ? usernameW + gap : 0);
@@ -10919,20 +12045,38 @@ function drawDefaultHeaderTextAndLogo(ctx, W, headerY, headerH, headerLabel, sta
   const logoEnabled = options.logoEnabled ?? headerDefaultLogoEnabled;
   const logoPos = options.logoPos ?? headerDefaultLogoPos;
   const logoColor = options.logoColor ?? textColor;
+  const usernameColor = options.usernameColor ?? textColor;
   const usernameText = options.usernameText ?? getHeaderUsernameText();
-  const usernameRelative = !logoEnabled || headerUsernameRelativeToLogo;
-  const fitUsernameText = usernameRelative ? usernameText : '';
-  const fontPx = fitHeaderFont(ctx, headerLabel, W, headerH, startFontPx, headerFontCss, headerWeight, { logoEnabled, logoPos, usernameText: fitUsernameText });
+  const usernameUsesIndependentBand = usernameText
+    && isCenterUsernamePlacement(headerUsernamePlacement)
+    && !(logoEnabled && headerUsernameRelativeToLogo && !isCenterLogoPos(logoPos));
+  const preserveManualFontSize = options.manualFontSize === true
+    && !isCenterLogoPos(logoPos)
+    && !usernameUsesIndependentBand;
+  const fontPx = preserveManualFontSize
+    ? Math.max(5, Math.min(startFontPx, Math.floor(headerH * 0.82)))
+    : fitHeaderFont(ctx, headerLabel, W, headerH, startFontPx, headerFontCss, headerWeight, { logoEnabled, logoPos, usernameText });
   const pad = Math.max(14, Math.round(headerH * 0.18));
   const gap = Math.max(12, Math.round(fontPx * 0.48));
   const centerY = headerY + headerH / 2;
   const logoH = getDefaultHeaderLogoHeight(headerH, fontPx);
   const logoW = measureHeaderLogo(ctx, logoH);
-  const userFontPx = getHeaderUsernameFontSize(headerH, fontPx);
+  const userFontPx = fitHeaderUsernameFont(
+    ctx,
+    usernameText,
+    getHeaderUsernameFontSize(headerH, fontPx),
+    W - pad * 2,
+    headerFontCss,
+    headerWeight
+  );
 
   ctx.fillStyle = textColor;
   ctx.font = `${headerWeight} ${fontPx}px ${headerFontCss}`;
   ctx.textBaseline = 'middle';
+
+  function drawLabel(bounds, y) {
+    drawHeaderLabelAligned(ctx, headerLabel, bounds, y, { fitWidth: preserveManualFontSize });
+  }
 
   function measureUsername() {
     if (!usernameText) return 0;
@@ -10945,11 +12089,13 @@ function drawDefaultHeaderTextAndLogo(ctx, W, headerY, headerH, headerLabel, sta
 
   function drawUsername(x, y, align = 'left') {
     if (!usernameText) return;
+    ctx.save();
     ctx.font = `${headerWeight} ${userFontPx}px ${headerFontCss}`;
-    ctx.fillStyle = textColor;
+    ctx.fillStyle = usernameColor;
     ctx.textAlign = align;
     ctx.textBaseline = 'middle';
-    drawHeaderTextWithOutline(ctx, usernameText, x, y);
+    drawHeaderUsernameWithOutline(ctx, usernameText, x, y);
+    ctx.restore();
   }
 
   function getTitleYBetweenBands(bands) {
@@ -10998,7 +12144,7 @@ function drawDefaultHeaderTextAndLogo(ctx, W, headerY, headerH, headerLabel, sta
         { cy: userY, h: userFontPx }
       ]);
       ctx.font = `${headerWeight} ${fontPx}px ${headerFontCss}`;
-      drawHeaderLabelAligned(ctx, headerLabel, { left: leftBound, right: rightBound, center: (leftBound + rightBound) / 2 }, titleY);
+      drawLabel({ left: leftBound, right: rightBound, center: (leftBound + rightBound) / 2 }, titleY);
       return;
     }
 
@@ -11011,7 +12157,7 @@ function drawDefaultHeaderTextAndLogo(ctx, W, headerY, headerH, headerLabel, sta
       rightBound = Math.min(rightBound, W - pad - userW - gap);
     }
     ctx.font = `${headerWeight} ${fontPx}px ${headerFontCss}`;
-    drawHeaderLabelAligned(ctx, headerLabel, { left: leftBound, right: rightBound, center: (leftBound + rightBound) / 2 }, centerY);
+    drawLabel({ left: leftBound, right: rightBound, center: (leftBound + rightBound) / 2 }, centerY);
     return;
   }
 
@@ -11039,15 +12185,16 @@ function drawDefaultHeaderTextAndLogo(ctx, W, headerY, headerH, headerLabel, sta
       drawHeaderLogo(ctx, logoX, logoCY, logoH, logoColor);
       ctx.font = `${headerWeight} ${fontPx}px ${headerFontCss}`;
       const titleY = getTitleYBetweenBands([{ cy: logoCY, h: logoH }, centeredUserBand]);
-      drawHeaderLabelAligned(ctx, headerLabel, { left: pad, right: W - pad, center: W / 2 }, titleY);
+      drawLabel({ left: pad, right: W - pad, center: W / 2 }, titleY);
       return;
     }
 
     const centeredUser = usernameText && isCenterUsernamePlacement(headerUsernamePlacement);
     const stackMode = usernameText && !centeredUser && (headerUsernamePlacement === 'above' || headerUsernamePlacement === 'below');
-    const clusterW = stackMode ? Math.max(logoW, usernameW) : logoW + (!centeredUser && usernameW ? usernameW + gap : 0);
+    const relativeCenteredStack = centeredUser && headerUsernameRelativeToLogo;
+    const clusterW = (stackMode || relativeCenteredStack) ? Math.max(logoW, usernameW) : logoW + (!centeredUser && usernameW ? usernameW + gap : 0);
     const clusterX = logoPos === 'right' ? W - pad - clusterW : pad;
-    const logoX = stackMode
+    const logoX = (stackMode || relativeCenteredStack)
       ? clusterX + (clusterW - logoW) / 2
       : headerUsernamePlacement === 'left' && usernameText
         ? clusterX + usernameW + gap
@@ -11058,6 +12205,10 @@ function drawDefaultHeaderTextAndLogo(ctx, W, headerY, headerH, headerLabel, sta
       if (centeredUser) {
         if (headerUsernameRelativeToLogo && (logoPos === 'left' || logoPos === 'right')) {
           const stackGap = Math.max(4, Math.round(userFontPx * 0.22));
+          const stackHeight = logoH + stackGap + userFontPx;
+          logoCY = isUsernamePlacementBottom(headerUsernamePlacement)
+            ? centerY - stackHeight / 2 + logoH / 2
+            : centerY + stackHeight / 2 - logoH / 2;
           const userY = isUsernamePlacementBottom(headerUsernamePlacement)
             ? logoCY + logoH / 2 + stackGap + userFontPx / 2
             : logoCY - logoH / 2 - stackGap - userFontPx / 2;
@@ -11086,8 +12237,8 @@ function drawDefaultHeaderTextAndLogo(ctx, W, headerY, headerH, headerLabel, sta
     drawHeaderLogo(ctx, logoX, logoCY, logoH, logoColor);
     ctx.font = `${headerWeight} ${fontPx}px ${headerFontCss}`;
     const bounds = getDefaultHeaderTextBounds(ctx, W, headerH, fontPx, { logoEnabled, logoPos, usernameText });
-    const titleY = centeredUserBand ? getTitleYBetweenBands([{ cy: logoCY, h: logoH }, centeredUserBand]) : centerY;
-    drawHeaderLabelAligned(ctx, headerLabel, bounds, titleY);
+    const titleY = relativeCenteredStack ? centerY : (centeredUserBand ? getTitleYBetweenBands([{ cy: logoCY, h: logoH }, centeredUserBand]) : centerY);
+    drawLabel(bounds, titleY);
     return;
   }
 
@@ -11101,7 +12252,7 @@ function drawDefaultHeaderTextAndLogo(ctx, W, headerY, headerH, headerLabel, sta
       const titleY = isUsernamePlacementBottom(headerUsernamePlacement)
         ? Math.max(headerY + fontPx / 2, userY - userFontPx / 2 - gap - fontPx / 2)
         : Math.min(headerY + headerH - fontPx / 2, userY + userFontPx / 2 + gap + fontPx / 2);
-      drawHeaderLabelAligned(ctx, headerLabel, { left: pad, right: W - pad, center: W / 2 }, titleY);
+      drawLabel({ left: pad, right: W - pad, center: W / 2 }, titleY);
       return;
     }
     const side = headerUsernamePlacement === 'left' ? 'left' : 'right';
@@ -11112,12 +12263,12 @@ function drawDefaultHeaderTextAndLogo(ctx, W, headerY, headerH, headerLabel, sta
     const bounds = side === 'left'
       ? { left: pad + reserved, right: W - pad, center: (pad + reserved + W - pad) / 2 }
       : { left: pad, right: W - pad - reserved, center: (pad + W - pad - reserved) / 2 };
-    drawHeaderLabelAligned(ctx, headerLabel, bounds, centerY);
+    drawLabel(bounds, centerY);
     return;
   }
 
   const bounds = getDefaultHeaderTextBounds(ctx, W, headerH, fontPx, { logoEnabled, logoPos, usernameText });
-  drawHeaderLabelAligned(ctx, headerLabel, bounds, centerY);
+  drawLabel(bounds, centerY);
 }
 
 function makeLinearGradient(ctx, x, y, w, h, angleDeg, color1, color2, color3 = null) {
@@ -11150,6 +12301,7 @@ function fillHeaderBackground(ctx, x, y, w, h, accent, sharedPaint = null) {
 function getTileBorderPaint(ctx, x, y, w, h, accent, sharedPaint = null) {
   const headerVisible = document.getElementById('show-header')?.checked !== false;
   if (headerVisible && tileBorderFollowHeader) {
+    if (headerImage) return headerImageDominantColor;
     if (sharedPaint) return sharedPaint;
     const c1 = getHeaderBgBaseColor(accent);
     if (!headerGradientEnabled) return c1;
@@ -11176,6 +12328,205 @@ function ensureCanvasFontLoaded(spec) {
   return canvasFontLoadCache.get(spec);
 }
 
+const HEADER_AUTO_FONT_RATIO = 0.56;
+function resolveHeaderFontPx(bandHeight, explicitPx = 0) {
+  const automaticSize = Math.max(5, Math.round(bandHeight * HEADER_AUTO_FONT_RATIO));
+  if (explicitPx <= 0) return automaticSize;
+  return Math.max(5, Math.min(160, Math.round(explicitPx)));
+}
+
+function getInteractiveHeaderRotation() {
+  if (!isLateralHeaderPosition()) return 0;
+  if (headerTextRotation === 'cw') return Math.PI / 2;
+  if (headerTextRotation === 'ccw') return -Math.PI / 2;
+  return 0;
+}
+
+function normalizeInteractiveHeaderRotation(value) {
+  const rotation = Number(value);
+  if (rotation === 90) return 90;
+  if (rotation === -90 || rotation === 270) return -90;
+  return 0;
+}
+
+function getInteractiveComponentRotation(saved, contextKey) {
+  if (saved?.context === contextKey && Number.isFinite(Number(saved.rotation))) {
+    return normalizeInteractiveHeaderRotation(saved.rotation);
+  }
+  return normalizeInteractiveHeaderRotation(Math.round(getInteractiveHeaderRotation() * 180 / Math.PI));
+}
+
+function getInteractiveHeaderTextParts(headerLabel) {
+  const subtitle = getHeaderSubtitlePart(headerLabel);
+  let primary = String(headerLabel || '').trim();
+  if (subtitle && primary.endsWith(subtitle)) primary = primary.slice(0, -subtitle.length).trim();
+  primary = primary.replace(/[\u00b7|]\s*$/, '').trim();
+  const separator = headerSeparatorMode === 'bar' ? '|' : headerSeparatorMode === 'dot' ? '\u00b7' : '';
+  return { primary, subtitle: subtitle ? `${separator ? separator + '  ' : ''}${subtitle}` : '' };
+}
+
+function getInteractiveHeaderComponents(headerLabel, headerFontPx, textColor, userColor) {
+  const components = [];
+  const addText = (key, label, text, size, line = 0) => {
+    const clean = String(text || '').trim();
+    if (clean) components.push({ key, label, kind: 'text', text: clean, size, color: label === 'Usuário' ? userColor : textColor, line });
+  };
+  const addLogo = (key, label, logoType, size, outline, line = 0) => {
+    components.push({ key, label, kind: 'logo', logoType, size, color: headerDefaultLogoColor || textColor, outline, line });
+  };
+
+  if (!headerCustomEnabled) {
+    addText('standard-header', 'Cabeçalho', headerLabel, headerFontPx);
+    addText('standard-username', 'Usuário', getHeaderUsernameText(), Math.max(8, headerUsernameScale));
+    if (headerDefaultLogoEnabled) addLogo('standard-logo', 'Logo', headerDefaultLogoType, Math.max(8, headerDefaultLogoScale), headerLogoOutlineState);
+    return components;
+  }
+
+  const lines = [{
+    text1: headerText1_1 || getDefaultCustomHeaderText(headerLabel), text2: headerText2_1,
+    text2Enabled: headerText2Enabled1, logoEnabled: headerLogoEnabled1,
+    logoType: headerLogoType1, logoScale: headerLogoScale1, logoOutline: headerLogoOutlineState,
+  }];
+  if (headerLine2Enabled) lines.push({
+    text1: headerText1_2, text2: headerText2_2, text2Enabled: headerText2Enabled2,
+    logoEnabled: headerLogoEnabled2, logoType: headerLogoType2, logoScale: headerLogoScale2, logoOutline: headerLogoOutlineState2,
+  });
+  if (headerLine3Enabled) lines.push({
+    text1: headerText1_3, text2: headerText2_3, text2Enabled: headerText2Enabled3,
+    logoEnabled: headerLogoEnabled3, logoType: headerLogoType3, logoScale: headerLogoScale3, logoOutline: headerLogoOutlineState3,
+  });
+  const lineFont = resolveHeaderFontPx(Math.max(24, Number(headerHeightSlider.value) / lines.length), parseInt(headerFontSlider.value));
+  lines.forEach((line, index) => {
+    const n = index + 1;
+    addText(`custom-l${n}-text1`, `Linha ${n} · Texto 1`, line.text1, lineFont, index);
+    if (line.text2Enabled) addText(`custom-l${n}-text2`, `Linha ${n} · Texto 2`, line.text2, lineFont, index);
+    if (line.logoEnabled) addLogo(`custom-l${n}-logo`, `Linha ${n} · Logo`, line.logoType, Math.max(8, Math.round(lineFont * .82 * line.logoScale / 100)), line.logoOutline, index);
+  });
+  components.lineCount = lines.length;
+  return components;
+}
+
+function getInteractiveHeaderDefaultPoint(component, index, components) {
+  const lineCount = Math.max(1, components.lineCount || 1);
+  if (!headerCustomEnabled) {
+    const count = Math.max(1, components.length);
+    return isLateralHeaderPosition()
+      ? { x: .5, y: (index + 1) / (count + 1) }
+      : { x: (index + 1) / (count + 1), y: .5 };
+  }
+  const siblings = components.filter(item => item.line === component.line);
+  const siblingIndex = siblings.findIndex(item => item.key === component.key);
+  return isLateralHeaderPosition()
+    ? { x: (component.line + .5) / lineCount, y: (siblingIndex + 1) / (siblings.length + 1) }
+    : { x: (siblingIndex + 1) / (siblings.length + 1), y: (component.line + .5) / lineCount };
+}
+
+function drawInteractiveHeaderComposition(ctx, headerRect, headerLabel, headerFontPx, headerFontCss, headerWeight, textColor, userColor, recordModel = true) {
+  const components = getInteractiveHeaderComponents(headerLabel, headerFontPx, textColor, userColor);
+  const contextKey = [
+    headerPosition,
+    headerCustomEnabled ? 'custom' : 'standard',
+    isLateralHeaderPosition() ? headerTextRotation : 'none',
+    components.map(component => component.key).join(','),
+  ].join(':');
+  const measureComponent = (component, size, rotation) => {
+    let boxW;
+    let boxH;
+    ctx.save();
+    if (component.kind === 'logo') {
+      boxW = measureHeaderLogo(ctx, size, component.logoType);
+      boxH = size;
+    } else {
+      ctx.font = `${headerWeight} ${size}px ${headerFontCss}`;
+      boxW = Math.max(8, ctx.measureText(component.text).width);
+      boxH = Math.max(8, size * 1.15);
+    }
+    if (rotation) [boxW, boxH] = [boxH, boxW];
+    ctx.restore();
+    return { boxW, boxH };
+  };
+  const measured = components.map(component => {
+    const saved = headerInteractiveLayout[component.key];
+    const locked = !!saved?.locked;
+    const rotation = getInteractiveComponentRotation(saved, contextKey);
+    let size = Math.max(5, Math.min(160, Number(saved?.size ?? component.size)));
+    let { boxW, boxH } = measureComponent(component, size, rotation);
+    const maxW = Math.max(12, headerRect.w - 20);
+    const maxH = Math.max(12, headerRect.h - 12);
+    while (!locked && size > 5 && (boxW > maxW || boxH > maxH)) {
+      size--;
+      ({ boxW, boxH } = measureComponent(component, size, rotation));
+    }
+    return { ...component, saved, locked, size, rotation, boxW, boxH };
+  });
+
+  const defaults = new Map();
+  const lineCount = Math.max(1, components.lineCount || 1);
+  const groups = headerCustomEnabled
+    ? Array.from({ length: lineCount }, (_, line) => measured.filter(component => component.line === line))
+    : [measured];
+  groups.forEach((group, line) => {
+    const horizontal = !isLateralHeaderPosition();
+    const available = Math.max(20, (horizontal ? headerRect.w : headerRect.h) - 12);
+    const gap = Math.max(10, Math.min(28, available * .025));
+    const crossAvailable = Math.max(12, (horizontal ? headerRect.h : headerRect.w) / lineCount - 10);
+    group.forEach(component => {
+      let crossSize = horizontal ? component.boxH : component.boxW;
+      while (!component.locked && component.size > 5 && crossSize > crossAvailable) {
+        component.size--;
+        const measuredBox = measureComponent(component, component.size, component.rotation);
+        component.boxW = measuredBox.boxW;
+        component.boxH = measuredBox.boxH;
+        crossSize = horizontal ? component.boxH : component.boxW;
+      }
+    });
+    const dimensions = group.map(component => horizontal ? component.boxW : component.boxH);
+    const total = dimensions.reduce((sum, value) => sum + value, 0) + gap * Math.max(0, group.length - 1);
+    let cursor = Math.max(6, 6 + (available - total) / 2);
+    group.forEach((component, index) => {
+      const center = cursor + dimensions[index] / 2;
+      defaults.set(component.key, horizontal
+        ? { x: center / headerRect.w, y: (line + .5) / lineCount }
+        : { x: (line + .5) / lineCount, y: center / headerRect.h });
+      cursor += dimensions[index] + gap;
+    });
+  });
+
+  const rendered = [];
+  measured.forEach(component => {
+    const fallback = defaults.get(component.key) || { x: .5, y: .5 };
+    const { saved, locked, size, rotation, boxW, boxH } = component;
+    const nx = saved?.context === contextKey ? Number(saved.x) : fallback.x;
+    const ny = saved?.context === contextKey ? Number(saved.y) : fallback.y;
+    const halfX = Math.min(.48, (boxW / 2 + 5) / Math.max(1, headerRect.w));
+    const halfY = Math.min(.48, (boxH / 2 + 5) / Math.max(1, headerRect.h));
+    const rawX = Number.isFinite(nx) ? nx : fallback.x;
+    const rawY = Number.isFinite(ny) ? ny : fallback.y;
+    const x = locked ? rawX : Math.max(halfX, Math.min(1 - halfX, rawX));
+    const y = locked ? rawY : Math.max(halfY, Math.min(1 - halfY, rawY));
+    headerInteractiveLayout[component.key] = { x, y, size, rotation, context: contextKey, locked };
+    const centerX = headerRect.x + x * headerRect.w;
+    const centerY = headerRect.y + y * headerRect.h;
+
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    if (rotation) ctx.rotate(rotation * Math.PI / 180);
+    if (component.kind === 'logo') {
+      const naturalLogoWidth = measureHeaderLogo(ctx, size, component.logoType);
+      drawHeaderLogo(ctx, -naturalLogoWidth / 2, 0, size, component.color, component.logoType, component.outline);
+    } else {
+      ctx.font = `${headerWeight} ${size}px ${headerFontCss}`;
+      ctx.fillStyle = component.color;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      drawHeaderTextWithOutline(ctx, component.text, 0, 0);
+    }
+    ctx.restore();
+    rendered.push({ ...component, x, y, size, rotation, boxW, boxH, saved: undefined });
+  });
+  if (recordModel) lastInteractiveHeaderModel = { headerRect: { ...headerRect }, components: rendered };
+}
+
 async function drawCollage(items, type, cols, rows, headerLabel, apikey, accentOverride, options = {}) {
   const queryState = getRenderedQueryState();
   if (queryState) {
@@ -11200,8 +12551,8 @@ async function drawCollage(items, type, cols, rows, headerLabel, apikey, accentO
   const showHeader  = showHeaderChk.checked;
   const HEADER_H    = showHeader ? parseInt(headerHeightSlider.value) : 0;
   const headerFontRaw = parseInt(headerFontSlider.value);
-  // Auto: proportional to header height (same as original: 42% of height)
-  const headerFontPx  = headerFontRaw > 0 ? headerFontRaw : Math.round(HEADER_H * 0.42);
+  // Auto usa 56% da altura; valores manuais representam pixels reais no canvas.
+  const headerFontPx = resolveHeaderFontPx(HEADER_H, headerFontRaw);
 
   const showRank    = showRankChk.checked;
   const badgeAlpha  = parseInt(badgeAlphaSlider.value);
@@ -11241,6 +12592,7 @@ async function drawCollage(items, type, cols, rows, headerLabel, apikey, accentO
   const ALBUM_FONT_WEIGHT  = albumFontBold  ? 'bold' : '500';
   const SUB_FONT_WEIGHT    = subFontBold    ? 'bold' : '500';
   const PLAYS_FONT_WEIGHT  = playsFontBold  ? 'bold' : '500';
+  const BADGE_FONT_WEIGHT  = badgeFontBold  ? 'bold' : '500';
   const isArtistTileType = type === 'artists';
   const MAIN_TEXT_FONT_FAMILY = isArtistTileType ? SUB_FONT_FAMILY : MAIN_FONT_FAMILY;
   const MAIN_TEXT_FONT_WEIGHT = isArtistTileType ? SUB_FONT_WEIGHT : MAIN_FONT_WEIGHT;
@@ -11256,7 +12608,7 @@ async function drawCollage(items, type, cols, rows, headerLabel, apikey, accentO
       ensureCanvasFontLoaded(`${ALBUM_FONT_WEIGHT} 16px ${ALBUM_FONT_FAMILY}`),
       ensureCanvasFontLoaded(`${SUB_FONT_WEIGHT} 16px ${SUB_FONT_FAMILY}`),
       ensureCanvasFontLoaded(`${PLAYS_FONT_WEIGHT} 16px ${PLAYS_FONT_FAMILY}`),
-      ensureCanvasFontLoaded(`bold 16px ${BADGE_FONT_FAMILY}`),
+      ensureCanvasFontLoaded(`${BADGE_FONT_WEIGHT} 16px ${BADGE_FONT_FAMILY}`),
     ]);
   } catch (e) { /* segue mesmo se falhar — cai no fallback da pilha de fontes */ }
 
@@ -11268,8 +12620,9 @@ async function drawCollage(items, type, cols, rows, headerLabel, apikey, accentO
   const borderGap = tileBorderEnabled ? tileBorderWidth : 0;
   const gridW = cols * tileW + (tileBorderEnabled ? (cols + 1) * borderGap : 0);
   const gridH = rows * tileH + (tileBorderEnabled ? (rows + 1) * borderGap : 0);
-  const W = gridW;
-  const H = gridH + HEADER_H;
+  const lateralHeader = showHeader && isLateralHeaderPosition();
+  const W = gridW + (lateralHeader ? HEADER_H : 0);
+  const H = gridH + (showHeader && !lateralHeader ? HEADER_H : 0);
 
   // Desenha tudo num canvas fora da tela — o canvas visível só é atualizado
   // no final, de uma vez só, pra nunca aparecer preto/vazio enquanto as
@@ -11278,7 +12631,14 @@ async function drawCollage(items, type, cols, rows, headerLabel, apikey, accentO
   canvas.width  = W;
   canvas.height = H;
   const ctx = canvas.getContext('2d');
-  const sharedHeaderBorderPaint = tileBorderEnabled && tileBorderFollowHeader && showHeader && headerGradientEnabled
+  const headerImageAcrossBorders = Boolean(
+    tileBorderEnabled && tileBorderFollowHeader && showHeader && headerImage
+    && headerImageMatchesSize(getHeaderImageRecommendedSizes().withBorders)
+  );
+  const headerImageBorderFallback = Boolean(
+    tileBorderEnabled && tileBorderFollowHeader && showHeader && headerImage && !headerImageAcrossBorders
+  );
+  const sharedHeaderBorderPaint = tileBorderEnabled && tileBorderFollowHeader && showHeader && headerGradientEnabled && !headerImage
     ? makeLinearGradient(
         ctx, 0, 0, W, H, headerGradientAngle,
         getHeaderBgBaseColor(accent),
@@ -11288,31 +12648,40 @@ async function drawCollage(items, type, cols, rows, headerLabel, apikey, accentO
     : null;
 
   // BG
-  ctx.fillStyle = '#0d0d0d';
+  ctx.fillStyle = headerImageBorderFallback ? headerImageDominantColor : '#0d0d0d';
   ctx.fillRect(0, 0, W, H);
+  if (headerImageAcrossBorders) drawCoverTransformed(ctx, headerImage, 0, 0, W, H);
 
-  // Onde os tiles começam verticalmente (ver getTilesTopOffset) — precisa
-  // ser calculado antes do loop de tiles logo abaixo.
-  const tilesTopOffset = getTilesTopOffset(HEADER_H);
-  if (tileBorderEnabled) {
-    ctx.fillStyle = getTileBorderPaint(ctx, 0, tilesTopOffset, gridW, gridH, accent, sharedHeaderBorderPaint);
-    ctx.fillRect(0, tilesTopOffset, gridW, gridH);
+  const tilesOffset = getTilesOffset(HEADER_H);
+  if (tileBorderEnabled && !headerImageAcrossBorders) {
+    ctx.fillStyle = getTileBorderPaint(ctx, tilesOffset.x, tilesOffset.y, gridW, gridH, accent, sharedHeaderBorderPaint);
+    ctx.fillRect(tilesOffset.x, tilesOffset.y, gridW, gridH);
   }
 
   // Header (only if enabled)
   if (showHeader) {
-    // Y onde o RETÂNGULO do header começa: topo do canvas (posição padrão)
-    // ou colado na base, depois de todos os tiles, quando headerPosition
-    // é 'bottom'.
-    const headerY = headerPosition === 'bottom' ? (H - HEADER_H) : 0;
-    const headerBaseColor = fillHeaderBackground(ctx, 0, headerY, W, HEADER_H, accent, sharedHeaderBorderPaint);
+    const headerRect = getHeaderRect(W, H, HEADER_H);
+    const headerBaseColor = headerImageAcrossBorders
+      ? headerImageDominantColor
+      : fillHeaderBackground(ctx, headerRect.x, headerRect.y, headerRect.w, headerRect.h, accent, sharedHeaderBorderPaint);
+    if (headerImage && !headerImageAcrossBorders) {
+      drawCoverTransformed(ctx, headerImage, headerRect.x, headerRect.y, headerRect.w, headerRect.h);
+    }
     const headerAutoTextColor = isLightColor(headerBaseColor) ? '#000' : '#fff';
     const headerTextColor = headerTextColorOverride || headerAutoTextColor;
+    const headerUserColor = headerUsernameColor || headerTextColor;
     syncHeaderTextColorUi(headerAutoTextColor);
     syncHeaderLogoColorUi(headerTextColor);
+    syncHeaderUsernameColorUi(headerTextColor);
 
-    if (!headerCustomEnabled) {
-      drawDefaultHeaderTextAndLogo(ctx, W, headerY, HEADER_H, headerLabel, headerFontPx, fontFamilyCSS(headerFontFamily), HEADER_FONT_WEIGHT, headerTextColor, { logoColor: headerDefaultLogoColor });
+    if (headerInteractiveEnabled || lateralHeader) {
+      drawInteractiveHeaderComposition(ctx, headerRect, headerLabel, headerFontPx, fontFamilyCSS(headerFontFamily), HEADER_FONT_WEIGHT, headerTextColor, headerUserColor, !outputCanvasOnly);
+    } else if (!headerCustomEnabled) {
+      drawDefaultHeaderTextAndLogo(ctx, W, headerRect.y, HEADER_H, headerLabel, headerFontPx, fontFamilyCSS(headerFontFamily), HEADER_FONT_WEIGHT, headerTextColor, {
+        logoColor: headerDefaultLogoColor,
+        usernameColor: headerUserColor,
+        manualFontSize: headerFontRaw > 0,
+      });
     } else {
       // Modo personalizado — 1 ou 2 linhas, cada uma com Texto1/Texto2/Logo
       // posicionados independentemente. Com 2 linhas, cada uma ocupa
@@ -11341,10 +12710,12 @@ async function drawCollage(items, type, cols, rows, headerLabel, apikey, accentO
         logoOutline: headerLogoOutlineState3,
       });
       const rowH = HEADER_H / activeLines.length;
-      const rowFontPx = headerFontRaw > 0 ? headerFontRaw : Math.round(rowH * 0.42);
+      const rowFontPx = resolveHeaderFontPx(rowH, headerFontRaw);
       const headerFontCss = fontFamilyCSS(headerFontFamily);
-      activeLines.forEach((line, idx) => drawHeaderRow(ctx, line, headerY + rowH * idx, rowH, W, headerTextColor, rowFontPx, headerFontCss));
+      activeLines.forEach((line, idx) => drawHeaderRow(ctx, line, headerRect.y + rowH * idx, rowH, W, headerTextColor, rowFontPx, headerFontCss));
     }
+  } else if (!outputCanvasOnly) {
+    lastInteractiveHeaderModel = null;
   }
 
   // Load images — usa poolImageCache (Map por índice do pool, nunca se desloca)
@@ -11385,8 +12756,8 @@ async function drawCollage(items, type, cols, rows, headerLabel, apikey, accentO
     const poolIdx = allFetchedItems.indexOf(item);
     const col  = i % cols, row = Math.floor(i/cols);
     const visualCol = tileDirection === 'rtl' ? (cols - 1 - col) : col;
-    const x = tileBorderEnabled ? borderGap + visualCol * (tileW + borderGap) : visualCol * tileW;
-    const y = tileBorderEnabled ? tilesTopOffset + borderGap + row * (tileH + borderGap) : tilesTopOffset + row * tileH;
+    const x = tileBorderEnabled ? tilesOffset.x + borderGap + visualCol * (tileW + borderGap) : tilesOffset.x + visualCol * tileW;
+    const y = tileBorderEnabled ? tilesOffset.y + borderGap + row * (tileH + borderGap) : tilesOffset.y + row * tileH;
     const pad  = Math.round(tileW * 0.067);
 
     ctx.save();
@@ -11415,6 +12786,8 @@ async function drawCollage(items, type, cols, rows, headerLabel, apikey, accentO
     // Shading overlay
     if (tileShadingEnabled) {
       const shadeAlpha = tileShadingAlpha / 100;
+      const topShadeAlpha = tileShadingAlphaTop / 100;
+      const bottomShadeAlpha = tileShadingAlphaBottom / 100;
       let grad;
       if (tileShadingPosition === 'top') {
         grad = ctx.createLinearGradient(x, y, x, y + tileH * .7);
@@ -11423,11 +12796,11 @@ async function drawCollage(items, type, cols, rows, headerLabel, apikey, accentO
         grad.addColorStop(1, hexToRgba(tileShadingColor, 0));
       } else if (tileShadingPosition === 'both') {
         grad = ctx.createLinearGradient(x, y, x, y + tileH);
-        grad.addColorStop(0, hexToRgba(tileShadingColor, .95 * shadeAlpha));
-        grad.addColorStop(.25, hexToRgba(tileShadingColor, .6 * shadeAlpha));
+        grad.addColorStop(0, hexToRgba(tileShadingColor, .95 * topShadeAlpha));
+        grad.addColorStop(.25, hexToRgba(tileShadingColor, .6 * topShadeAlpha));
         grad.addColorStop(.5, hexToRgba(tileShadingColor, 0));
-        grad.addColorStop(.75, hexToRgba(tileShadingColor, .6 * shadeAlpha));
-        grad.addColorStop(1, hexToRgba(tileShadingColor, .95 * shadeAlpha));
+        grad.addColorStop(.75, hexToRgba(tileShadingColor, .6 * bottomShadeAlpha));
+        grad.addColorStop(1, hexToRgba(tileShadingColor, .95 * bottomShadeAlpha));
       } else {
         grad = ctx.createLinearGradient(x, y + tileH * .3, x, y + tileH);
         grad.addColorStop(0, hexToRgba(tileShadingColor, 0));
@@ -11464,7 +12837,7 @@ async function drawCollage(items, type, cols, rows, headerLabel, apikey, accentO
         ctx.fillRect(badgeX, badgeY, badgeSize, badgeSize);
       }
       ctx.fillStyle = badgeNumFinal;
-      ctx.font = `bold ${badgeFontPx}px ${BADGE_FONT_FAMILY}`;
+      ctx.font = `${BADGE_FONT_WEIGHT} ${badgeFontPx}px ${BADGE_FONT_FAMILY}`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText(i+1, badgeX+badgeSize/2, badgeY+badgeSize/2);
     }
@@ -11709,6 +13082,12 @@ async function drawCollage(items, type, cols, rows, headerLabel, apikey, accentO
   liveCanvas.width  = W;
   liveCanvas.height = H;
   liveCanvas.getContext('2d').drawImage(canvas, 0, 0);
+  liveCanvas.dataset.headerHeight = String(HEADER_H);
+  liveCanvas.dataset.headerPosition = headerPosition;
+  requestAnimationFrame(() => {
+    syncInteractiveHeaderEditor();
+    syncHeaderImageEditor();
+  });
 
   // Sincroniza paintedItems com o que ACABOU de ser pintado — é a partir
   // deste ponto que cliques/hit-tests devem resolver identidade de item,
@@ -12415,6 +13794,7 @@ function capturePendingQueryState() {
     };
   });
   return {
+    username: normalizeMemoryPart(document.getElementById('username')?.value || ''),
     mode: currentType,
     effectiveType: getEffectiveType(),
     newSubType,
@@ -12520,6 +13900,9 @@ async function runDraw() {
     await drawCollage(currentItems, getDrawType(), cols, rows, headerLabelText, currentApiKey, getDrawAccentOverride(), { cacheOnlyImages: true });
     lastHoveredHit = null;
     stopHoverAnim();
+    if (typeof window.refreshDesktopPreviewAfterCanvasRedraw === 'function') {
+      window.refreshDesktopPreviewAfterCanvasRedraw();
+    }
     syncCanvasInteractionLayersAfterLayout();
     // A codificação PNG é independente do preview e acontece somente após
     // uma breve pausa, usando toBlob assíncrono em vez de bloquear com toDataURL.
@@ -12695,6 +14078,7 @@ async function generate() {
     captureCurrentCollageMemory();
     saveCredential(user, apikey);
     recordTimelineAction('Collage gerada.');
+    triggerHapticFeedback('medium');
     notifyQueryConfigurationChanged();
 
   } catch(err) {
@@ -12730,33 +14114,33 @@ function hitTestTile(clientX, clientY) {
   const rect = mainCanvas.getBoundingClientRect();
   const cx = (clientX - rect.left) * (mainCanvas.width / rect.width);
   const cy = (clientY - rect.top)  * (mainCanvas.height / rect.height);
-  const HEADER_H = showHeaderChk.checked ? parseInt(headerHeightSlider.value) : 0;
+  const paintedHeaderHeight = Number(mainCanvas.dataset.headerHeight);
+  const HEADER_H = Number.isFinite(paintedHeaderHeight) ? paintedHeaderHeight : (showHeaderChk.checked ? parseInt(headerHeightSlider.value) : 0);
+  const paintedHeaderPosition = mainCanvas.dataset.headerPosition || headerPosition;
   const { cols, rows } = getDrawGrid();
   const tileH = Math.round(TILE_SIZE * tileRatio);
   const borderGap = tileBorderEnabled ? tileBorderWidth : 0;
+  const gridW = cols * TILE_SIZE + (tileBorderEnabled ? (cols + 1) * borderGap : 0);
   const gridH = rows * tileH + (tileBorderEnabled ? (rows + 1) * borderGap : 0);
-  // Onde a área de tiles começa/termina verticalmente — muda dependendo de
-  // o header estar no topo (tiles começam depois dele) ou no fundo (tiles
-  // começam do zero, header vem depois de todos eles).
-  const topOffset = getTilesTopOffset(HEADER_H);
-  if (cy < topOffset || cy >= topOffset + gridH) return null;
+  const tilesOffset = getTilesOffset(HEADER_H, paintedHeaderPosition);
+  if (cx < tilesOffset.x || cx >= tilesOffset.x + gridW || cy < tilesOffset.y || cy >= tilesOffset.y + gridH) return null;
 
   let visualCol;
   let row;
   let tileX;
   let tileY;
   if (tileBorderEnabled) {
-    visualCol = Math.floor((cx - borderGap) / (TILE_SIZE + borderGap));
-    row = Math.floor((cy - topOffset - borderGap) / (tileH + borderGap));
+    visualCol = Math.floor((cx - tilesOffset.x - borderGap) / (TILE_SIZE + borderGap));
+    row = Math.floor((cy - tilesOffset.y - borderGap) / (tileH + borderGap));
     if (visualCol < 0 || visualCol >= cols || row < 0 || row >= rows) return null;
-    tileX = borderGap + visualCol * (TILE_SIZE + borderGap);
-    tileY = topOffset + borderGap + row * (tileH + borderGap);
+    tileX = tilesOffset.x + borderGap + visualCol * (TILE_SIZE + borderGap);
+    tileY = tilesOffset.y + borderGap + row * (tileH + borderGap);
     if (cx < tileX || cx >= tileX + TILE_SIZE || cy < tileY || cy >= tileY + tileH) return null;
   } else {
-    visualCol = Math.floor(cx / TILE_SIZE);
-    row = Math.floor((cy - topOffset) / tileH);
-    tileX = visualCol * TILE_SIZE;
-    tileY = topOffset + row * tileH;
+    visualCol = Math.floor((cx - tilesOffset.x) / TILE_SIZE);
+    row = Math.floor((cy - tilesOffset.y) / tileH);
+    tileX = tilesOffset.x + visualCol * TILE_SIZE;
+    tileY = tilesOffset.y + row * tileH;
   }
   // O desenho espelha a coluna visual quando tileDirection é 'rtl' (ver drawCollage).
   // Aqui fazemos o espelhamento inverso pra descobrir a qual item do array
@@ -12795,11 +14179,572 @@ function positionCanvasOverlay(element) {
   element.style.height = rect.height + 'px';
 }
 
+let interactiveHeaderIdleTimer = 0;
+let interactiveHeaderDrag = null;
+let interactiveHeaderTransform = null;
+let interactiveHeaderSelectedKey = '';
+let interactiveHeaderCollisionTimer = 0;
+let interactiveHeaderRedrawFrame = 0;
+
+function wakeInteractiveHeaderEditor() {
+  const layer = document.getElementById('interactive-header-layer');
+  if (!layer) return;
+  layer.classList.remove('idle');
+  clearTimeout(interactiveHeaderIdleTimer);
+  if (headerInteractiveEnabled) {
+    interactiveHeaderIdleTimer = setTimeout(() => layer.classList.add('idle'), 3000);
+  }
+}
+
+function scheduleInteractiveHeaderRedraw() {
+  if (interactiveHeaderRedrawFrame) return;
+  interactiveHeaderRedrawFrame = requestAnimationFrame(() => {
+    interactiveHeaderRedrawFrame = 0;
+    redrawIfReady();
+  });
+}
+
+function getInteractiveHeaderCssRect(layer, model = lastInteractiveHeaderModel) {
+  const canvas = document.getElementById('collage-canvas');
+  if (!canvas?.width || !canvas?.height) return null;
+  const headerSize = Number(canvas.dataset.headerHeight) || parseInt(headerHeightSlider?.value || 0);
+  const position = canvas.dataset.headerPosition || headerPosition;
+  const internal = model?.headerRect || getHeaderRect(canvas.width, canvas.height, headerSize, position);
+  const scaleX = layer.clientWidth / canvas.width;
+  const scaleY = layer.clientHeight / canvas.height;
+  return {
+    x: internal.x * scaleX, y: internal.y * scaleY,
+    w: internal.w * scaleX, h: internal.h * scaleY,
+    scaleX, scaleY, internal,
+  };
+}
+
+function getInteractiveHeaderGuideColor() {
+  const accent = getDrawAccentOverride() || getTypeAccent(getDrawType());
+  const colors = [getHeaderBgBaseColor(accent)];
+  if (headerGradientEnabled) {
+    colors.push(headerBgColor2 || colors[0]);
+    if (headerGradientThirdEnabled) colors.push(headerBgColor3 || colors[colors.length - 1]);
+  }
+  const rgb = colors.map(color => {
+    const value = String(color || '#000000').replace('#', '');
+    const hex = value.length === 3 ? value.split('').map(char => char + char).join('') : value.padEnd(6, '0').slice(0, 6);
+    return [parseInt(hex.slice(0, 2), 16) || 0, parseInt(hex.slice(2, 4), 16) || 0, parseInt(hex.slice(4, 6), 16) || 0];
+  });
+  const average = rgb.reduce((sum, color) => sum.map((value, index) => value + color[index]), [0, 0, 0])
+    .map(value => Math.round(value / Math.max(1, rgb.length)));
+  return `#${average.map(value => (255 - value).toString(16).padStart(2, '0')).join('')}`;
+}
+
+function positionInteractiveHeaderGuides(layer, rect) {
+  const guides = document.getElementById('interactive-header-guides');
+  if (!guides || !rect) return;
+  const visible = headerInteractiveEnabled && headerInteractiveGridVisible && headerInteractiveGuidesEnabled;
+  guides.classList.toggle('visible', visible);
+  guides.style.left = `${rect.x}px`;
+  guides.style.top = `${rect.y}px`;
+  guides.style.width = `${rect.w}px`;
+  guides.style.height = `${rect.h}px`;
+}
+
+function positionInteractiveHeaderTools(layer, rect) {
+  const panel = document.getElementById('interactive-header-control-panel');
+  const gridButton = document.getElementById('interactive-header-grid-toggle');
+  const guidesButton = document.getElementById('interactive-header-guides-toggle');
+  const resizeButton = document.getElementById('interactive-header-resize');
+  if (!panel || !gridButton || !guidesButton || !resizeButton || !rect) return;
+  panel.classList.toggle('visible', headerInteractiveEnabled);
+  if (!headerInteractiveEnabled) return;
+
+  gridButton.classList.toggle('active', headerInteractiveEnabled && headerInteractiveGridVisible);
+  gridButton.setAttribute('aria-pressed', String(headerInteractiveGridVisible));
+  guidesButton.classList.toggle('active', headerInteractiveGridVisible && headerInteractiveGuidesEnabled);
+  guidesButton.setAttribute('aria-pressed', String(headerInteractiveGridVisible && headerInteractiveGuidesEnabled));
+  guidesButton.disabled = !headerInteractiveGridVisible;
+  resizeButton.style.display = headerInteractiveEnabled && headerInteractiveGridVisible ? '' : 'none';
+  resizeButton.classList.toggle('vertical', isLateralHeaderPosition());
+
+  const mobile = window.matchMedia('(max-width: 47.999rem)').matches;
+  const panelWidth = panel.offsetWidth || (mobile ? 108 : 38);
+  const panelHeight = panel.offsetHeight || (mobile ? 38 : 108);
+  if (mobile) {
+    let left = Math.max(4, layer.clientWidth - panelWidth - 4);
+    let top;
+    if (headerPosition === 'bottom') {
+      top = rect.y - panelHeight - 6;
+    } else if (headerPosition === 'right') {
+      left = Math.max(4, rect.x - panelWidth - 6);
+      top = layer.clientHeight - panelHeight - 4;
+    } else if (headerPosition === 'left') {
+      top = layer.clientHeight - panelHeight - 4;
+    } else {
+      top = rect.y + rect.h + 6;
+    }
+    panel.style.left = `${Math.max(4, Math.min(layer.clientWidth - panelWidth - 4, left))}px`;
+    panel.style.top = `${Math.max(4, Math.min(layer.clientHeight - panelHeight - 4, top))}px`;
+  } else {
+    panel.style.left = `${layer.clientWidth + 8}px`;
+    panel.style.top = `${Math.max(4, Math.min(layer.clientHeight - panelHeight - 4, rect.y + 4))}px`;
+  }
+}
+
+function updateInteractiveHeaderItemPosition(element, component, headerRect) {
+  const width = Math.max(34, component.boxW * headerRect.scaleX);
+  const height = Math.max(20, component.boxH * headerRect.scaleY);
+  element.classList.toggle('interactive-header-controls-left', component.x > .68);
+  element.style.width = `${width}px`;
+  element.style.height = `${height}px`;
+  element.style.left = `${headerRect.x + component.x * headerRect.w - width / 2}px`;
+  element.style.top = `${headerRect.y + component.y * headerRect.h - height / 2}px`;
+}
+
+function syncInteractiveHeaderEditor() {
+  const canvas = document.getElementById('collage-canvas');
+  const layer = document.getElementById('interactive-header-layer');
+  const itemsHost = document.getElementById('interactive-header-items');
+  if (!canvas || !layer || !itemsHost) return;
+  const hasHeader = showHeaderChk?.checked && canvas.width > 0 && canvas.height > 0 && document.getElementById('collage-wrap')?.classList.contains('visible');
+  layer.classList.toggle('visible', !!hasHeader);
+  layer.setAttribute('aria-hidden', hasHeader ? 'false' : 'true');
+  if (!hasHeader) {
+    itemsHost.replaceChildren();
+    return;
+  }
+  positionCanvasOverlay(layer);
+  const rect = getInteractiveHeaderCssRect(layer);
+  const guideColor = getInteractiveHeaderGuideColor();
+  layer.style.setProperty('--interactive-guide-color', guideColor);
+  layer.style.setProperty('--interactive-guide-color-40', hexToRgba(guideColor, .4));
+  positionInteractiveHeaderGuides(layer, rect);
+  positionInteractiveHeaderTools(layer, rect);
+  layer.classList.toggle('grid-hidden', !headerInteractiveGridVisible);
+  if (!headerInteractiveEnabled || !lastInteractiveHeaderModel || interactiveHeaderDrag || interactiveHeaderTransform) {
+    if (!headerInteractiveEnabled) itemsHost.replaceChildren();
+    return;
+  }
+
+  const availableKeys = new Set(lastInteractiveHeaderModel.components.map(component => component.key));
+  if (interactiveHeaderSelectedKey && !availableKeys.has(interactiveHeaderSelectedKey)) interactiveHeaderSelectedKey = '';
+  itemsHost.classList.toggle('has-selection', !!interactiveHeaderSelectedKey);
+  const fragment = document.createDocumentFragment();
+  lastInteractiveHeaderModel.components.forEach(component => {
+    const item = document.createElement('div');
+    const locked = !!headerInteractiveLayout[component.key]?.locked;
+    item.className = `interactive-header-item${component.key === interactiveHeaderSelectedKey ? ' selected' : ''}${locked ? ' locked' : ''}`;
+    item.dataset.key = component.key;
+    const lockTitle = locked ? `Desafixar ${component.label}` : `Fixar ${component.label}`;
+    const lockIcon = locked
+      ? '<rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>'
+      : '<rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 7.5-2"/>';
+    item.innerHTML = `<button type="button" class="interactive-header-item-handle interactive-header-rotate-handle" data-header-action="rotate" aria-label="Girar ${escapeHtml(component.label)} em 90 graus" title="Girar 90°"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36L21 8"/><path d="M21 3v5h-5"/></svg></button><span class="interactive-header-item-label">${escapeHtml(component.label)}</span><label class="interactive-header-size-editor" title="Tamanho em pixels"><input type="number" min="5" max="160" step="1" value="${Math.round(component.size)}" data-header-size aria-label="Tamanho de ${escapeHtml(component.label)} em pixels"${locked ? ' disabled' : ''}><span>px</span></label><button type="button" class="interactive-header-item-handle interactive-header-lock-handle" data-header-action="lock" aria-label="${escapeHtml(lockTitle)}" title="${escapeHtml(lockTitle)}" aria-pressed="${locked}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${lockIcon}</svg></button><button type="button" class="interactive-header-item-handle interactive-header-resize-handle" data-header-action="resize" aria-label="Redimensionar ${escapeHtml(component.label)}" title="Arraste para redimensionar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M12 17h5v-5"/></svg></button>`;
+    updateInteractiveHeaderItemPosition(item, component, rect);
+    fragment.appendChild(item);
+  });
+  itemsHost.replaceChildren(fragment);
+  wakeInteractiveHeaderEditor();
+}
+
+function getInteractiveComponent(key) {
+  return lastInteractiveHeaderModel?.components.find(component => component.key === key) || null;
+}
+
+function selectInteractiveHeaderItem(key) {
+  interactiveHeaderSelectedKey = key || '';
+  const host = document.getElementById('interactive-header-items');
+  if (!host) return;
+  host.classList.toggle('has-selection', !!interactiveHeaderSelectedKey);
+  host.querySelectorAll('.interactive-header-item').forEach(item => {
+    item.classList.toggle('selected', item.dataset.key === interactiveHeaderSelectedKey);
+  });
+  wakeInteractiveHeaderEditor();
+}
+
+function nudgeOverlappedInteractiveItems(draggedElement, dragMovement = { x: 0, y: 0 }) {
+  const host = document.getElementById('interactive-header-items');
+  const layer = document.getElementById('interactive-header-layer');
+  if (!host || !layer) return false;
+  const draggedRect = draggedElement.getBoundingClientRect();
+  const headerRect = getInteractiveHeaderCssRect(layer);
+  if (!headerRect) return false;
+  const movementIsHorizontal = Math.abs(dragMovement.x) > Math.abs(dragMovement.y);
+  let moved = false;
+  Array.from(host.querySelectorAll('.interactive-header-item')).forEach(target => {
+    if (target === draggedElement) return;
+    const targetRect = target.getBoundingClientRect();
+    const overlapX = Math.min(draggedRect.right, targetRect.right) - Math.max(draggedRect.left, targetRect.left);
+    const overlapY = Math.min(draggedRect.bottom, targetRect.bottom) - Math.max(draggedRect.top, targetRect.top);
+    if (overlapX <= 0 || overlapY <= 0) return;
+    const key = target.dataset.key;
+    const component = getInteractiveComponent(key);
+    const layout = headerInteractiveLayout[key];
+    if (!component || !layout || layout.locked) return;
+    const targetCenterX = targetRect.left + targetRect.width / 2;
+    const targetCenterY = targetRect.top + targetRect.height / 2;
+    const draggedCenterX = draggedRect.left + draggedRect.width / 2;
+    const draggedCenterY = draggedRect.top + draggedRect.height / 2;
+    const useHorizontal = Math.max(Math.abs(dragMovement.x), Math.abs(dragMovement.y)) > 4
+      ? movementIsHorizontal
+      : overlapX <= overlapY;
+    const gap = 6;
+    if (useHorizontal) {
+      const fallbackSign = dragMovement.x >= 0 ? -1 : 1;
+      const sign = targetCenterX === draggedCenterX ? fallbackSign : (targetCenterX < draggedCenterX ? -1 : 1);
+      const half = Math.min(.48, targetRect.width / 2 / Math.max(1, headerRect.w));
+      const distance = sign < 0
+        ? targetRect.right - draggedRect.left + gap
+        : draggedRect.right - targetRect.left + gap;
+      layout.x = Math.max(half, Math.min(1 - half, layout.x + sign * distance / headerRect.w));
+    } else {
+      const fallbackSign = dragMovement.y >= 0 ? -1 : 1;
+      const sign = targetCenterY === draggedCenterY ? fallbackSign : (targetCenterY < draggedCenterY ? -1 : 1);
+      const half = Math.min(.48, targetRect.height / 2 / Math.max(1, headerRect.h));
+      const distance = sign < 0
+        ? targetRect.bottom - draggedRect.top + gap
+        : draggedRect.bottom - targetRect.top + gap;
+      layout.y = Math.max(half, Math.min(1 - half, layout.y + sign * distance / headerRect.h));
+    }
+    component.x = layout.x;
+    component.y = layout.y;
+    updateInteractiveHeaderItemPosition(target, component, headerRect);
+    moved = true;
+  });
+  return moved;
+}
+
+document.getElementById('interactive-header-grid-toggle')?.addEventListener('click', () => {
+  if (!headerInteractiveEnabled) {
+    headerInteractiveEnabled = true;
+    headerInteractiveGridVisible = true;
+    if (headerInteractiveChk) headerInteractiveChk.checked = true;
+    syncHeaderInteractiveUi();
+    redrawIfReady();
+  } else {
+    headerInteractiveGridVisible = !headerInteractiveGridVisible;
+    syncInteractiveHeaderEditor();
+  }
+  if (headerInteractiveGridChk) headerInteractiveGridChk.checked = headerInteractiveGridVisible;
+  wakeInteractiveHeaderEditor();
+});
+
+document.getElementById('interactive-header-guides-toggle')?.addEventListener('click', () => {
+  if (!headerInteractiveEnabled || !headerInteractiveGridVisible) return;
+  headerInteractiveGuidesEnabled = !headerInteractiveGuidesEnabled;
+  syncInteractiveHeaderEditor();
+  wakeInteractiveHeaderEditor();
+});
+
+document.getElementById('interactive-header-items')?.addEventListener('click', event => {
+  const button = event.target.closest('button[data-header-action="lock"]');
+  if (!button || !headerInteractiveEnabled || !headerInteractiveGridVisible) return;
+  const item = button.closest('.interactive-header-item');
+  const key = item?.dataset.key;
+  const component = getInteractiveComponent(key);
+  const layout = headerInteractiveLayout[key];
+  if (!component || !layout) return;
+  event.preventDefault();
+  event.stopPropagation();
+  layout.locked = !layout.locked;
+  component.locked = layout.locked;
+  selectInteractiveHeaderItem(key);
+  syncInteractiveHeaderEditor();
+  scheduleInteractiveHeaderRedraw();
+});
+
+document.getElementById('interactive-header-items')?.addEventListener('click', event => {
+  const button = event.target.closest('button[data-header-action="rotate"]');
+  if (!button || !headerInteractiveEnabled || !headerInteractiveGridVisible) return;
+  const item = button.closest('.interactive-header-item');
+  const key = item?.dataset.key;
+  const component = getInteractiveComponent(key);
+  const layout = headerInteractiveLayout[key];
+  if (!component || !layout || layout.locked) return;
+  event.preventDefault();
+  event.stopPropagation();
+  selectInteractiveHeaderItem(key);
+  const current = normalizeInteractiveHeaderRotation(layout.rotation ?? component.rotation);
+  layout.rotation = current === 0 ? 90 : (current === 90 ? -90 : 0);
+  component.rotation = layout.rotation;
+  wakeInteractiveHeaderEditor();
+  scheduleInteractiveHeaderRedraw();
+});
+
+document.getElementById('interactive-header-items')?.addEventListener('focusin', event => {
+  const input = event.target.closest('input[data-header-size]');
+  if (!input) return;
+  input.select();
+});
+
+function applyInteractiveHeaderSizeInput(input, redraw = true) {
+  if (!input || !headerInteractiveEnabled || !headerInteractiveGridVisible) return false;
+  const item = input.closest('.interactive-header-item');
+  const key = item?.dataset.key;
+  const component = getInteractiveComponent(key);
+  const layout = headerInteractiveLayout[key];
+  if (!component || !layout || layout.locked) return false;
+  const size = Math.max(5, Math.min(160, Math.round(Number(input.value) || component.size)));
+  input.value = size;
+  layout.size = size;
+  component.size = size;
+  selectInteractiveHeaderItem(key);
+  wakeInteractiveHeaderEditor();
+  if (redraw) scheduleInteractiveHeaderRedraw();
+  return true;
+}
+
+document.getElementById('interactive-header-items')?.addEventListener('input', event => {
+  const input = event.target.closest('input[data-header-size]');
+  if (input) applyInteractiveHeaderSizeInput(input, false);
+});
+
+document.getElementById('interactive-header-items')?.addEventListener('keydown', event => {
+  const input = event.target.closest('input[data-header-size]');
+  if (!input) return;
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    applyInteractiveHeaderSizeInput(input, true);
+    input.blur();
+  }
+  if (event.key === 'Escape') {
+    const component = getInteractiveComponent(input.closest('.interactive-header-item')?.dataset.key);
+    if (component) input.value = Math.round(component.size);
+    input.blur();
+  }
+});
+
+document.getElementById('interactive-header-items')?.addEventListener('change', event => {
+  const input = event.target.closest('input[data-header-size]');
+  if (input) applyInteractiveHeaderSizeInput(input, true);
+});
+
+let interactiveHeaderLongPress = null;
+
+function cancelInteractiveHeaderLongPress(event = null) {
+  const pending = interactiveHeaderLongPress;
+  if (!pending || (event?.pointerId != null && event.pointerId !== pending.pointerId)) return;
+  clearTimeout(pending.timer);
+  pending.item.classList.remove('long-press-pending');
+  try {
+    if (pending.item.hasPointerCapture(pending.pointerId)) pending.item.releasePointerCapture(pending.pointerId);
+  } catch {}
+  interactiveHeaderLongPress = null;
+}
+
+function beginInteractiveHeaderDrag({ item, component, headerRect, pointerId, clientX, clientY }) {
+  const itemRect = item.getBoundingClientRect();
+  item.classList.remove('long-press-pending');
+  item.classList.add('dragging');
+  interactiveHeaderDrag = {
+    item, key: item.dataset.key, pointerId, component, headerRect,
+    startClientX: clientX, startClientY: clientY,
+    lastClientX: clientX, lastClientY: clientY,
+    offsetX: clientX - itemRect.left - item.offsetWidth / 2,
+    offsetY: clientY - itemRect.top - item.offsetHeight / 2,
+  };
+  wakeInteractiveHeaderEditor();
+}
+
+document.getElementById('interactive-header-items')?.addEventListener('pointerdown', event => {
+  if (event.target.closest('.interactive-header-item-handle, .interactive-header-size-editor') || event.button > 0) return;
+  const item = event.target.closest('.interactive-header-item');
+  if (!item || !headerInteractiveEnabled || !headerInteractiveGridVisible) return;
+  selectInteractiveHeaderItem(item.dataset.key);
+  if (headerInteractiveLayout[item.dataset.key]?.locked) return;
+  const layer = document.getElementById('interactive-header-layer');
+  const component = getInteractiveComponent(item.dataset.key);
+  const headerRect = getInteractiveHeaderCssRect(layer);
+  if (!component || !headerRect) return;
+  event.preventDefault();
+  item.setPointerCapture(event.pointerId);
+  if (event.pointerType === 'touch') {
+    cancelInteractiveHeaderLongPress();
+    const pending = {
+      item, component, headerRect, pointerId: event.pointerId,
+      startClientX: event.clientX, startClientY: event.clientY,
+      lastClientX: event.clientX, lastClientY: event.clientY,
+      timer: 0,
+    };
+    item.classList.add('long-press-pending');
+    pending.timer = setTimeout(() => {
+      if (interactiveHeaderLongPress !== pending || !headerInteractiveEnabled || !headerInteractiveGridVisible) return;
+      interactiveHeaderLongPress = null;
+      triggerHapticFeedback('short');
+      beginInteractiveHeaderDrag({
+        item: pending.item,
+        component: pending.component,
+        headerRect: pending.headerRect,
+        pointerId: pending.pointerId,
+        clientX: pending.lastClientX,
+        clientY: pending.lastClientY,
+      });
+    }, 500);
+    interactiveHeaderLongPress = pending;
+    wakeInteractiveHeaderEditor();
+    return;
+  }
+  beginInteractiveHeaderDrag({
+    item, component, headerRect, pointerId: event.pointerId,
+    clientX: event.clientX, clientY: event.clientY,
+  });
+});
+
+document.addEventListener('pointermove', event => {
+  const pending = interactiveHeaderLongPress;
+  if (pending && event.pointerId === pending.pointerId) {
+    pending.lastClientX = event.clientX;
+    pending.lastClientY = event.clientY;
+    if (Math.hypot(event.clientX - pending.startClientX, event.clientY - pending.startClientY) > 12) {
+      cancelInteractiveHeaderLongPress(event);
+    } else {
+      event.preventDefault();
+    }
+    return;
+  }
+  const transform = interactiveHeaderTransform;
+  if (transform && event.pointerId === transform.pointerId) {
+    event.preventDefault();
+    const distance = Math.hypot(event.clientX - transform.centerX, event.clientY - transform.centerY);
+    const internalDelta = (distance - transform.startDistance) / Math.max(.01, transform.displayScale);
+    const size = Math.max(5, Math.min(160, Math.round(transform.startSize + internalDelta)));
+    const layout = headerInteractiveLayout[transform.key];
+    layout.size = size;
+    transform.component.size = size;
+    transform.item.style.transform = `scale(${Math.max(.2, size / transform.startSize)})`;
+    wakeInteractiveHeaderEditor();
+    scheduleInteractiveHeaderRedraw();
+    return;
+  }
+  const drag = interactiveHeaderDrag;
+  if (!drag || event.pointerId !== drag.pointerId) return;
+  event.preventDefault();
+  const layerRect = document.getElementById('interactive-header-layer').getBoundingClientRect();
+  const x = (event.clientX - layerRect.left - drag.headerRect.x - drag.offsetX) / drag.headerRect.w;
+  const y = (event.clientY - layerRect.top - drag.headerRect.y - drag.offsetY) / drag.headerRect.h;
+  const layout = headerInteractiveLayout[drag.key];
+  const halfX = Math.min(.48, drag.item.offsetWidth / 2 / Math.max(1, drag.headerRect.w));
+  const halfY = Math.min(.48, drag.item.offsetHeight / 2 / Math.max(1, drag.headerRect.h));
+  const boundedX = Math.max(halfX, Math.min(1 - halfX, x));
+  const boundedY = Math.max(halfY, Math.min(1 - halfY, y));
+  const snapThresholdX = Math.max(.015, Math.min(.05, 12 / Math.max(1, drag.headerRect.w)));
+  const snapThresholdY = Math.max(.015, Math.min(.05, 12 / Math.max(1, drag.headerRect.h)));
+  layout.x = headerInteractiveGuidesEnabled && Math.abs(boundedX - .5) <= snapThresholdX ? .5 : boundedX;
+  layout.y = headerInteractiveGuidesEnabled && Math.abs(boundedY - .5) <= snapThresholdY ? .5 : boundedY;
+  drag.component.x = layout.x;
+  drag.component.y = layout.y;
+  drag.lastClientX = event.clientX;
+  drag.lastClientY = event.clientY;
+  updateInteractiveHeaderItemPosition(drag.item, drag.component, drag.headerRect);
+  wakeInteractiveHeaderEditor();
+  scheduleInteractiveHeaderRedraw();
+}, { passive: false });
+
+function finishInteractiveHeaderDrag(event) {
+  const drag = interactiveHeaderDrag;
+  if (!drag || (event.pointerId != null && event.pointerId !== drag.pointerId)) return;
+  drag.item.classList.remove('dragging');
+  const nudged = nudgeOverlappedInteractiveItems(drag.item, {
+    x: drag.lastClientX - drag.startClientX,
+    y: drag.lastClientY - drag.startClientY,
+  });
+  interactiveHeaderDrag = null;
+  wakeInteractiveHeaderEditor();
+  if (nudged) {
+    if (interactiveHeaderRedrawFrame) cancelAnimationFrame(interactiveHeaderRedrawFrame);
+    interactiveHeaderRedrawFrame = 0;
+    clearTimeout(interactiveHeaderCollisionTimer);
+    interactiveHeaderCollisionTimer = setTimeout(scheduleInteractiveHeaderRedraw, 270);
+  } else {
+    scheduleInteractiveHeaderRedraw();
+  }
+}
+document.addEventListener('pointerup', event => {
+  cancelInteractiveHeaderLongPress(event);
+  finishInteractiveHeaderDrag(event);
+});
+document.addEventListener('pointercancel', event => {
+  cancelInteractiveHeaderLongPress(event);
+  finishInteractiveHeaderDrag(event);
+});
+
+document.getElementById('interactive-header-items')?.addEventListener('pointerdown', event => {
+  const handle = event.target.closest('button[data-header-action="resize"]');
+  if (!handle || event.button > 0 || !headerInteractiveEnabled || !headerInteractiveGridVisible) return;
+  const item = handle.closest('.interactive-header-item');
+  const key = item?.dataset.key;
+  const component = getInteractiveComponent(key);
+  const layout = headerInteractiveLayout[key];
+  const layer = document.getElementById('interactive-header-layer');
+  const headerRect = getInteractiveHeaderCssRect(layer);
+  if (!item || !component || !layout || layout.locked || !headerRect) return;
+  event.preventDefault();
+  event.stopPropagation();
+  selectInteractiveHeaderItem(key);
+  handle.setPointerCapture(event.pointerId);
+  item.classList.add('resizing');
+  const rect = item.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+  interactiveHeaderTransform = {
+    item, key, component, pointerId: event.pointerId,
+    startSize: Math.max(5, Number(layout.size || component.size)),
+    centerX, centerY,
+    startDistance: Math.max(1, Math.hypot(event.clientX - centerX, event.clientY - centerY)),
+    displayScale: Math.max(.01, (headerRect.scaleX + headerRect.scaleY) / 2),
+  };
+  wakeInteractiveHeaderEditor();
+});
+
+function finishInteractiveHeaderTransform(event) {
+  const transform = interactiveHeaderTransform;
+  if (!transform || (event.pointerId != null && event.pointerId !== transform.pointerId)) return;
+  transform.item.classList.remove('resizing');
+  transform.item.style.transform = '';
+  interactiveHeaderTransform = null;
+  wakeInteractiveHeaderEditor();
+  scheduleInteractiveHeaderRedraw();
+}
+document.addEventListener('pointerup', finishInteractiveHeaderTransform);
+document.addEventListener('pointercancel', finishInteractiveHeaderTransform);
+
+document.getElementById('interactive-header-resize')?.addEventListener('pointerdown', event => {
+  if (event.button > 0 || !headerInteractiveEnabled || !headerInteractiveGridVisible) return;
+  event.preventDefault();
+  const button = event.currentTarget;
+  button.setPointerCapture(event.pointerId);
+  const canvasRect = document.getElementById('collage-canvas').getBoundingClientRect();
+  const initialSize = parseInt(headerHeightSlider.value);
+  const initialClient = isLateralHeaderPosition() ? event.clientX : event.clientY;
+  const internalPerCss = isLateralHeaderPosition()
+    ? document.getElementById('collage-canvas').width / canvasRect.width
+    : document.getElementById('collage-canvas').height / canvasRect.height;
+  const direction = headerPosition === 'bottom' || headerPosition === 'right' ? -1 : 1;
+  const move = moveEvent => {
+    if (moveEvent.pointerId !== event.pointerId) return;
+    const current = isLateralHeaderPosition() ? moveEvent.clientX : moveEvent.clientY;
+    const size = Math.max(40, Math.min(200, Math.round(initialSize + (current - initialClient) * internalPerCss * direction)));
+    headerHeightSlider.value = size;
+    headerHeightVal.textContent = `${size}px`;
+    syncHeaderImageSizeHint();
+    wakeInteractiveHeaderEditor();
+    scheduleInteractiveHeaderRedraw();
+  };
+  const end = endEvent => {
+    if (endEvent.pointerId !== event.pointerId) return;
+    document.removeEventListener('pointermove', move);
+    document.removeEventListener('pointerup', end);
+    document.removeEventListener('pointercancel', end);
+  };
+  document.addEventListener('pointermove', move, { passive: true });
+  document.addEventListener('pointerup', end);
+  document.addEventListener('pointercancel', end);
+});
+
 // Mantém o canvas de overlay com o mesmo tamanho (real + exibido) do canvas principal
 function syncOverlaySize() {
   overlayCanvas.width  = mainCanvas.width;
   overlayCanvas.height = mainCanvas.height;
   positionCanvasOverlay(overlayCanvas);
+  syncInteractiveHeaderEditor();
+  syncHeaderImageEditor();
 }
 
 // Calcula a posição/tamanho de um tile na tela a partir do seu índice na
@@ -12807,15 +14752,17 @@ function syncOverlaySize() {
 function getTileRect(index) {
   const { cols } = getDrawGrid();
   const tileH = Math.round(TILE_SIZE * tileRatio);
-  const HEADER_H = showHeaderChk.checked ? parseInt(headerHeightSlider.value) : 0;
-  const topOffset = getTilesTopOffset(HEADER_H);
+  const paintedHeaderHeight = Number(mainCanvas.dataset.headerHeight);
+  const HEADER_H = Number.isFinite(paintedHeaderHeight) ? paintedHeaderHeight : (showHeaderChk.checked ? parseInt(headerHeightSlider.value) : 0);
+  const paintedHeaderPosition = mainCanvas.dataset.headerPosition || headerPosition;
+  const tilesOffset = getTilesOffset(HEADER_H, paintedHeaderPosition);
   const borderGap = tileBorderEnabled ? tileBorderWidth : 0;
   const col = index % cols;
   const row = Math.floor(index / cols);
   const visualCol = tileDirection === 'rtl' ? (cols - 1 - col) : col;
   return {
-    tileX: tileBorderEnabled ? borderGap + visualCol * (TILE_SIZE + borderGap) : visualCol * TILE_SIZE,
-    tileY: tileBorderEnabled ? topOffset + borderGap + row * (tileH + borderGap) : topOffset + row * tileH,
+    tileX: tileBorderEnabled ? tilesOffset.x + borderGap + visualCol * (TILE_SIZE + borderGap) : tilesOffset.x + visualCol * TILE_SIZE,
+    tileY: tileBorderEnabled ? tilesOffset.y + borderGap + row * (tileH + borderGap) : tilesOffset.y + row * tileH,
     tileW: TILE_SIZE,
     tileH,
   };
@@ -13272,6 +15219,7 @@ function openTextEditModal(index) {
 
   textEditOverlay.style.display = 'flex';
   showTileConfigView(); // troca de tile — sempre abre na página de configuração, descarta busca anterior
+  triggerHapticFeedback('short');
 }
 
 function closeTextEditModal() {
@@ -14019,6 +15967,7 @@ async function executeMerge(sourceItem, targetItem) {
   scheduleDownloadRefresh();
   captureCurrentCollageMemory();
   recordTimelineAction(`Mesclagem: ${sourceItem.name || 'quadro'} → ${targetItem.name || 'quadro'}.`);
+  triggerHapticFeedback('short');
   return true;
 }
 
@@ -14414,6 +16363,7 @@ async function restoreHistoryPoolIdx(poolIdx) {
   scheduleDownloadRefresh();
   captureCurrentCollageMemory();
   recordTimelineAction(`Quadro restaurado: ${restoredItem?.name || 'sem nome'}.`);
+  triggerHapticFeedback('short');
 }
 
 function createHistoryCard(poolIdx, kind) {
@@ -14512,6 +16462,7 @@ async function restoreGlobalHistoryRule(saved, kind) {
   }
   forgetGlobalBehaviorByKey(source.key, context);
   renderDeletedPanel();
+  triggerHapticFeedback('short');
 }
 
 function createBehaviorHistoryCard(saved, kind, type) {
@@ -14748,6 +16699,7 @@ async function executeDeleteTile(deletedItem) {
   scheduleDownloadRefresh();
   captureCurrentCollageMemory();
   recordTimelineAction(`Quadro excluído: ${deletedItem.name || 'sem nome'}.`);
+  triggerHapticFeedback('short');
   return true;
 }
 
@@ -15033,6 +16985,7 @@ async function restoreStatusHistoryEntry(entry) {
     }
 
     window.__collagerTimelineActiveId = entry.id;
+    triggerHapticFeedback('short');
   } catch (error) {
     console.error('Não foi possível restaurar o ponto da linha do tempo:', error);
     showStatus('Erro ao restaurar este ponto do histórico.', true);
@@ -15621,6 +17574,7 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
     { sel: '#number-pos-toggle button',  attr: 'pos',   id: 'number-position' },
     { sel: '.cut-opt',                  attr: 'mode',   id: 'cut-mode' },
     { sel: '#header-position-toggle button',     attr: 'pos', id: 'header-position' },
+    { sel: '#header-text-rotation-toggle button', attr: 'rotation', id: 'header-text-rotation' },
     { sel: '#header-text-align-toggle button',   attr: 'align', id: 'header-text-align' },
     { sel: '#header-separator-toggle button', attr: 'sep', id: 'header-separator' },
     { sel: '#header-default-logo-type-toggle button', attr: 'logo', id: 'header-default-logo-type' },
@@ -15773,10 +17727,14 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       playsColorOverride,
       mainFontColorOverride, albumFontColorOverride, subFontColorOverride,
       headerDefaultLogoColor,
+      headerUsernameColor,
       headerSubtitleOverride,
       headerTextColorOverride,
       headerSubtitleInputValue: document.getElementById('header-subtitle-input')?.value || '',
       headerTypeLabelOverrides: { ...headerTypeLabelOverrides },
+      headerInteractiveGridVisible,
+      headerInteractiveGuidesEnabled,
+      headerInteractiveLayout: JSON.parse(JSON.stringify(headerInteractiveLayout)),
       outlineState: JSON.parse(JSON.stringify(outlineState)),
       textBoxState: JSON.parse(JSON.stringify(textBoxState)),
       newSubType,
@@ -15826,6 +17784,13 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
         syncHeaderLogoColorUi();
       }
     }
+    if (Object.prototype.hasOwnProperty.call(js, 'headerUsernameColor')) {
+      const savedUsernameColor = js.headerUsernameColor;
+      if (savedUsernameColor === null || /^#[0-9a-f]{6}$/i.test(savedUsernameColor || '')) {
+        headerUsernameColor = savedUsernameColor;
+        syncHeaderUsernameColorUi();
+      }
+    }
     if (Object.prototype.hasOwnProperty.call(js, 'headerSubtitleOverride')) headerSubtitleOverride = js.headerSubtitleOverride ?? null;
     if (Object.prototype.hasOwnProperty.call(js, 'headerTextColorOverride')) headerTextColorOverride = js.headerTextColorOverride ?? null;
     syncHeaderTextColorUi();
@@ -15833,6 +17798,11 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
     if (subtitleInput) subtitleInput.value = js.headerSubtitleInputValue || '';
     headerTypeLabelOverrides = js.headerTypeLabelOverrides ? { ...js.headerTypeLabelOverrides } : {};
     syncHeaderTypeInput();
+    if (typeof js.headerInteractiveGridVisible === 'boolean') headerInteractiveGridVisible = js.headerInteractiveGridVisible;
+    if (typeof js.headerInteractiveGuidesEnabled === 'boolean') headerInteractiveGuidesEnabled = js.headerInteractiveGuidesEnabled;
+    if (js.headerInteractiveLayout && typeof js.headerInteractiveLayout === 'object') {
+      headerInteractiveLayout = JSON.parse(JSON.stringify(js.headerInteractiveLayout));
+    }
 
     if (js.outlineState) outlineState = JSON.parse(JSON.stringify(js.outlineState));
     if (js.textBoxState) textBoxState = JSON.parse(JSON.stringify(js.textBoxState));
@@ -15938,6 +17908,8 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
     updateLocalArtistFolderStatus();
     syncTypeSpecificPanels();
     updateSourceGroupVisibility();
+    headerInteractiveEnabled = !!document.getElementById('header-interactive-enabled')?.checked;
+    syncHeaderInteractiveUi();
 
     syncDependentSwatches();
     syncTitleColorSwatches();
@@ -17133,6 +19105,8 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       if (!isMobile() || body.dataset.mobileView !== 'edit' || !hasGeneratedCollage()) return;
       const showHeader = Boolean(document.getElementById('show-header')?.checked);
       const headerHeight = showHeader ? Math.max(0, Number(document.getElementById('header-height')?.value) || 0) : 0;
+      const headerPosition = document.querySelector('#header-position-toggle button.active')?.dataset.pos || 'top';
+      const verticalHeaderHeight = headerPosition === 'top' || headerPosition === 'bottom' ? headerHeight : 0;
       const grid = typeof getDrawGrid === 'function' ? getDrawGrid() : { cols: Number(document.getElementById('cols')?.value) || 3 };
       const columns = Math.max(1, Number(grid.cols) || 1);
       const borderEnabled = Boolean(document.getElementById('tile-border-enabled')?.checked);
@@ -17142,11 +19116,10 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       const nativeTileHeight = nativeTileWidth * (Number(tileRatio) || 1);
       const visibleWidth = Math.max(280, window.innerWidth - (Math.max(10, window.innerWidth * .03) * 2));
       const scale = visibleWidth / canvasWidth;
-      const desiredHeight = (headerHeight + gap + ((nativeTileHeight + gap) * 1.5)) * scale;
+      const desiredHeight = (verticalHeaderHeight + gap + ((nativeTileHeight + gap) * 1.5)) * scale;
       const previewHeight = Math.max(180, Math.min(window.innerHeight * .62, desiredHeight));
       document.documentElement.style.setProperty('--mobile-edit-preview-height', `${previewHeight}px`);
 
-      const headerPosition = document.querySelector('#header-position-toggle button.active')?.dataset.pos;
       body.classList.toggle('mobile-edit-header-bottom', showHeader && headerPosition === 'bottom');
       requestAnimationFrame(() => {
         if (typeof syncOverlaySize === 'function') syncOverlaySize();
@@ -17267,6 +19240,7 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
 
     mobileEditTabs.querySelectorAll('button[data-mobile-panel]').forEach(button => {
       button.addEventListener('click', () => {
+        if (body.dataset.mobileEditPanel !== button.dataset.mobilePanel) triggerHapticFeedback('short');
         setMobileEditPanel(button.dataset.mobilePanel);
         const section = {
           header: document.getElementById('custom-header-section'),
@@ -17529,6 +19503,9 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
     let zoom = 1;
     let fitSize = null;
     let resizeTimer = 0;
+    let redrawFitFrame = 0;
+    let lastCanvasWidth = canvas.width;
+    let lastCanvasHeight = canvas.height;
 
     const clearPreviewSizing = () => {
       wrap.style.removeProperty('width');
@@ -17621,6 +19598,27 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
         center.scrollTo({ left: 0, top: 0 });
         updateToolbar();
         if (typeof syncOverlaySize === 'function') syncOverlaySize();
+      });
+    };
+
+    window.refreshDesktopPreviewAfterCanvasRedraw = () => {
+      const dimensionsChanged = canvas.width !== lastCanvasWidth || canvas.height !== lastCanvasHeight;
+      lastCanvasWidth = canvas.width;
+      lastCanvasHeight = canvas.height;
+      if (!dimensionsChanged || !desktopQuery.matches || !wrap.classList.contains('visible')) return;
+
+      cancelAnimationFrame(redrawFitFrame);
+      redrawFitFrame = requestAnimationFrame(() => {
+        const previousZoom = zoom;
+        fitSize = null;
+        center.classList.remove('desktop-preview-zoomed');
+        clearPreviewSizing();
+        requestAnimationFrame(() => {
+          captureFitSize();
+          applyZoom(previousZoom);
+          if (typeof syncOverlaySize === 'function') syncOverlaySize();
+          if (typeof syncDeletingOverlay === 'function') syncDeletingOverlay();
+        });
       });
     };
 
