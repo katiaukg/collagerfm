@@ -401,6 +401,20 @@
   .source-key-box { margin-top: 8px; display: none; flex-direction: column; gap: 6px; }
   .source-key-box.visible { display: flex; }
   .source-key-label { font-size: 10px; color: var(--muted); font-weight: 600; }
+  #lastfm-write-account-state {
+    display: grid; gap: 7px; margin-top: 9px; padding-top: 9px;
+    border-top: 1px solid var(--border);
+  }
+  #lastfm-write-account-state[hidden] { display: none !important; }
+  #lastfm-write-account-message { color: #78dfa0; font-size: 10px; line-height: 1.4; }
+  #lastfm-change-account {
+    width: 100%; min-height: 34px; padding: 8px 10px;
+    border: 1px solid #ffffff24; border-radius: 7px;
+    background: #ffffff08; color: var(--text); cursor: pointer;
+    font: 800 10.5px/1.2 inherit;
+  }
+  #lastfm-change-account:hover { border-color: #ffffff40; background: #ffffff0e; }
+  #lastfm-change-account:disabled { opacity: .55; cursor: wait; }
 
   /* Cards de resultado da "Mesclar pesquisando artista" — imitam a cara de um tile */
   .merge-search-card {
@@ -3001,6 +3015,10 @@
         </button>
       </div>
       <datalist id="apikey-history"></datalist>
+      <div id="lastfm-write-account-state" hidden>
+        <div id="lastfm-write-account-message" aria-live="polite"></div>
+        <button type="button" id="lastfm-change-account">ALTERAR CONTA</button>
+      </div>
     </div>
 
     <div class="divider"></div>
@@ -15890,6 +15908,9 @@ const recentMetadataSave = document.getElementById('recent-metadata-save');
 const recentScrobbleDelete = document.getElementById('edit-scrobble-delete');
 const recentLastfmAuthorize = document.getElementById('recent-lastfm-authorize');
 const recentMetadataStatus = document.getElementById('recent-metadata-status');
+const lastfmWriteAccountState = document.getElementById('lastfm-write-account-state');
+const lastfmWriteAccountMessage = document.getElementById('lastfm-write-account-message');
+const lastfmChangeAccount = document.getElementById('lastfm-change-account');
 const fanartPickerBtn = document.getElementById('fanart-picker-btn');
 const editLastfmLinkBtn = document.getElementById('edit-lastfm-link');
 const fanartPickerOverlay = document.getElementById('fanart-picker-overlay');
@@ -16026,6 +16047,10 @@ function applyRecentMetadataAuthState(status) {
     connected: Boolean(status?.connected),
     username: status?.username || '',
   };
+  lastfmWriteAccountState.hidden = !recentLastfmAuthState.connected;
+  lastfmWriteAccountMessage.textContent = recentLastfmAuthState.connected
+    ? `Conta ${recentLastfmAuthState.username} autorizada para editar o histórico.`
+    : '';
   const itemUnavailable = Boolean(activeClickItem?._nowPlaying || activeClickItem?._lastfmDeleted);
   recentMetadataSave.disabled = !recentLastfmAuthState.connected;
   recentScrobbleDelete.disabled = !recentLastfmAuthState.connected || itemUnavailable;
@@ -16129,6 +16154,34 @@ recentLastfmAuthorize.addEventListener('click', async () => {
     recentLastfmAuthorize.disabled = false;
   }
 });
+
+lastfmChangeAccount.addEventListener('click', async event => {
+  event.preventDefault();
+  event.stopPropagation();
+  lastfmChangeAccount.disabled = true;
+  lastfmChangeAccount.textContent = 'ALTERANDO CONTA...';
+  try {
+    const disconnectResponse = await fetch('/api/lastfm-auth?action=disconnect', {
+      method: 'POST',
+      headers: { Accept: 'application/json' },
+    });
+    const disconnectPayload = await disconnectResponse.json().catch(() => ({}));
+    if (!disconnectResponse.ok) throw new Error(disconnectPayload.error || 'Não foi possível desconectar a conta atual.');
+    applyRecentMetadataAuthState({ configured: recentLastfmAuthState.configured, connected: false, username: '' });
+    const status = await ensureLastfmWriteAuthorization();
+    applyRecentMetadataAuthState({ ...status, configured: true });
+    setRecentMetadataStatus(`Conta ${status.username} autorizada para editar o histórico.`);
+  } catch (error) {
+    setRecentMetadataStatus(error.message, true);
+  } finally {
+    lastfmChangeAccount.disabled = false;
+    lastfmChangeAccount.textContent = 'ALTERAR CONTA';
+  }
+});
+
+getLastfmWriteAuthStatus()
+  .then(applyRecentMetadataAuthState)
+  .catch(() => applyRecentMetadataAuthState({ configured: false, connected: false, username: '' }));
 
 function closeFanartPicker() {
   fanartPickerOverlay.style.display = 'none';
