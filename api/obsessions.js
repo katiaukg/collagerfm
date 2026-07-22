@@ -4,7 +4,7 @@ const crypto = require('crypto');
 
 const CACHE_TTL = 5 * 60 * 1000;
 const STALE_CACHE_TTL = 24 * 60 * 60 * 1000;
-const CACHE_PREFIX = 'collager:obsessions:v1:';
+const CACHE_PREFIX = 'collager:obsessions:v2:';
 const responseCache = new Map();
 const LASTFM_PAGE_HEADERS = {
   Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
@@ -128,6 +128,8 @@ function parseObsessions(html) {
     const artist = cleanText(firstMatch(artistBlock, /<a\b[^>]*>([\s\S]*?)<\/a>/i) || artistBlock);
     const dateBlock = firstMatch(block, /<p\b[^>]*class="[^"]*obsession-history-item-date[^"]*"[^>]*>([\s\S]*?)<\/p>/i);
     const date = cleanText(firstMatch(dateBlock, /<a\b[^>]*>([\s\S]*?)<\/a>/i) || dateBlock);
+    const obsessionUrl = decodeHtml(firstMatch(block, /href="([^"]*\/obsessions\/\d+[^"]*)"/i)).trim();
+    const obsessionId = firstMatch(obsessionUrl, /\/obsessions\/(\d+)/i);
     const image = decodeHtml(firstMatch(block, /background-image:[\s\S]*?url\((https?:\/\/[^)]+)\)/i)).trim();
     const trackUrl = decodeHtml(firstMatch(block, /data-track-url="([^"]+)"/i)).trim();
     if (!name || !artist) continue;
@@ -138,6 +140,8 @@ function parseObsessions(html) {
       dateIso: parseDateIso(date),
       image,
       trackUrl,
+      obsessionUrl,
+      obsessionId,
     });
   }
   return items;

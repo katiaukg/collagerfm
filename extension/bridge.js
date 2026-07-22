@@ -23,7 +23,7 @@ window.addEventListener('message', event => {
   if (event.data?.type !== PAGE_REQUEST || typeof event.data.requestId !== 'string') return;
   const requestId = event.data.requestId;
   const action = event.data.action;
-  if (action !== 'ping' && action !== 'deleteScrobble') return;
+  if (action !== 'ping' && action !== 'deleteScrobble' && action !== 'deleteObsession') return;
 
   chrome.runtime.sendMessage({ channel: 'collager-lastfm', action, payload: event.data.payload || {} })
     .then(result => {

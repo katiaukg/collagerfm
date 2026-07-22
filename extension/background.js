@@ -23,6 +23,21 @@ function validateDeletePayload(payload) {
   return { username, artist, track, timestamp };
 }
 
+function validateObsessionPayload(payload) {
+  const username = clean(payload?.username, 100);
+  const rawUrl = clean(payload?.url, 1000);
+  let url;
+  try { url = new URL(rawUrl, 'https://www.last.fm'); }
+  catch (_) { throw new Error('O endereco desta obsessao e invalido.'); }
+  const match = url.pathname.match(/^\/user\/([^/]+)\/obsessions\/(\d+)\/?$/i);
+  if (url.origin !== 'https://www.last.fm' || !match) throw new Error('O endereco desta obsessao e invalido.');
+  const pathUsername = decodeURIComponent(match[1]);
+  if (username && pathUsername.toLocaleLowerCase() !== username.toLocaleLowerCase()) {
+    throw new Error('A obsessao nao pertence ao usuario informado.');
+  }
+  return { username: username || pathUsername, url: url.href, obsessionId: match[2] };
+}
+
 function waitForTab(tabId, timeoutMs = 20000) {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
@@ -44,12 +59,12 @@ function waitForTab(tabId, timeoutMs = 20000) {
   });
 }
 
-async function sendToLastfmTab(tabId, payload) {
+async function sendToLastfmTab(tabId, action, payload) {
   try {
-    return await chrome.tabs.sendMessage(tabId, { channel: 'collager-lastfm-page', action: 'deleteScrobble', payload });
+    return await chrome.tabs.sendMessage(tabId, { channel: 'collager-lastfm-page', action, payload });
   } catch (_) {
     await chrome.scripting.executeScript({ target: { tabId }, files: ['lastfm-content.js'] });
-    return chrome.tabs.sendMessage(tabId, { channel: 'collager-lastfm-page', action: 'deleteScrobble', payload });
+    return chrome.tabs.sendMessage(tabId, { channel: 'collager-lastfm-page', action, payload });
   }
 }
 
@@ -66,13 +81,37 @@ async function deleteScrobble(payload) {
   await waitForTab(tab.id);
 
   try {
-    const result = await sendToLastfmTab(tab.id, safe);
+    const result = await sendToLastfmTab(tab.id, 'deleteScrobble', safe);
     if (!result?.ok) {
       if (result?.authRequired) await chrome.tabs.update(tab.id, { active: true });
       throw new Error(result?.error || 'O Last.fm nao confirmou a exclusao.');
     }
     if (created) await chrome.tabs.remove(tab.id).catch(() => {});
     return { deleted: true, username: safe.username, timestamp: safe.timestamp };
+  } catch (error) {
+    if (created) await chrome.tabs.update(tab.id, { active: true }).catch(() => {});
+    throw error;
+  }
+}
+
+async function deleteObsession(payload) {
+  const safe = validateObsessionPayload(payload);
+  const tabs = await chrome.tabs.query({ url: 'https://www.last.fm/*' });
+  let tab = tabs.find(candidate => candidate.status === 'complete') || tabs[0];
+  let created = false;
+  if (!tab) {
+    tab = await chrome.tabs.create({ url: safe.url, active: false });
+    created = true;
+  }
+  await waitForTab(tab.id);
+  try {
+    const result = await sendToLastfmTab(tab.id, 'deleteObsession', safe);
+    if (!result?.ok) {
+      if (result?.authRequired) await chrome.tabs.update(tab.id, { active: true });
+      throw new Error(result?.error || 'O Last.fm nao confirmou a exclusao da obsessao.');
+    }
+    if (created) await chrome.tabs.remove(tab.id).catch(() => {});
+    return { deleted: true, username: safe.username, obsessionId: safe.obsessionId };
   } catch (error) {
     if (created) await chrome.tabs.update(tab.id, { active: true }).catch(() => {});
     throw error;
@@ -97,6 +136,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     ? Promise.resolve({ available: true, version: chrome.runtime.getManifest().version })
     : message.action === 'deleteScrobble'
       ? enqueue(() => deleteScrobble(message.payload))
+      : message.action === 'deleteObsession'
+        ? enqueue(() => deleteObsession(message.payload))
       : Promise.reject(new Error('Acao nao permitida.'));
   operation.then(sendResponse).catch(error => sendResponse({ __error: error?.message || 'A extensao nao concluiu a operacao.' }));
   return true;

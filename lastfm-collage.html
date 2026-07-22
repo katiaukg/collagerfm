@@ -257,7 +257,8 @@
     justify-content: center;
     padding-left: 0;
   }
-  #new-subtype-row { grid-column: 1 / -1; }
+  #new-subtype-row,
+  #specific-subtype-row { grid-column: 1 / -1; }
   .type-btn[data-type="specific_artists"].active { border-color: var(--specific); color: var(--specific); background: color-mix(in srgb, var(--specific) 10%, transparent); }
   .type-btn[data-type="recent"].active { border-color: var(--recent); color: var(--recent); background: color-mix(in srgb, var(--recent) 10%, transparent); }
   .type-btn[data-type="obsessions"].active { border-color: var(--obsessions); color: var(--obsessions); background: color-mix(in srgb, var(--obsessions) 10%, transparent); }
@@ -1014,6 +1015,32 @@
     display: block; width: auto; height: auto;
     min-width: min(300px, 100%); max-width: 100%; max-height: calc(100vh - 80px);
     object-fit: contain; cursor: pointer;
+  }
+  .temporal-page-btn {
+    position: fixed; z-index: 72;
+    width: 38px; height: 52px; padding: 0;
+    display: none; align-items: center; justify-content: center;
+    border: 1px solid #ffffff24; border-radius: 7px;
+    background: #111e; color: #ddd; box-shadow: 0 8px 24px #0009;
+    cursor: pointer; transition: color .15s, border-color .15s, background .15s, opacity .15s;
+  }
+  .temporal-page-btn.visible { display: inline-flex; }
+  .temporal-page-btn:hover,
+  .temporal-page-btn:focus-visible { color: #fff; border-color: #ffffff55; background: #222; outline: none; }
+  .temporal-page-btn:disabled { opacity: .2; cursor: default; }
+  .temporal-page-btn svg {
+    width: 21px; height: 21px; fill: none; stroke: currentColor;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+  }
+  @media (max-width: 47.999rem) {
+    .temporal-page-btn {
+      width: 42px; height: 58px;
+      border-color: #ffffff18; background: #09090980; opacity: .5;
+      box-shadow: 0 6px 18px #0008; backdrop-filter: blur(5px);
+    }
+    .temporal-page-btn:hover,
+    .temporal-page-btn:focus-visible { background: #090909b8; opacity: .85; }
+    .temporal-page-btn:disabled { opacity: .12; }
   }
   #interactive-header-layer {
     --interactive-guide-color: #fff;
@@ -3031,7 +3058,7 @@
         </button>
       </div>
       <datalist id="apikey-history"></datalist>
-      <div id="lastfm-write-account-state" hidden>
+      <div id="lastfm-write-account-state">
         <div id="lastfm-write-account-message" aria-live="polite"></div>
         <button type="button" id="lastfm-change-account">ALTERAR CONTA</button>
       </div>
@@ -3104,6 +3131,10 @@
             <input class="swatch-input" type="color" id="color-specific_artists" value="#f4a261">
           </div>
         </button>
+        <div id="specific-subtype-row" style="display:none; gap:6px; margin-top:0;">
+          <button class="new-sub-btn active" id="specific-sub-albums" style="flex:1;text-align:center;"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="2"/></svg>ÁLBUNS</button>
+          <button class="new-sub-btn" id="specific-sub-tracks" style="flex:1;text-align:center;"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>FAIXAS</button>
+        </div>
         <div class="type-special-row">
           <button class="type-btn" data-type="recent" title="Os scrobbles mais recentes da conta">
             <span class="type-btn-label"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>RECENTES</span>
@@ -3121,10 +3152,6 @@
       </div>
 
       <div id="specific-artists-panel" style="display:none;margin-top:8px;">
-        <div id="specific-subtype-row" style="display:flex; gap:6px; margin-bottom:8px;">
-          <button class="new-sub-btn active" id="specific-sub-albums" style="flex:1;text-align:center;"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="2"/></svg>ÁLBUNS</button>
-          <button class="new-sub-btn" id="specific-sub-tracks" style="flex:1;text-align:center;"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>FAIXAS</button>
-        </div>
         <span class="section-label" style="margin-bottom:5px;display:block;">Pesquisar artistas</span>
         <input id="specific-artist-search" type="text" placeholder="Digite um artista..." autocomplete="off">
         <div class="specific-search-status" id="specific-artist-search-status"></div>
@@ -4668,6 +4695,12 @@
         <button type="button" id="header-image-editor-save" class="secondary-action-btn">Salvar ajuste</button>
       </div>
     </div>
+    <button type="button" class="temporal-page-btn" id="temporal-page-prev" title="Página anterior" aria-label="Página anterior da collage">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <button type="button" class="temporal-page-btn" id="temporal-page-next" title="Próxima página" aria-label="Próxima página da collage">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+    </button>
   </div>
   <div id="history-panels">
     <section id="deleted-panel" class="history-panel">
@@ -4897,8 +4930,15 @@
       </div>
       <button type="button" id="recent-lastfm-authorize" style="display:none;width:100%;padding:9px;border:1px solid #d5100788;border-radius:8px;background:#d5100718;color:#ff8a84;font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;">AUTORIZAR LAST.FM</button>
       <div id="recent-extension-status" aria-live="polite" style="color:var(--muted);font-size:10.5px;line-height:1.4;">Verificando extensão companheira...</div>
-      <div style="padding:8px;border:1px solid #ffffff18;border-radius:7px;background:#00000024;color:var(--muted);font-size:10px;line-height:1.45;">A substituição cria um novo scrobble corrigido e depois exclui o original. Ela está disponível para registros de até aproximadamente 14 dias.</div>
       <div id="recent-metadata-status" aria-live="polite" style="display:none;color:var(--muted);font-size:10.5px;line-height:1.4;"></div>
+    </div>
+    <div id="obsession-actions" style="display:none;flex-direction:column;gap:8px;padding:11px;border:1px solid #c281ee55;border-radius:8px;background:#c281ee0d;">
+      <button type="button" id="edit-obsession-delete" style="width:100%;padding:10px;border:1px solid #ef444488;border-radius:8px;background:#3f1518;color:#ff9b9b;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">EXCLUIR OBSESSÃO</button>
+      <button type="button" id="edit-obsession-lastfm-link" style="width:100%;padding:9px 10px;display:flex;align-items:center;justify-content:center;gap:7px;border:1px solid #ffffff24;border-radius:8px;background:#ffffff08;color:var(--text);font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+        ABRIR NO LAST.FM ESSA OBSESSÃO
+      </button>
+      <div id="obsession-action-status" aria-live="polite" style="display:none;color:var(--muted);font-size:10.5px;line-height:1.4;"></div>
     </div>
     <div id="tile-restore-actions" style="display:flex;flex-direction:column;gap:8px;">
       <hr style="width:100%;border:none;border-top:1px solid #2e2e2e;margin:4px 0;">
@@ -6365,6 +6405,12 @@ function isTemporalCollageType(type = currentType) {
 function isRecentCollageRendered() {
   return (getRenderedQueryState()?.mode || currentType) === 'recent';
 }
+function isObsessionsCollageRendered() {
+  return (getRenderedQueryState()?.mode || currentType) === 'obsessions';
+}
+function isTemporalCollageRendered() {
+  return isTemporalCollageType(getRenderedQueryState()?.mode || currentType);
+}
 function getPlaysUiLabel(type = currentType) {
   if (type === 'recent') return 'Data de scrobble';
   if (type === 'obsessions') return 'Data da obsessão';
@@ -6395,6 +6441,7 @@ function getTileLineTypeForUi() {
 }
 
 let currentItems       = [];
+let temporalCollagePage = 0;
 // A sidebar guarda a proxima consulta; a collage visivel usa apenas o
 // snapshot confirmado no ultimo clique em "Gerar Collage".
 let generatedQueryState = null;
@@ -6871,7 +6918,7 @@ function ensureBehaviorMergeTarget(entry, type) {
 }
 
 function applyGlobalCollageBehavior(context) {
-  if (context.mode === 'recent') return 0;
+  if (isTemporalCollageType(context.mode)) return 0;
   const type = context.type;
   const rules = getCombinedBehaviorRules(context);
   let applied = 0;
@@ -9784,9 +9831,11 @@ Object.entries(specificSubBtns).forEach(([type, btn]) => {
 
 function syncTypeSpecificPanels() {
   const newSubRow = document.getElementById('new-subtype-row');
+  const specificSubRow = document.getElementById('specific-subtype-row');
   const specificPanel = document.getElementById('specific-artists-panel');
   const temporalMode = isTemporalCollageType();
   if (newSubRow) newSubRow.style.display = currentType === 'new_artists' ? 'flex' : 'none';
+  if (specificSubRow) specificSubRow.style.display = currentType === 'specific_artists' ? 'flex' : 'none';
   if (specificPanel) specificPanel.style.display = currentType === 'specific_artists' ? '' : 'none';
   const periodSection = document.getElementById('period-section-wrap');
   const periodDivider = document.getElementById('period-section-divider');
@@ -11175,6 +11224,9 @@ async function getRecentObsessionItems(user, maxItems = 50) {
     _temporalType: 'obsessions',
     _temporalDate: item.dateIso || '',
     _temporalText: formatObsessionDate(item.dateIso, item.date),
+    _obsessionUrl: item.obsessionUrl || '',
+    _obsessionId: item.obsessionId || '',
+    _obsessionUsername: user,
   }));
 }
 
@@ -11701,6 +11753,7 @@ async function fetchTrackAlbumImageLastfm(item, artistName, trackName, apikey) {
       const album = data?.track?.album || {};
       albumName = String(album.title || album.name || '').trim();
       if (albumName) {
+        item.albumName = albumName;
         const albumUrl = await fetchAlbumImageLastfmFallback(artistName, albumName, apikey);
         if (albumUrl) return albumUrl;
       }
@@ -11999,7 +12052,8 @@ function reconcileRecentItems(freshItems, maximumPoolSize) {
   remapRecentIndexedState(oldItems, limited);
   allFetchedItems = limited;
   const { cols, rows } = getDrawGrid();
-  currentItems = limited.slice(0, cols * rows);
+  currentItems = computeVisibleItems(cols * rows);
+  updateTemporalPaginationControls();
   return before !== recentItemsSignature(limited);
 }
 
@@ -13999,11 +14053,98 @@ async function getNewItemsForDateRange(user, apikey, subType, fromTs, toTs, limi
 // ─────────────────────────────────────────────────────────────
 function computeVisibleItems(count) {
   const visible = [];
-  for (let i = 0; i < allFetchedItems.length && visible.length < count; i++) {
+  for (let i = 0; i < allFetchedItems.length; i++) {
     if (!deletedPoolIndices.has(i)) visible.push(allFetchedItems[i]);
   }
-  return visible;
+  if (!isTemporalCollageRendered()) return visible.slice(0, count);
+  const safeCount = Math.max(1, count);
+  const pageCount = Math.max(1, Math.ceil(visible.length / safeCount));
+  temporalCollagePage = Math.max(0, Math.min(temporalCollagePage, pageCount - 1));
+  const start = temporalCollagePage * safeCount;
+  return visible.slice(start, start + safeCount);
 }
+
+const temporalPagePrev = document.getElementById('temporal-page-prev');
+const temporalPageNext = document.getElementById('temporal-page-next');
+let temporalPageChangeBusy = false;
+let temporalPaginationPositionFrame = 0;
+
+function getTemporalPaginationInfo() {
+  const { cols, rows } = getDrawGrid();
+  const pageSize = Math.max(1, cols * rows);
+  const available = allFetchedItems.reduce((total, _, index) => total + (deletedPoolIndices.has(index) ? 0 : 1), 0);
+  const pages = Math.max(1, Math.ceil(available / pageSize));
+  temporalCollagePage = Math.max(0, Math.min(temporalCollagePage, pages - 1));
+  return { pageSize, pages };
+}
+
+function positionTemporalPaginationControls() {
+  temporalPaginationPositionFrame = 0;
+  if (!temporalPagePrev.classList.contains('visible')) return;
+  const canvas = document.getElementById('collage-canvas');
+  const rect = canvas.getBoundingClientRect();
+  if (!rect.width || !rect.height) return;
+  const mobile = matchMedia('(max-width: 47.999rem)').matches;
+  const inset = mobile ? 8 : 12;
+  const prevWidth = temporalPagePrev.offsetWidth || (mobile ? 42 : 38);
+  const nextWidth = temporalPageNext.offsetWidth || prevWidth;
+  const buttonHeight = temporalPagePrev.offsetHeight || (mobile ? 58 : 52);
+  const top = Math.max(8, Math.min(innerHeight - buttonHeight - 8, rect.top + rect.height / 2 - buttonHeight / 2));
+  const prevLeft = mobile
+    ? rect.left + inset
+    : Math.max(8, rect.left - prevWidth - inset);
+  const nextLeft = mobile
+    ? rect.right - nextWidth - inset
+    : Math.min(innerWidth - nextWidth - 8, rect.right + inset);
+  temporalPagePrev.style.left = `${Math.round(prevLeft)}px`;
+  temporalPageNext.style.left = `${Math.round(nextLeft)}px`;
+  temporalPagePrev.style.top = temporalPageNext.style.top = `${Math.round(top)}px`;
+}
+
+function scheduleTemporalPaginationPosition() {
+  if (temporalPaginationPositionFrame) return;
+  temporalPaginationPositionFrame = requestAnimationFrame(positionTemporalPaginationControls);
+}
+
+function updateTemporalPaginationControls() {
+  const { pages } = getTemporalPaginationInfo();
+  const wrapVisible = document.getElementById('collage-wrap')?.classList.contains('visible');
+  const visible = Boolean(wrapVisible && isTemporalCollageRendered() && pages > 1);
+  temporalPagePrev.classList.toggle('visible', visible);
+  temporalPageNext.classList.toggle('visible', visible);
+  temporalPagePrev.disabled = temporalPageChangeBusy || temporalCollagePage <= 0;
+  temporalPageNext.disabled = temporalPageChangeBusy || temporalCollagePage >= pages - 1;
+  temporalPagePrev.title = `Página anterior (${temporalCollagePage + 1}/${pages})`;
+  temporalPageNext.title = `Próxima página (${temporalCollagePage + 1}/${pages})`;
+  if (visible) scheduleTemporalPaginationPosition();
+}
+
+async function changeTemporalCollagePage(direction) {
+  if (temporalPageChangeBusy || !isTemporalCollageRendered()) return;
+  const { pageSize, pages } = getTemporalPaginationInfo();
+  const nextPage = Math.max(0, Math.min(pages - 1, temporalCollagePage + direction));
+  if (nextPage === temporalCollagePage) return;
+  temporalPageChangeBusy = true;
+  temporalCollagePage = nextPage;
+  currentItems = computeVisibleItems(pageSize);
+  updateTemporalPaginationControls();
+  triggerHapticFeedback('short');
+  try {
+    await runDraw();
+    const visibleIndices = currentItems.map(item => allFetchedItems.indexOf(item)).filter(index => index >= 0);
+    loadRecentImageIndices(visibleIndices, currentApiKey, recentLiveGeneration).catch(() => {});
+  } finally {
+    temporalPageChangeBusy = false;
+    updateTemporalPaginationControls();
+  }
+}
+
+temporalPagePrev.addEventListener('click', () => changeTemporalCollagePage(-1));
+temporalPageNext.addEventListener('click', () => changeTemporalCollagePage(1));
+window.addEventListener('resize', scheduleTemporalPaginationPosition);
+window.addEventListener('scroll', scheduleTemporalPaginationPosition, { passive: true, capture: true });
+window.visualViewport?.addEventListener('resize', scheduleTemporalPaginationPosition);
+new ResizeObserver(scheduleTemporalPaginationPosition).observe(document.getElementById('collage-canvas'));
 
 // Reordena allFetchedItems por plays efetivos (respeitando customPlays),
 // remapeando todos os índices dependentes: deletedPoolIndices, mergeRecords,
@@ -14761,6 +14902,7 @@ async function runDraw() {
       window.refreshDesktopPreviewAfterCanvasRedraw();
     }
     syncCanvasInteractionLayersAfterLayout();
+    updateTemporalPaginationControls();
     // A codificação PNG é independente do preview e acontece somente após
     // uma breve pausa, usando toBlob assíncrono em vez de bloquear com toDataURL.
     scheduleDownloadRefresh();
@@ -14810,6 +14952,7 @@ async function generate() {
     setArtistSubDefaultsForEffectiveType(requestedQueryState.effectiveType);
   }
   generationQueryState = requestedQueryState;
+  temporalCollagePage = 0;
 
   cancelRequested = false;
   prefetchGen++; // invalida qualquer pré-carregamento em segundo plano de uma geração anterior
@@ -14830,6 +14973,7 @@ async function generate() {
   }, 4000);
   setLoading(true);
   document.getElementById('collage-wrap').classList.remove('visible');
+  updateTemporalPaginationControls();
   document.getElementById('dl-btn').classList.remove('visible');
   customImages = {};
   customImageRefs = {};
@@ -14855,8 +14999,6 @@ async function generate() {
       items = await getRecentScrobbleItems(user, apikey, limit);
     } else if (isObsessionsMode) {
       items = await getRecentObsessionItems(user, limit);
-      showStatus('Buscando imagens...');
-      items = await enrichItemImages(items, 'tracks', apikey);
     } else if (isSpecificMode) {
       if (!selectedSpecificArtists.length) { showStatus('Escolha pelo menos um artista específico.', true); setLoading(false); return; }
       items = await getSpecificArtistItems(user, apikey, specificSubType, currentPeriod, limit);
@@ -14893,8 +15035,9 @@ async function generate() {
     }
 
     if (!items.length) { showStatus('Nenhum dado encontrado para esse período.', true); setLoading(false); return; }
-    if (isRecentMode) {
-      // A grafia canônica só afeta links; não deve atrasar a primeira pintura.
+    if (isTemporalMode) {
+      // A grafia canônica só afeta links; não deve atrasar a primeira pintura
+      // nem de Recentes, nem de Obsessões.
       canonicalUsernamePromise.then(canonical => {
         const activeUser = document.getElementById('username')?.value?.trim().toLocaleLowerCase();
         if (activeUser === user.toLocaleLowerCase()) canonicalLastfmUsername = canonical;
@@ -14903,7 +15046,7 @@ async function generate() {
       canonicalLastfmUsername = await canonicalUsernamePromise;
     }
 
-    showStatus(isRecentMode ? 'Montando informações...' : 'Carregando imagens...');
+    showStatus(isTemporalMode ? 'Montando informações...' : 'Carregando imagens...');
     const dateFrom = periodMode==='custom' ? document.getElementById('date-from').value : null;
     const dateTo   = periodMode==='custom' ? document.getElementById('date-to').value   : null;
     const typeLabels = { artists: 'Artistas', albums: 'Álbuns', tracks: 'Faixas' };
@@ -14945,7 +15088,7 @@ async function generate() {
         header,
         apikey,
         getDrawAccentOverride(),
-        isRecentMode ? { cacheOnlyImages: true } : {}
+        isTemporalMode ? { cacheOnlyImages: true } : {}
       );
     } finally {
       _isDrawing = false;
@@ -14954,6 +15097,7 @@ async function generate() {
     generatedQueryState = cloneTimelinePlain(requestedQueryState, requestedQueryState);
 
     document.getElementById('collage-wrap').classList.add('visible');
+    updateTemporalPaginationControls();
     document.getElementById('status').style.display = 'none';
 
     // Garante que o overlay de hover já nasça do tamanho certo
@@ -14967,13 +15111,13 @@ async function generate() {
     dlBtn.classList.add('visible');
     scheduleDownloadRefresh(0);
 
-    // Recentes mostra textos primeiro e completa as capas visíveis em fila.
-    // Os outros modos mantêm o pré-carregamento tradicional dos reservas.
-    if (isRecentMode) {
+    // Modos temporais mostram os metadados primeiro e completam as capas
+    // progressivamente, sem bloquear a primeira visualização da collage.
+    if (isTemporalMode) {
       loadRecentImagesProgressively(effectiveType, apikey).catch(error => {
-        if (error.message !== 'cancelled') console.warn('Carregamento progressivo de Recentes:', error);
+        if (error.message !== 'cancelled') console.warn('Carregamento progressivo da collage temporal:', error);
       });
-      startRecentLiveUpdates(user, apikey);
+      if (isRecentMode) startRecentLiveUpdates(user, apikey);
     }
     else prefetchPoolImages(effectiveType, apikey);
 
@@ -16074,6 +16218,10 @@ const recentScrobbleDelete = document.getElementById('edit-scrobble-delete');
 const recentLastfmAuthorize = document.getElementById('recent-lastfm-authorize');
 const recentExtensionStatus = document.getElementById('recent-extension-status');
 const recentMetadataStatus = document.getElementById('recent-metadata-status');
+const obsessionActions = document.getElementById('obsession-actions');
+const obsessionDeleteButton = document.getElementById('edit-obsession-delete');
+const obsessionLastfmLinkButton = document.getElementById('edit-obsession-lastfm-link');
+const obsessionActionStatus = document.getElementById('obsession-action-status');
 const lastfmWriteAccountState = document.getElementById('lastfm-write-account-state');
 const lastfmWriteAccountMessage = document.getElementById('lastfm-write-account-message');
 const lastfmChangeAccount = document.getElementById('lastfm-change-account');
@@ -16083,8 +16231,8 @@ const fanartPickerOverlay = document.getElementById('fanart-picker-overlay');
 const fanartPickerGrid = document.getElementById('fanart-picker-grid');
 const fanartPickerStatus = document.getElementById('fanart-picker-status');
 
-function syncTileConfigTextFields(type, recentMode = false) {
-  if (recentMode) {
+function syncTileConfigTextFields(type, temporalMetadataMode = false) {
+  if (temporalMetadataMode) {
     editTextMainLabel.textContent = 'Faixa';
     [editTextMainWrap, editTextAlbumWrap, editTextSubWrap].forEach(field => {
       field.style.display = 'flex';
@@ -16143,12 +16291,20 @@ function openTextEditModal(index) {
     editTextSub.value = override.sub !== undefined ? override.sub : originalSub;
   }
   const recentMode = isRecentCollageRendered();
-  syncTileConfigTextFields(effectiveType, recentMode);
+  const obsessionsMode = isObsessionsCollageRendered();
+  const temporalMode = isTemporalCollageRendered();
+  syncTileConfigTextFields(effectiveType, recentMode || obsessionsMode);
+  [editTextMain, editTextAlbum, editTextSub].forEach(input => {
+    input.readOnly = obsessionsMode;
+    input.style.opacity = obsessionsMode ? '.72' : '';
+    input.style.cursor = obsessionsMode ? 'default' : '';
+  });
   tileImageSection.style.display = 'flex';
-  tileMergeActions.style.display = recentMode ? 'none' : 'flex';
-  document.getElementById('edit-tile-delete').style.display = recentMode ? 'none' : '';
-  document.getElementById('edit-text-save').style.display = recentMode ? 'none' : '';
+  tileMergeActions.style.display = temporalMode ? 'none' : 'flex';
+  document.getElementById('edit-tile-delete').style.display = temporalMode ? 'none' : '';
+  document.getElementById('edit-text-save').style.display = temporalMode ? 'none' : '';
   recentMetadataActions.style.display = recentMode ? 'flex' : 'none';
+  obsessionActions.style.display = obsessionsMode ? 'flex' : 'none';
   recentMetadataFuture.checked = true;
   recentMetadataReplace.checked = true;
   recentMetadataReplace.disabled = Boolean(item._nowPlaying);
@@ -16166,6 +16322,15 @@ function openTextEditModal(index) {
   editLastfmLinkBtn.disabled = !lastfmUrl;
   editLastfmLinkBtn.style.opacity = lastfmUrl ? '1' : '.45';
   editLastfmLinkBtn.dataset.url = lastfmUrl;
+  editLastfmLinkBtn.style.display = obsessionsMode ? 'none' : 'flex';
+  const obsessionUrl = obsessionsMode ? getObsessionLastfmUrl(item) : '';
+  obsessionLastfmLinkButton.disabled = !obsessionUrl;
+  obsessionLastfmLinkButton.style.opacity = obsessionUrl ? '1' : '.45';
+  obsessionLastfmLinkButton.dataset.url = obsessionUrl;
+  obsessionDeleteButton.disabled = Boolean(item._obsessionDeleted || !obsessionUrl);
+  obsessionDeleteButton.textContent = item._obsessionDeleted ? 'OBSESSÃO EXCLUÍDA' : 'EXCLUIR OBSESSÃO';
+  obsessionActionStatus.style.display = 'none';
+  obsessionActionStatus.textContent = '';
   if (mobilePasteTarget) {
     mobilePasteTarget.replaceChildren();
     mobilePasteTarget.hidden = true;
@@ -16192,6 +16357,30 @@ editLastfmLinkBtn.addEventListener('click', () => {
   if (!url) return;
   window.open(url, '_blank', 'noopener');
   appendStatusHistoryEntry('Item aberto no Last.fm para o período selecionado.');
+});
+
+function getObsessionLastfmUrl(item) {
+  const raw = String(item?._obsessionUrl || '').trim();
+  if (/^https:\/\/www\.last\.fm\/user\/[^/]+\/obsessions\/\d+/i.test(raw)) return raw;
+  if (/^\/user\/[^/]+\/obsessions\/\d+/i.test(raw)) return `https://www.last.fm${raw}`;
+  const id = String(item?._obsessionId || '').trim();
+  const username = String(item?._obsessionUsername || getRenderedQueryState()?.username || document.getElementById('username')?.value || '').trim();
+  return id && username
+    ? `https://www.last.fm/user/${lastfmPathPart(username)}/obsessions/${encodeURIComponent(id)}`
+    : '';
+}
+
+function setObsessionActionStatus(message, error = false) {
+  obsessionActionStatus.style.display = message ? '' : 'none';
+  obsessionActionStatus.style.color = error ? '#ff8b8b' : 'var(--muted)';
+  obsessionActionStatus.textContent = message || '';
+}
+
+obsessionLastfmLinkButton.addEventListener('click', () => {
+  const url = obsessionLastfmLinkButton.dataset.url || getObsessionLastfmUrl(activeClickItem);
+  if (!url) return;
+  window.open(url, '_blank', 'noopener');
+  appendStatusHistoryEntry('Obsessão aberta no Last.fm.');
 });
 
 let lastfmAuthorizationPromise = null;
@@ -16301,10 +16490,14 @@ function applyRecentMetadataAuthState(status) {
     connected: Boolean(status?.connected),
     username: status?.username || '',
   };
-  lastfmWriteAccountState.hidden = !recentLastfmAuthState.connected;
+  lastfmWriteAccountState.hidden = false;
   lastfmWriteAccountMessage.textContent = recentLastfmAuthState.connected
     ? `Conta ${recentLastfmAuthState.username} autorizada para editar o histórico.`
-    : '';
+    : 'Autorize uma conta do Last.fm para editar o histórico.';
+  lastfmChangeAccount.disabled = !recentLastfmAuthState.configured;
+  lastfmChangeAccount.textContent = recentLastfmAuthState.configured
+    ? (recentLastfmAuthState.connected ? 'ALTERAR CONTA' : 'AUTORIZAR LAST.FM')
+    : 'AUTORIZAÇÃO INDISPONÍVEL';
   const itemUnavailable = Boolean(activeClickItem?._nowPlaying || activeClickItem?._lastfmDeleted);
   recentMetadataSave.disabled = itemUnavailable;
   recentScrobbleDelete.disabled = itemUnavailable;
@@ -16413,15 +16606,20 @@ lastfmChangeAccount.addEventListener('click', async event => {
   event.preventDefault();
   event.stopPropagation();
   lastfmChangeAccount.disabled = true;
-  lastfmChangeAccount.textContent = 'ALTERANDO CONTA...';
+  const changingAccount = recentLastfmAuthState.connected;
+  lastfmChangeAccount.textContent = changingAccount ? 'ALTERANDO CONTA...' : 'AUTORIZANDO...';
   try {
-    const disconnectResponse = await fetch('/api/lastfm-auth?action=disconnect', {
-      method: 'POST',
-      headers: { Accept: 'application/json' },
-    });
-    const disconnectPayload = await disconnectResponse.json().catch(() => ({}));
-    if (!disconnectResponse.ok) throw new Error(disconnectPayload.error || 'Não foi possível desconectar a conta atual.');
-    applyRecentMetadataAuthState({ configured: recentLastfmAuthState.configured, connected: false, username: '' });
+    if (changingAccount) {
+      const disconnectResponse = await fetch('/api/lastfm-auth?action=disconnect', {
+        method: 'POST',
+        headers: { Accept: 'application/json' },
+      });
+      const disconnectPayload = await disconnectResponse.json().catch(() => ({}));
+      if (!disconnectResponse.ok) throw new Error(disconnectPayload.error || 'Não foi possível desconectar a conta atual.');
+      applyRecentMetadataAuthState({ configured: recentLastfmAuthState.configured, connected: false, username: '' });
+      lastfmChangeAccount.disabled = true;
+      lastfmChangeAccount.textContent = 'AUTORIZANDO...';
+    }
     const status = await ensureLastfmWriteAuthorization();
     applyRecentMetadataAuthState({ ...status, configured: true });
     setRecentMetadataStatus(`Conta ${status.username} autorizada para editar o histórico.`);
@@ -16429,7 +16627,7 @@ lastfmChangeAccount.addEventListener('click', async event => {
     setRecentMetadataStatus(error.message, true);
   } finally {
     lastfmChangeAccount.disabled = false;
-    lastfmChangeAccount.textContent = 'ALTERAR CONTA';
+    lastfmChangeAccount.textContent = recentLastfmAuthState.connected ? 'ALTERAR CONTA' : 'AUTORIZAR LAST.FM';
   }
 });
 
@@ -16661,7 +16859,7 @@ function showTileConfigView() {
 }
 
 function showMergeSearchView() {
-  if (isRecentCollageRendered()) return;
+  if (isTemporalCollageRendered()) return;
   if (activeClickIndex === null || !activeClickItem) return;
   const type = getDrawType();
   mergeSearchTitleTypeEl.textContent = MERGE_SEARCH_TYPE_LABELS[type] || 'item';
@@ -17076,7 +17274,7 @@ mergeSearchConfirmBtn.addEventListener('click', async () => {
 
 
 document.getElementById('merge-collage-btn').addEventListener('click', () => {
-  if (isRecentCollageRendered()) return;
+  if (isTemporalCollageRendered()) return;
   if (activeClickIndex === null || !activeClickItem) return;
   mergeSourceIndex   = activeClickIndex;
   mergeSourceItem    = activeClickItem;
@@ -17111,7 +17309,7 @@ document.addEventListener('keydown', e => {
 // IDENTIDADE do item (nunca por índice/posição), então funciona igual não
 // importa como source/target foram escolhidos.
 async function executeMerge(sourceItem, targetItem) {
-  if (isRecentCollageRendered()) return false;
+  if (isTemporalCollageRendered()) return false;
   const { cols, rows } = getDrawGrid();
   const gridSize = cols * rows;
 
@@ -17217,7 +17415,7 @@ function closeMergeConfirm() {
 // Ponto de entrada único usado pelo arraste: decide se mescla direto
 // (preferência "Não perguntar novamente" já ativa) ou abre a confirmação.
 async function confirmAndMerge(sourceItem, targetItem) {
-  if (isRecentCollageRendered()) return;
+  if (isTemporalCollageRendered()) return;
   if (mergeConfirmSkip) { await executeMerge(sourceItem, targetItem); return; }
   openMergeConfirm(sourceItem, targetItem);
 }
@@ -17241,7 +17439,7 @@ const deleteConfirmSkipChk  = document.getElementById('delete-confirm-skip-chk')
 let pendingDeleteItem = null;
 
 function openDeleteConfirm(item) {
-  if (isRecentCollageRendered()) return;
+  if (isTemporalCollageRendered()) return;
   pendingDeleteItem = item;
   deleteConfirmQuestion.textContent = `Você quer excluir "${item.name || ''}"?`;
   deleteConfirmSkipChk.checked = false;
@@ -17256,7 +17454,7 @@ function closeDeleteConfirm() {
 // Ponto de entrada único usado pelo arraste-pra-fora: exclui direto se a
 // preferência "Não perguntar novamente" já estiver ativa, senão confirma.
 async function confirmAndDelete(item) {
-  if (isRecentCollageRendered()) return;
+  if (isTemporalCollageRendered()) return;
   if (deleteConfirmSkip) { await executeDeleteTile(item); return; }
   openDeleteConfirm(item);
 }
@@ -17342,7 +17540,7 @@ function cancelTileDrag() {
 }
 
 mainCanvas.addEventListener('mousedown', e => {
-  if (isRecentCollageRendered()) return;
+  if (isTemporalCollageRendered()) return;
   if (e.button !== 0) return; // só botão esquerdo
   if (mergePickingActive) return; // não conflita com o modo de seleção por botão
   if (mergeConfirmOverlay.style.display === 'flex') return; // confirmação já aberta
@@ -17856,7 +18054,7 @@ function renderHistoryModal() {
 }
 
 function openHistoryModal(kind, options = {}) {
-  if (isRecentCollageRendered() && !options.allowGlobalHistory) return;
+  if (isTemporalCollageRendered() && !options.allowGlobalHistory) return;
   historyModalKind = kind;
   const context = activeCollageMemoryContext || getCollageMemoryContext();
   historyModalSource = options.source === 'menu' ? 'menu' : 'collage';
@@ -17882,7 +18080,7 @@ function closeHistoryModal() {
 
 function renderDeletedPanel() {
   const historyPanels = document.getElementById('history-panels');
-  if (isRecentCollageRendered()) {
+  if (isTemporalCollageRendered()) {
     historyPanels.classList.remove('has-items');
     if (historyModalKind) closeHistoryModal();
     document.getElementById('empty-grid-msg')?.remove();
@@ -17941,7 +18139,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && historyMod
 // então funciona igual não importa se foi disparada pelo botão do modal
 // ("Excluir tile e puxar próximo") ou pelo arraste pra fora da collage.
 async function executeDeleteTile(deletedItem) {
-  if (isRecentCollageRendered()) return false;
+  if (isTemporalCollageRendered()) return false;
   const { cols, rows } = getDrawGrid();
   const gridSize = cols * rows;
 
@@ -18129,6 +18327,35 @@ recentScrobbleDelete.addEventListener('click', async () => {
     setRecentMetadataStatus(error.message, true);
   } finally {
     recentScrobbleDelete.disabled = Boolean(item._lastfmDeleted);
+  }
+});
+
+obsessionDeleteButton.addEventListener('click', async () => {
+  const item = activeClickItem;
+  const obsessionUrl = getObsessionLastfmUrl(item);
+  if (!item || !isObsessionsCollageRendered() || !obsessionUrl || item._obsessionDeleted) return;
+  if (!window.confirm('Excluir definitivamente esta obsessão do seu perfil do Last.fm?')) {
+    setObsessionActionStatus('Exclusão cancelada.');
+    return;
+  }
+  obsessionDeleteButton.disabled = true;
+  setObsessionActionStatus('Excluindo obsessão do Last.fm...');
+  try {
+    await requireCollagerLastfmExtension();
+    await collagerExtensionRequest('deleteObsession', {
+      username: item._obsessionUsername || getRenderedQueryState()?.username || document.getElementById('username')?.value || '',
+      url: obsessionUrl,
+      obsessionId: item._obsessionId || '',
+    });
+    item._obsessionDeleted = true;
+    obsessionDeleteButton.textContent = 'OBSESSÃO EXCLUÍDA';
+    setObsessionActionStatus('Obsessão excluída do Last.fm.');
+    appendStatusHistoryEntry(`Obsessão excluída do Last.fm: ${item.artist?.name || ''} — ${item.name || ''}.`);
+    triggerHapticFeedback('short');
+  } catch (error) {
+    setObsessionActionStatus(error.message, true);
+  } finally {
+    obsessionDeleteButton.disabled = Boolean(item._obsessionDeleted);
   }
 });
 // Clicar fora do modal (no fundo escurecido) NÃO fecha mais — evita fechar
@@ -18895,7 +19122,7 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
   // estiver aberto (evita reabrir por cima de outra coisa em andamento).
   mainCanvas.addEventListener('keydown', e => {
     if (e.key !== 'f' && e.key !== 'F') return;
-    if (isRecentCollageRendered()) return;
+    if (isTemporalCollageRendered()) return;
     if (!lastHoveredHit) return;
     if (textEditOverlay.style.display === 'flex') return;
     const item = currentItems[lastHoveredHit.index];

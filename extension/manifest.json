@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "collager.fm - Last.fm companion",
-  "version": "0.1.0",
-  "description": "Permite ao collager.fm substituir ou excluir scrobbles usando a sessao web do Last.fm.",
+  "version": "0.2.0",
+  "description": "Permite ao collager.fm substituir ou excluir scrobbles e excluir obsessoes usando a sessao web do Last.fm.",
   "permissions": [
     "scripting",
     "tabs"
