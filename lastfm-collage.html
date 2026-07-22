@@ -906,11 +906,22 @@
   .status-msg.error { color: #f54242; }
   .status-msg a { color: #888; }
   #lastfm-queue-feedback {
-    display: flex; flex-direction: column; align-items: center; gap: 8px;
-    width: min(100%, 360px);
+    position: fixed; left: calc(390px + (100vw - 390px) / 2); bottom: 16px;
+    z-index: 920; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    width: min(calc(100vw - 32px), 380px); padding: 8px;
+    border: 1px solid #ffffff20; border-radius: 8px;
+    background: #111111ed; box-shadow: 0 10px 30px #000a;
+    backdrop-filter: blur(10px);
   }
   #lastfm-queue-feedback[hidden], #lastfm-queue-status[hidden] { display: none !important; }
   #lastfm-queue-status { font-size: 12px; line-height: 1.45; }
+  @media (max-width: 74.999rem) and (min-width: 48rem) {
+    #lastfm-queue-feedback { left: calc(var(--sidebar-width) + (100vw - var(--sidebar-width)) / 2); }
+  }
+  @media (max-width: 47.999rem) {
+    #lastfm-queue-feedback { left: 50%; bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
+  }
   #status-history-dock {
     position: sticky; top: 50vh; transform: translateY(-50%);
     grid-area: status; z-index: 40; width: 100%; align-self: flex-start; justify-self: start;
@@ -1380,12 +1391,13 @@
   #history-list-overlay { display:none;position:fixed;inset:0;background:#000000b8;z-index:1200;align-items:center;justify-content:center;padding:24px; }
   #history-list-modal { width:min(860px,94vw);max-height:88vh;overflow:hidden;background:var(--surface);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column; }
   .history-modal-head { display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid var(--border); }
-  .history-modal-titlebar { display:flex;align-items:center;gap:14px;min-width:0; }
+  .history-modal-titlebar { display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;min-width:0; }
   #history-list-title { font-size:14px;font-weight:800;color:var(--text);text-transform:uppercase; }
   .history-filter-toggle { display:flex;align-items:stretch;border:1px solid var(--border);border-radius:6px;overflow:hidden;flex-shrink:0; }
   .history-filter-toggle button { min-height:28px;padding:5px 10px;border:0;border-right:1px solid var(--border);background:var(--surface2);color:var(--muted);font:700 10px/1 inherit;cursor:pointer; }
   .history-filter-toggle button:last-child { border-right:0; }
   .history-filter-toggle button.active { background:#ef444420;color:#fff;box-shadow:inset 0 0 0 1px #ef4444; }
+  .history-type-filter button.active { border-color:#ef4444;color:#fff;box-shadow:inset 0 0 0 1px #ef4444; }
   .history-modal-close { width:30px;height:28px;font-size:17px; }
   #history-list-grid {
     display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
@@ -2590,7 +2602,10 @@
       justify-content: flex-start;
       overflow: hidden;
     }
-    body[data-mobile-view="edit"].mobile-edit-header-bottom #collage-wrap.visible { justify-content: flex-end; }
+    body[data-mobile-view="edit"].mobile-edit-header-bottom #collage-wrap.visible {
+      justify-content: flex-start;
+      transform: translateY(calc(var(--mobile-edit-preview-height, 18rem) - 100%));
+    }
     body[data-mobile-view="edit"] #collage-canvas {
       width: 100%;
       min-width: 0;
@@ -2719,6 +2734,7 @@
     #history-list-modal .history-modal-titlebar { width: 100%; flex: 1 1 100%; }
     #history-list-modal .history-filter-toggle { width: 100%; }
     #history-list-modal .history-filter-toggle button { flex: 1 1 50%; }
+    #history-list-modal .history-type-filter button { flex-basis: 33.333%; }
     #history-list-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; padding: .625rem; }
     body.mobile-menu-all-history #history-list-filter { display: none !important; }
 
@@ -3137,6 +3153,7 @@
         </div>
         <div class="source-toggle-group" id="sources-tracks" data-srctype="tracks">
           <button class="source-btn" data-source="local_folder" draggable="true"><span class="src-num"></span>Pasta local</button>
+          <button class="source-btn active" data-source="lastfm" draggable="true"><span class="src-num"></span>Last.fm</button>
           <button class="source-btn active" data-source="deezer" draggable="true"><span class="src-num"></span>Deezer</button>
           <button class="source-btn" data-source="spotify" draggable="true" title="Requer Spotify Premium"><span class="src-num"></span>Spotify<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7z"/><path d="M5 20h14"/></svg></button>
           <button class="source-btn" data-source="youtube" draggable="true"><span class="src-num"></span>YouTube</button>
@@ -3144,11 +3161,11 @@
         </div>
         <div class="source-toggle-group" id="sources-recent" data-srctype="recent">
           <button class="source-btn active" data-source="lastfm" draggable="true"><span class="src-num"></span>Last.fm</button>
-          <button class="source-btn" data-source="local_folder" draggable="true"><span class="src-num"></span>Pasta local</button>
-          <button class="source-btn" data-source="deezer" draggable="true"><span class="src-num"></span>Deezer</button>
+          <button class="source-btn active" data-source="deezer" draggable="true"><span class="src-num"></span>Deezer</button>
           <button class="source-btn" data-source="spotify" draggable="true" title="Requer Spotify Premium"><span class="src-num"></span>Spotify<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7z"/><path d="M5 20h14"/></svg></button>
           <button class="source-btn" data-source="youtube" draggable="true"><span class="src-num"></span>YouTube</button>
           <button class="source-btn" data-source="fanart" draggable="true"><span class="src-num"></span>Fanart.tv</button>
+          <button class="source-btn" data-source="local_folder" draggable="true"><span class="src-num"></span>Pasta local</button>
         </div>
         <div style="font-size:10px;color:#555;margin-top:6px;">Botões arrastáveis e ativáveis, para ordenar a sua prioridade e preferência de uso.</div>
 
@@ -4712,7 +4729,12 @@
     <div class="history-modal-head">
       <div class="history-modal-titlebar">
         <div id="history-list-title">Listagem de excluídos</div>
-        <div class="history-filter-toggle" id="history-list-filter" aria-label="Filtrar listagem">
+        <div class="history-filter-toggle history-type-filter" id="history-list-type-filter" aria-label="Filtrar por tipo">
+          <button type="button" data-history-type="artists">Artistas</button>
+          <button type="button" class="active" data-history-type="albums">Álbuns</button>
+          <button type="button" data-history-type="tracks">Faixas</button>
+        </div>
+        <div class="history-filter-toggle" id="history-list-filter" aria-label="Filtrar por período">
           <button type="button" class="active" data-filter="period">Neste período</button>
           <button type="button" data-filter="all">Todos</button>
         </div>
@@ -4749,7 +4771,7 @@
     </div>
     <div class="toggle-row">
       <span class="toggle-label">Incluir excluídos, mesclados e textos editados?</span>
-      <label class="toggle-switch"><input type="checkbox" id="settings-export-history" aria-label="Incluir excluídos, mesclados e textos editados?"><span class="toggle-slider"></span></label>
+      <label class="toggle-switch"><input type="checkbox" id="settings-export-history" checked aria-label="Incluir excluídos, mesclados e textos editados?"><span class="toggle-slider"></span></label>
     </div>
     <div id="settings-export-history-note" style="font-size:11px;color:var(--muted);line-height:1.5;">Desativado: excluídos, mesclados e alterações de texto feitas nas configurações dos quadros não serão exportados.</div>
     <div class="toggle-row">
@@ -4874,6 +4896,8 @@
         <button type="button" id="edit-scrobble-delete" style="flex:1;padding:10px;border:1px solid #ef444488;border-radius:8px;background:#3f1518;color:#ff9b9b;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">EXCLUIR SCROBBLE</button>
       </div>
       <button type="button" id="recent-lastfm-authorize" style="display:none;width:100%;padding:9px;border:1px solid #d5100788;border-radius:8px;background:#d5100718;color:#ff8a84;font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;">AUTORIZAR LAST.FM</button>
+      <div id="recent-extension-status" aria-live="polite" style="color:var(--muted);font-size:10.5px;line-height:1.4;">Verificando extensão companheira...</div>
+      <div style="padding:8px;border:1px solid #ffffff18;border-radius:7px;background:#00000024;color:var(--muted);font-size:10px;line-height:1.45;">A substituição cria um novo scrobble corrigido e depois exclui o original. Ela está disponível para registros de até aproximadamente 14 dias.</div>
       <div id="recent-metadata-status" aria-live="polite" style="display:none;color:var(--muted);font-size:10.5px;line-height:1.4;"></div>
     </div>
     <div id="tile-restore-actions" style="display:flex;flex-direction:column;gap:8px;">
@@ -5649,8 +5673,8 @@ const SOURCES_NEEDING_KEY = { youtube: true, spotify: true };
 let imageSources = {
   artists: new Set(['deezer']),
   albums:  new Set(['lastfm']),
-  tracks:  new Set(['deezer']),
-  recent:  new Set(['lastfm']),
+  tracks:  new Set(['lastfm', 'deezer']),
+  recent:  new Set(['lastfm', 'deezer']),
 };
 
 const LOCAL_ARTIST_SOURCE = 'local_folder';
@@ -8938,6 +8962,12 @@ headerUsernameSizeVal.textContent = DEFAULTS.headerUsernameScale + 'px';
 headerUsernameSizeSlider.addEventListener('input', () => {
   headerUsernameScale = parseInt(headerUsernameSizeSlider.value);
   headerUsernameSizeVal.textContent = headerUsernameScale + 'px';
+  if (headerInteractiveEnabled) {
+    const layout = headerInteractiveLayout['standard-username'] || (headerInteractiveLayout['standard-username'] = {});
+    layout.size = headerUsernameScale;
+    const component = lastInteractiveHeaderModel?.components?.find(item => item.key === 'standard-username');
+    if (component) component.size = headerUsernameScale;
+  }
   redrawIfReady();
 });
 const headerUseUsernameChk = document.getElementById('header-use-username-label');
@@ -8990,6 +9020,7 @@ document.getElementById('header-position-toggle').addEventListener('click', e =>
   syncHeaderImageSizeHint();
   syncHeaderInteractiveUi();
   redrawIfReady();
+  requestAnimationFrame(() => window.updateMobileEditPreview?.());
 });
 
 document.getElementById('header-text-rotation-toggle')?.addEventListener('click', event => {
@@ -9517,17 +9548,24 @@ const headerFontVal    = document.getElementById('val-header-font');
 headerFontSlider.addEventListener('input', () => {
   const v = parseInt(headerFontSlider.value);
   headerFontVal.textContent = v === 0 ? 'auto' : v + 'px';
-  if (headerInteractiveEnabled && lastInteractiveHeaderModel?.components) {
+  if (headerInteractiveEnabled) {
     const lineCount = headerCustomEnabled
       ? 1 + Number(headerLine2Enabled) + Number(headerLine3Enabled)
       : 1;
     const rowHeight = Math.max(24, parseInt(headerHeightSlider.value) / Math.max(1, lineCount));
     const size = resolveHeaderFontPx(rowHeight, v);
-    lastInteractiveHeaderModel.components.forEach(component => {
-      if (component.kind !== 'text' || component.key === 'standard-username') return;
-      const layout = headerInteractiveLayout[component.key] || (headerInteractiveLayout[component.key] = {});
+    const textKeys = headerCustomEnabled
+      ? [
+          'custom-l1-text1', ...(headerText2Enabled1 ? ['custom-l1-text2'] : []),
+          ...(headerLine2Enabled ? ['custom-l2-text1', ...(headerText2Enabled2 ? ['custom-l2-text2'] : [])] : []),
+          ...(headerLine3Enabled ? ['custom-l3-text1', ...(headerText2Enabled3 ? ['custom-l3-text2'] : [])] : []),
+        ]
+      : ['standard-header'];
+    textKeys.forEach(key => {
+      const layout = headerInteractiveLayout[key] || (headerInteractiveLayout[key] = {});
       layout.size = size;
-      component.size = size;
+      const component = lastInteractiveHeaderModel?.components?.find(item => item.key === key);
+      if (component) component.size = size;
     });
   }
   redrawIfReady();
@@ -9754,11 +9792,6 @@ function syncTypeSpecificPanels() {
   const periodDivider = document.getElementById('period-section-divider');
   if (periodSection) periodSection.style.display = temporalMode ? 'none' : '';
   if (periodDivider) periodDivider.style.display = temporalMode ? 'none' : '';
-  const recentMode = currentType === 'recent';
-  ['mobile-deleted-list-btn', 'mobile-merged-list-btn', 'desktop-deleted-list-btn', 'desktop-merged-list-btn'].forEach(id => {
-    const button = document.getElementById(id);
-    if (button) button.style.display = recentMode ? 'none' : '';
-  });
   renderSpecificArtistsList();
 }
 
@@ -10770,35 +10803,76 @@ document.getElementById('lastfm-own-key-action').addEventListener('click', event
   window.openLastfmApiSettings?.();
 });
 
+const lastfmQueueFeedbackController = (() => {
+  const queuedRequests = new Set();
+  const feedback = document.getElementById('lastfm-queue-feedback');
+  const status = document.getElementById('lastfm-queue-status');
+  const ownKeyAction = document.getElementById('lastfm-own-key-action');
+  let statusHideTimer = 0;
+  let actionHideTimer = 0;
+
+  const sync = () => { feedback.hidden = status.hidden && ownKeyAction.hidden; };
+  const cancelTimers = () => {
+    clearTimeout(statusHideTimer);
+    clearTimeout(actionHideTimer);
+    statusHideTimer = 0;
+    actionHideTimer = 0;
+  };
+  const showOwnKeyAction = () => {
+    ownKeyAction.hidden = false;
+    sync();
+  };
+  const show = (requestId, queue) => {
+    if (!queue) return;
+    const queued = queue.state === 'queued' && Number(queue.position) > 0;
+    const deduplicated = queue.state === 'deduplicated';
+    if (!queued && !deduplicated) return;
+    queuedRequests.add(requestId);
+    cancelTimers();
+    status.hidden = false;
+    status.textContent = queued
+      ? `Aguardando Last.fm — posição ${queue.position} da fila.`
+      : 'Aguardando uma solicitação igual que já está em andamento...';
+    showOwnKeyAction();
+  };
+  const finish = (requestId, keepActionVisible = false) => {
+    queuedRequests.delete(requestId);
+    if (queuedRequests.size) return;
+    clearTimeout(statusHideTimer);
+    clearTimeout(actionHideTimer);
+    statusHideTimer = setTimeout(() => {
+      status.hidden = true;
+      status.textContent = '';
+      sync();
+    }, 350);
+    actionHideTimer = setTimeout(() => {
+      ownKeyAction.hidden = true;
+      sync();
+    }, keepActionVisible ? 6000 : 2350);
+  };
+  const keepAction = (milliseconds = 6000) => {
+    cancelTimers();
+    showOwnKeyAction();
+    actionHideTimer = setTimeout(() => {
+      if (!queuedRequests.size) ownKeyAction.hidden = true;
+      sync();
+    }, milliseconds);
+  };
+  return { show, finish, keepAction };
+})();
+
 async function apiFetch(params, options = {}) {
   const suppliedApiKey = String(params?.api_key || '').trim();
   if (!suppliedApiKey) {
     const requestId = globalThis.crypto?.randomUUID?.() || `lfm_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-    const ownKeyAction = document.getElementById('lastfm-own-key-action');
-    const queueFeedback = document.getElementById('lastfm-queue-feedback');
-    const queueStatus = document.getElementById('lastfm-queue-status');
+    const generationQueueGroup = window._lastfmQueueGroup || '';
+    const queueGroup = generationQueueGroup || requestId;
     let requestFinished = false;
     let queuePollTimer = 0;
     let keepOwnKeyActionVisible = Boolean(options.keepOwnKeyActionVisible);
-    const syncQueueFeedback = () => {
-      queueFeedback.hidden = ownKeyAction.hidden && queueStatus.hidden;
-    };
-    const showOwnKeyAction = () => {
-      ownKeyAction.hidden = false;
-      syncQueueFeedback();
-    };
     const showQueueState = queue => {
       if (options.silentQueue || requestFinished || !queue) return;
-      if (queue.state === 'queued' && Number(queue.position) > 0) {
-        queueStatus.hidden = false;
-        queueStatus.textContent = `Aguardando Last.fm — posição ${queue.position} da fila.`;
-        showOwnKeyAction();
-      } else if (queue.state === 'deduplicated') {
-        queueStatus.hidden = false;
-        queueStatus.textContent = 'Aguardando uma solicitação igual que já está em andamento...';
-        showOwnKeyAction();
-      }
-      syncQueueFeedback();
+      lastfmQueueFeedbackController.show(requestId, queue);
     };
     const pollQueue = async () => {
       if (requestFinished) return;
@@ -10814,20 +10888,53 @@ async function apiFetch(params, options = {}) {
       const serverParams = { ...params };
       delete serverParams.api_key;
       if (!options.silentQueue) queuePollTimer = setTimeout(pollQueue, 300);
-      const response = await fetch('/api/lastfm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ params: serverParams, requestId }),
-        signal: combinedSignal(30000),
-      });
-      const data = await response.json();
+      const queueDeadline = Date.now() + 5 * 60 * 1000;
+      let response;
+      let data;
+      while (true) {
+        response = await fetch('/api/lastfm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            params: serverParams,
+            requestId,
+            queueGroup,
+          }),
+          signal: combinedSignal(30000),
+        });
+        data = await response.json();
+        if (!(response.status === 429 && data.retryable) || Date.now() >= queueDeadline) break;
+        const retryAfterMs = Math.max(500, Math.min(5000, Number(data.retryAfterMs) || 1000));
+        lastfmQueueFeedbackController.show(requestId, {
+          state: 'queued',
+          position: Math.max(1, Number(data.position) || Math.ceil(retryAfterMs / 1100)),
+        });
+        await new Promise((resolve, reject) => {
+          const signal = window._genSignal;
+          let timer = 0;
+          const cleanup = () => signal?.removeEventListener('abort', abort);
+          const complete = () => {
+            cleanup();
+            resolve();
+          };
+          const abort = () => {
+            clearTimeout(timer);
+            cleanup();
+            reject(new DOMException('Aborted', 'AbortError'));
+          };
+          timer = setTimeout(complete, retryAfterMs);
+          if (!signal) return;
+          if (signal.aborted) abort();
+          else signal.addEventListener('abort', abort, { once: true });
+        });
+      }
       if (!response.ok || data.error) {
         const error = new Error(data.message || data.error || `Last.fm respondeu ${response.status}`);
         if (data.retryable || response.status === 429) {
           error.code = 'LASTFM_RETRYABLE';
           error.retryAfterMs = Number(data.retryAfterMs || response.headers.get('Retry-After') * 1000 || 0);
           keepOwnKeyActionVisible = true;
-          showOwnKeyAction();
+          lastfmQueueFeedbackController.keepAction();
         } else if (data.fallbackRequired || response.status === 503) {
           error.code = 'DEFAULT_LASTFM_KEY_FAILED';
         }
@@ -10841,10 +10948,15 @@ async function apiFetch(params, options = {}) {
     } finally {
       requestFinished = true;
       clearTimeout(queuePollTimer);
-      queueStatus.hidden = true;
-      queueStatus.textContent = '';
-      if (!keepOwnKeyActionVisible) ownKeyAction.hidden = true;
-      syncQueueFeedback();
+      lastfmQueueFeedbackController.finish(requestId, keepOwnKeyActionVisible);
+      if (!generationQueueGroup) {
+        fetch('/api/lastfm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'queue-release', queueGroup }),
+          keepalive: true,
+        }).catch(() => {});
+      }
     }
   }
 
@@ -11034,10 +11146,21 @@ async function getRecentObsessionItems(user, maxItems = 50) {
   checkCancel();
   showStatus('Buscando obsessões recentes...');
   const params = new URLSearchParams({ user, limit: String(Math.max(1, Number.parseInt(maxItems, 10) || 50)) });
-  const response = await fetch(`/api/obsessions?${params.toString()}`, {
-    headers: { Accept: 'application/json' },
-    signal: window._genSignal || undefined,
-  });
+  const obsessionsEndpoint = window.location.protocol === 'file:'
+    ? 'http://127.0.0.1:8767/api/obsessions'
+    : '/api/obsessions';
+  let response;
+  try {
+    response = await fetch(`${obsessionsEndpoint}?${params.toString()}`, {
+      headers: { Accept: 'application/json' },
+      signal: window._genSignal || undefined,
+    });
+  } catch (error) {
+    if (window.location.protocol === 'file:') {
+      throw new Error('Obsessões precisam do servidor do collager.fm. Abra o site pelo endereço http://127.0.0.1:8767.');
+    }
+    throw new Error('Não foi possível acessar o serviço de obsessões. Verifique a conexão e tente novamente.');
+  }
   let payload = {};
   try { payload = await response.json(); }
   catch (_) { /* resposta inválida tratada abaixo */ }
@@ -11091,14 +11214,10 @@ async function enrichItemImages(items, type, apikey) {
       if (type !== 'tracks' && extractLastfmImage(item)) return;
       try {
         if (type === 'artists') {
-          const d = await apiFetch({ method: 'artist.getInfo', artist: item.name, api_key: apikey, autocorrect: 1 });
-          const imgs = d?.artist?.image || [];
-          // Last.fm retorna imagens vazias para artistas; só antecipa o
-          // YouTube quando ele estiver realmente ativado como fonte.
-          const hasValidImg = imgs.some(i => i['#text']);
-          if (hasValidImg) {
-            item.image = imgs;
-          } else if (imageSources.artists.has('youtube')) {
+          // A API do Last.fm não fornece mais fotos úteis de artistas. Evita
+          // uma chamada enfileirada por quadro e deixa as fontes realmente
+          // ativadas (Deezer/Fanart/YouTube/Spotify) resolverem a imagem.
+          if (imageSources.artists.has('youtube')) {
             const ytUrl = await fetchYoutubeArtistImage(item.name);
             if (ytUrl) item._youtubeImage = ytUrl;
           }
@@ -11427,6 +11546,7 @@ const LASTFM_PLACEHOLDER_HASH = '2a96cbd8b46e442fc41c2b86b821562f';
 const resolvedImageUrlCache = new Map();
 const sharedResolvedImageCache = new Map();
 const lastfmAlbumImageCache = new Map();
+const lastfmTrackAlbumImageCache = new Map();
 const fanartResponseCache = new Map();
 
 function getSharedImageKeys(item, type) {
@@ -11564,6 +11684,53 @@ async function fetchTrackImageLastfmFallback(artistName, trackName, apikey) {
   return '';
 }
 
+// Faixas e obsessões não usam uma imagem associada diretamente à faixa.
+// Primeiro identificam o álbum no Last.fm e então usam somente a capa dele.
+async function fetchTrackAlbumImageLastfm(item, artistName, trackName, apikey) {
+  if (!artistName || !trackName) return '';
+  const cacheKey = `${normalizeMemoryPart(artistName)}|${normalizeMemoryPart(trackName)}|${normalizeMemoryPart(item?.albumName || '')}`;
+  if (lastfmTrackAlbumImageCache.has(cacheKey)) return await lastfmTrackAlbumImageCache.get(cacheKey);
+  const request = (async () => {
+    let albumName = String(item?.albumName || '').trim();
+    if (albumName) {
+      const knownAlbumUrl = await fetchAlbumImageLastfmFallback(artistName, albumName, apikey);
+      if (knownAlbumUrl) return knownAlbumUrl;
+    }
+    try {
+      const data = await apiFetch({ method: 'track.getInfo', artist: artistName, track: trackName, api_key: apikey, autocorrect: 1 });
+      const album = data?.track?.album || {};
+      albumName = String(album.title || album.name || '').trim();
+      if (albumName) {
+        const albumUrl = await fetchAlbumImageLastfmFallback(artistName, albumName, apikey);
+        if (albumUrl) return albumUrl;
+      }
+      // O array retornado por track.getInfo também pertence ao álbum da faixa.
+      return extractBestLastfmImage(album.image || []);
+    } catch (_) {
+      return '';
+    }
+  })();
+  lastfmTrackAlbumImageCache.set(cacheKey, request);
+  const url = await request;
+  if (!url) lastfmTrackAlbumImageCache.delete(cacheKey);
+  return url;
+}
+
+async function fetchRecentImageLastfm(item, artistName, trackName, apikey) {
+  const directUrl = extractLastfmImage(item);
+  if (directUrl && !directUrl.includes(LASTFM_PLACEHOLDER_HASH)) {
+    const directImage = await loadImage(directUrl).catch(() => null);
+    if (directImage) return directUrl;
+  }
+  if (item.albumName) {
+    const albumUrl = await fetchAlbumImageLastfmFallback(artistName, item.albumName, apikey);
+    if (albumUrl && await loadImage(albumUrl).catch(() => null)) return albumUrl;
+  }
+  const trackUrl = await fetchTrackImageLastfmFallback(artistName, trackName, apikey);
+  if (trackUrl && await loadImage(trackUrl).catch(() => null)) return trackUrl;
+  return '';
+}
+
 // Resolve a URL final da imagem, tentando as fontes selecionadas pelo
 // usuário na ordem configurada (Fontes de Imagem, na sidebar) até uma dar certo.
 function getImageSourceConfigForDraw(type, item = null) {
@@ -11600,41 +11767,6 @@ async function resolveImageUrl(item, type, apikey) {
     return sharedUrl;
   }
 
-  // Recentes precisa aparecer imediatamente. Primeiro usa a capa devolvida por
-  // user.getRecentTracks; depois consulta o álbum conhecido no Last.fm e só
-  // então usa track.getInfo como último fallback da própria fonte.
-  if (item?._temporalType === 'recent' && sourceConfig.active.has('lastfm')) {
-    const directLastfmUrl = extractLastfmImage(item);
-    if (directLastfmUrl && !directLastfmUrl.includes(LASTFM_PLACEHOLDER_HASH)) {
-      const directImage = await loadImage(directLastfmUrl).catch(() => null);
-      if (directImage) {
-        resolvedImageUrlCache.set(cacheKey, directLastfmUrl);
-        rememberSharedResolvedImage(item, type, 'lastfm', directLastfmUrl);
-        return directLastfmUrl;
-      }
-    }
-    if (item.albumName) {
-      const albumLastfmUrl = await fetchAlbumImageLastfmFallback(artistName, item.albumName, apikey);
-      if (albumLastfmUrl) {
-        const albumImage = await loadImage(albumLastfmUrl).catch(() => null);
-        if (albumImage) {
-          resolvedImageUrlCache.set(cacheKey, albumLastfmUrl);
-          rememberSharedResolvedImage(item, type, 'lastfm', albumLastfmUrl);
-          return albumLastfmUrl;
-        }
-      }
-    }
-    const trackLastfmUrl = await fetchTrackImageLastfmFallback(artistName, itemName, apikey);
-    if (trackLastfmUrl) {
-      const trackImage = await loadImage(trackLastfmUrl).catch(() => null);
-      if (trackImage) {
-        resolvedImageUrlCache.set(cacheKey, trackLastfmUrl);
-        rememberSharedResolvedImage(item, type, 'lastfm', trackLastfmUrl);
-        return trackLastfmUrl;
-      }
-    }
-  }
-
   for (const source of sources) {
     try {
       let url = '';
@@ -11653,6 +11785,8 @@ async function resolveImageUrl(item, type, apikey) {
         else if (source === 'deezer') url = await fetchAlbumImageDeezer(artistName, itemName);
       } else if (type === 'tracks') {
         if (source === LOCAL_ARTIST_SOURCE) url = resolveLocalImageForItem(item, type);
+        else if (source === 'lastfm' && item?._temporalType === 'recent') url = await fetchRecentImageLastfm(item, artistName, itemName, apikey);
+        else if (source === 'lastfm') url = await fetchTrackAlbumImageLastfm(item, artistName, itemName, apikey);
         else if (source === 'fanart') url = await fetchAlbumCoverFanart(item, type, apikey);
         else if (source === 'deezer') url = await fetchTrackImageDeezer(artistName, itemName);
         else if (source === 'spotify') url = await fetchTrackImageSpotify(artistName, itemName);
@@ -11917,9 +12051,16 @@ function startRecentLiveUpdates(user, apikey) {
       recentLiveBusy = true;
       try {
         const previousKeys = new Set(allFetchedItems.map(recentScrobbleStableKey));
+        const previousNewestTimestamp = allFetchedItems.reduce((newest, item) => {
+          if (item?._nowPlaying) return newest;
+          return Math.max(newest, Number(item?._temporalTimestamp) || 0);
+        }, 0);
         const fresh = await fetchRecentScrobblePage(user, apikey, Math.min(100, poolSize), { silentQueue: true });
         if (liveGeneration !== recentLiveGeneration) return;
-        const newScrobbles = fresh.filter(item => !item._nowPlaying && !previousKeys.has(recentScrobbleStableKey(item)));
+        const newScrobbles = fresh.filter(item =>
+          !item._nowPlaying
+          && (Number(item?._temporalTimestamp) || 0) > previousNewestTimestamp
+          && !previousKeys.has(recentScrobbleStableKey(item)));
         const changed = reconcileRecentItems(fresh, poolSize);
         adaptiveInterval = changed
           ? RECENT_LIVE_MIN_INTERVAL
@@ -12743,12 +12884,7 @@ function drawDefaultHeaderTextAndLogo(ctx, W, headerY, headerH, headerLabel, sta
   const logoColor = options.logoColor ?? textColor;
   const usernameColor = options.usernameColor ?? textColor;
   const usernameText = options.usernameText ?? getHeaderUsernameText();
-  const usernameUsesIndependentBand = usernameText
-    && isCenterUsernamePlacement(headerUsernamePlacement)
-    && !(logoEnabled && headerUsernameRelativeToLogo && !isCenterLogoPos(logoPos));
-  const preserveManualFontSize = options.manualFontSize === true
-    && !isCenterLogoPos(logoPos)
-    && !usernameUsesIndependentBand;
+  const preserveManualFontSize = options.manualFontSize === true;
   const fontPx = preserveManualFontSize
     ? Math.max(5, Math.min(startFontPx, Math.floor(headerH * 0.82)))
     : fitHeaderFont(ctx, headerLabel, W, headerH, startFontPx, headerFontCss, headerWeight, { logoEnabled, logoPos, usernameText });
@@ -13144,16 +13280,19 @@ function drawInteractiveHeaderComposition(ctx, headerRect, headerLabel, headerFo
   const measured = components.map(component => {
     const saved = headerInteractiveLayout[component.key];
     const locked = !!saved?.locked;
+    const preserveManualTextSize = component.kind === 'text'
+      && component.key !== 'standard-username'
+      && parseInt(headerFontSlider.value, 10) > 0;
     const rotation = getInteractiveComponentRotation(saved, contextKey);
     let size = Math.max(5, Math.min(160, Number(saved?.size ?? component.size)));
     let { boxW, boxH } = measureComponent(component, size, rotation);
     const maxW = Math.max(12, headerRect.w - 20);
     const maxH = Math.max(12, headerRect.h - 12);
-    while (!locked && size > 5 && (boxW > maxW || boxH > maxH)) {
+    while (!locked && !preserveManualTextSize && size > 5 && (boxW > maxW || boxH > maxH)) {
       size--;
       ({ boxW, boxH } = measureComponent(component, size, rotation));
     }
-    return { ...component, saved, locked, size, rotation, boxW, boxH };
+    return { ...component, saved, locked, preserveManualTextSize, size, rotation, boxW, boxH };
   });
 
   const defaults = new Map();
@@ -13168,7 +13307,7 @@ function drawInteractiveHeaderComposition(ctx, headerRect, headerLabel, headerFo
     const crossAvailable = Math.max(12, (horizontal ? headerRect.h : headerRect.w) / lineCount - 10);
     group.forEach(component => {
       let crossSize = horizontal ? component.boxH : component.boxW;
-      while (!component.locked && component.size > 5 && crossSize > crossAvailable) {
+      while (!component.locked && !component.preserveManualTextSize && component.size > 5 && crossSize > crossAvailable) {
         component.size--;
         const measuredBox = measureComponent(component, component.size, component.rotation);
         component.boxW = measuredBox.boxW;
@@ -14010,6 +14149,7 @@ function getLastfmLibraryUrl(item, type = getDrawType()) {
       ? canonicalLastfmUsername
       : typedUsername;
   if (!username || !item) return '';
+  if (item._nowPlaying) return `https://www.last.fm/user/${lastfmPathPart(username)}`;
   const artist = getItemArtistName(item, type);
   const album = getItemAlbumName(item, type);
   const track = item?.name || '';
@@ -14648,6 +14788,7 @@ document.getElementById('gen-btn').addEventListener('click', () => {
 // ── Cancelamento ──
 let cancelRequested = false;
 let _genAbortController = null;
+let _lastfmQueueHeartbeatTimer = 0;
 function checkCancel() { if (cancelRequested) throw new Error('cancelled'); }
 
 async function generate() {
@@ -14675,6 +14816,18 @@ async function generate() {
   _genAbortController = new AbortController();
   const genSignal = _genAbortController.signal;
   window._genSignal = genSignal; // acessível por apiFetch, loadImage, fetchDeezer, fetchYoutube
+  window._lastfmQueueGroup = globalThis.crypto?.randomUUID?.()
+    || `job_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  clearInterval(_lastfmQueueHeartbeatTimer);
+  _lastfmQueueHeartbeatTimer = setInterval(() => {
+    const queueGroup = window._lastfmQueueGroup;
+    if (!queueGroup) return;
+    fetch('/api/lastfm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'queue-heartbeat', queueGroup }),
+    }).catch(() => {});
+  }, 4000);
   setLoading(true);
   document.getElementById('collage-wrap').classList.remove('visible');
   document.getElementById('dl-btn').classList.remove('visible');
@@ -14842,10 +14995,22 @@ async function generate() {
       showStatus('Erro: '+err.message, true);
     }
   } finally {
+    const finishedQueueGroup = window._lastfmQueueGroup;
+    clearInterval(_lastfmQueueHeartbeatTimer);
+    _lastfmQueueHeartbeatTimer = 0;
     generationQueryState = null;
     window._genSignal = null;
     _genAbortController = null;
     setLoading(false);
+    if (finishedQueueGroup) {
+      fetch('/api/lastfm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'queue-release', queueGroup: finishedQueueGroup }),
+        keepalive: true,
+      }).catch(() => {});
+    }
+    if (window._lastfmQueueGroup === finishedQueueGroup) window._lastfmQueueGroup = '';
   }
 }
 
@@ -15907,6 +16072,7 @@ const recentMetadataReplace = document.getElementById('recent-metadata-replace')
 const recentMetadataSave = document.getElementById('recent-metadata-save');
 const recentScrobbleDelete = document.getElementById('edit-scrobble-delete');
 const recentLastfmAuthorize = document.getElementById('recent-lastfm-authorize');
+const recentExtensionStatus = document.getElementById('recent-extension-status');
 const recentMetadataStatus = document.getElementById('recent-metadata-status');
 const lastfmWriteAccountState = document.getElementById('lastfm-write-account-state');
 const lastfmWriteAccountMessage = document.getElementById('lastfm-write-account-message');
@@ -15987,11 +16153,14 @@ function openTextEditModal(index) {
   recentMetadataReplace.checked = true;
   recentMetadataReplace.disabled = Boolean(item._nowPlaying);
   recentMetadataSave.disabled = recentMode;
-  recentScrobbleDelete.disabled = recentMode || Boolean(item._nowPlaying || item._lastfmDeleted);
+  recentScrobbleDelete.disabled = Boolean(item._nowPlaying || item._lastfmDeleted);
   recentScrobbleDelete.textContent = item._lastfmDeleted ? 'SCROBBLE EXCLUÍDO' : 'EXCLUIR SCROBBLE';
   recentMetadataStatus.style.display = item._nowPlaying ? '' : 'none';
   recentMetadataStatus.textContent = item._nowPlaying ? 'A faixa ainda está sendo escutada; ela poderá ser alterada ou excluída quando virar um scrobble.' : '';
-  if (recentMode) refreshRecentMetadataAuthUi();
+  if (recentMode) {
+    updateRecentExtensionStatus();
+    refreshRecentMetadataAuthUi();
+  }
   fanartPickerBtn.style.display = effectiveType === 'artists' && isImageSourceEnabledForDraw('artists', 'fanart') ? '' : 'none';
   const lastfmUrl = getLastfmLibraryUrl(item, effectiveType);
   editLastfmLinkBtn.disabled = !lastfmUrl;
@@ -16027,6 +16196,91 @@ editLastfmLinkBtn.addEventListener('click', () => {
 
 let lastfmAuthorizationPromise = null;
 let recentLastfmAuthState = { configured: false, connected: false, username: '' };
+let collagerLastfmExtensionAvailable = false;
+const collagerExtensionRequests = new Map();
+const LASTFM_REPLACEMENT_MAX_AGE_SECONDS = 14 * 24 * 60 * 60;
+
+function updateRecentExtensionStatus() {
+  if (!recentExtensionStatus) return;
+  recentExtensionStatus.style.color = collagerLastfmExtensionAvailable ? '#78dfa0' : '#ffb86b';
+  recentExtensionStatus.textContent = collagerLastfmExtensionAvailable
+    ? 'Extensão companheira conectada. Entre também no Last.fm neste navegador.'
+    : 'Extensão companheira não detectada. Instale-a e recarregue esta página para substituir ou excluir scrobbles.';
+}
+
+function collagerExtensionRequest(action, payload = {}, timeoutMs = 25000) {
+  return new Promise((resolve, reject) => {
+    const requestId = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const timeout = setTimeout(() => {
+      collagerExtensionRequests.delete(requestId);
+      reject(new Error('A extensão companheira não respondeu. Instale-a ou recarregue a página.'));
+    }, timeoutMs);
+    collagerExtensionRequests.set(requestId, { resolve, reject, timeout });
+    window.postMessage({
+      type: 'collager-lastfm-extension-request', requestId, action, payload,
+    }, location.origin);
+  });
+}
+
+window.addEventListener('message', event => {
+  if (event.source !== window || event.origin !== location.origin) return;
+  if (event.data?.type === 'collager-lastfm-extension-ready') {
+    collagerLastfmExtensionAvailable = true;
+    updateRecentExtensionStatus();
+    return;
+  }
+  if (event.data?.type !== 'collager-lastfm-extension-response') return;
+  const pending = collagerExtensionRequests.get(event.data.requestId);
+  if (!pending) return;
+  clearTimeout(pending.timeout);
+  collagerExtensionRequests.delete(event.data.requestId);
+  if (event.data.ok) pending.resolve(event.data.result);
+  else pending.reject(new Error(event.data.error || 'A extensão não concluiu a operação.'));
+});
+
+async function requireCollagerLastfmExtension() {
+  if (!collagerLastfmExtensionAvailable) {
+    try {
+      const result = await collagerExtensionRequest('ping', {}, 1400);
+      collagerLastfmExtensionAvailable = Boolean(result?.available);
+    } catch (_) {
+      collagerLastfmExtensionAvailable = false;
+    }
+  }
+  updateRecentExtensionStatus();
+  if (!collagerLastfmExtensionAvailable) {
+    throw new Error('Instale a extensão companheira do collager.fm e recarregue a página antes de continuar.');
+  }
+}
+
+function validateRecentReplacementAge(original) {
+  const timestamp = Math.floor(Number(original?.timestamp));
+  const age = Math.floor(Date.now() / 1000) - timestamp;
+  if (!Number.isFinite(timestamp) || timestamp <= 0) throw new Error('Este scrobble não possui um horário válido.');
+  if (age < -300) throw new Error('O horário deste scrobble está no futuro.');
+  if (age > LASTFM_REPLACEMENT_MAX_AGE_SECONDS) {
+    throw new Error('O Last.fm não aceita reenviar este scrobble porque ele tem mais de aproximadamente 14 dias.');
+  }
+}
+
+function recentExtensionDeletePayload(item, original = getRecentOriginalMetadata(item)) {
+  return {
+    username: item?._recentUsername || getRenderedQueryState()?.username || document.getElementById('username')?.value || '',
+    artist: original.artist,
+    track: original.track,
+    timestamp: original.timestamp,
+  };
+}
+
+setTimeout(() => {
+  collagerExtensionRequest('ping', {}, 1400).then(result => {
+    collagerLastfmExtensionAvailable = Boolean(result?.available);
+    updateRecentExtensionStatus();
+  }).catch(() => {
+    collagerLastfmExtensionAvailable = false;
+    updateRecentExtensionStatus();
+  });
+}, 0);
 
 function setRecentMetadataStatus(message, error = false) {
   recentMetadataStatus.style.display = message ? '' : 'none';
@@ -16052,8 +16306,8 @@ function applyRecentMetadataAuthState(status) {
     ? `Conta ${recentLastfmAuthState.username} autorizada para editar o histórico.`
     : '';
   const itemUnavailable = Boolean(activeClickItem?._nowPlaying || activeClickItem?._lastfmDeleted);
-  recentMetadataSave.disabled = !recentLastfmAuthState.connected;
-  recentScrobbleDelete.disabled = !recentLastfmAuthState.connected || itemUnavailable;
+  recentMetadataSave.disabled = itemUnavailable;
+  recentScrobbleDelete.disabled = itemUnavailable;
   recentLastfmAuthorize.style.display = recentLastfmAuthState.connected ? 'none' : '';
   recentLastfmAuthorize.disabled = !recentLastfmAuthState.configured;
   recentLastfmAuthorize.textContent = recentLastfmAuthState.configured
@@ -17260,6 +17514,45 @@ let deletedHistoryPage = 0;
 let mergedHistoryPage = 0;
 let historyModalKind = null;
 let historyModalFilter = 'period';
+let historyModalType = 'albums';
+let historyModalSource = 'collage';
+let historyModalBaseContext = null;
+
+function normalizeHistoryType(type) {
+  return ['artists', 'albums', 'tracks'].includes(type) ? type : 'albums';
+}
+
+function getHistoryContextForType(type) {
+  const base = historyModalBaseContext || activeCollageMemoryContext || getCollageMemoryContext();
+  const normalizedType = normalizeHistoryType(type);
+  return {
+    ...base,
+    mode: normalizedType,
+    type: normalizedType,
+    specificArtists: [],
+  };
+}
+
+function getSavedPeriodHistory(kind, type) {
+  const context = getHistoryContextForType(type);
+  const memory = getCollageMemoryForContext(context);
+  if (!memory) return [];
+  if (kind === 'merged') {
+    return (memory.merges || []).filter(saved => saved?.source?.item && saved?.target?.item).map(saved => ({
+      source: makeBehaviorItemEntry(saved?.source?.item, context.type),
+      target: makeBehaviorItemEntry(saved?.target?.item, context.type),
+    }));
+  }
+  return (memory.deleted || [])
+    .filter(saved => saved?.item)
+    .map(saved => makeBehaviorItemEntry(saved?.item, context.type))
+    .filter(Boolean);
+}
+
+function historyModalUsesAllPeriods() {
+  const context = historyModalBaseContext || activeCollageMemoryContext || getCollageMemoryContext();
+  return historyModalSource === 'menu' || context.period === 'overall';
+}
 
 function getHistoryIndices(kind) {
   return Array.from(deletedPoolIndices).filter(poolIdx =>
@@ -17408,8 +17701,8 @@ function makeBehaviorHistoryImage(entry, type) {
   return image;
 }
 
-async function restoreGlobalHistoryRule(saved, kind) {
-  const context = activeCollageMemoryContext || getCollageMemoryContext();
+async function restoreGlobalHistoryRule(saved, kind, contextOverride = null) {
+  const context = contextOverride || activeCollageMemoryContext || getCollageMemoryContext();
   const source = kind === 'merged' ? saved?.source : saved;
   if (!source?.key) return;
   const poolIdx = allFetchedItems.findIndex(item => getBehaviorItemKey(item, context.type) === source.key);
@@ -17422,7 +17715,7 @@ async function restoreGlobalHistoryRule(saved, kind) {
   triggerHapticFeedback('short');
 }
 
-function createBehaviorHistoryCard(saved, kind, type) {
+function createBehaviorHistoryCard(saved, kind, type, context = null) {
   const source = kind === 'merged' ? saved?.source : saved;
   if (!source?.item) return null;
   if (kind === 'merged') {
@@ -17453,7 +17746,7 @@ function createBehaviorHistoryCard(saved, kind, type) {
     restore.className = 'dt-restore';
     setUiIconText(restore, 'undo', 'Restaurar');
     card.appendChild(restore);
-    card.addEventListener('click', () => restoreGlobalHistoryRule(saved, kind));
+    card.addEventListener('click', () => restoreGlobalHistoryRule(saved, kind, context));
     return card;
   }
 
@@ -17476,7 +17769,7 @@ function createBehaviorHistoryCard(saved, kind, type) {
   restore.className = 'dt-restore';
   setUiIconText(restore, 'undo', 'Restaurar');
   tile.appendChild(restore);
-  tile.addEventListener('click', () => restoreGlobalHistoryRule(saved, kind));
+  tile.addEventListener('click', () => restoreGlobalHistoryRule(saved, kind, context));
   return tile;
 }
 
@@ -17511,7 +17804,10 @@ function renderHistoryModal() {
   if (!historyModalKind) return;
   const grid = document.getElementById('history-list-grid');
   grid.innerHTML = '';
-  const context = activeCollageMemoryContext || getCollageMemoryContext();
+  const currentContext = historyModalBaseContext || activeCollageMemoryContext || getCollageMemoryContext();
+  const context = getHistoryContextForType(historyModalType);
+  const allPeriods = historyModalUsesAllPeriods();
+  if (allPeriods) historyModalFilter = 'all';
   if (historyModalFilter === 'all') {
     const rules = getCombinedBehaviorRules(context);
     const entries = Array.from(historyModalKind === 'merged' ? rules.merges.values() : rules.deleted.values())
@@ -17521,14 +17817,21 @@ function renderHistoryModal() {
         return String(itemA?.name || '').localeCompare(String(itemB?.name || ''), 'pt-BR', { sensitivity: 'base' });
       });
     entries.forEach(saved => {
-      const card = createBehaviorHistoryCard(saved, historyModalKind, context.type);
+      const card = createBehaviorHistoryCard(saved, historyModalKind, context.type, context);
       if (card) grid.appendChild(card);
     });
   } else {
-    getHistoryIndices(historyModalKind).forEach(poolIdx => {
-      const card = createHistoryCard(poolIdx, historyModalKind);
-      if (card) grid.appendChild(card);
-    });
+    if (normalizeHistoryType(currentContext.type) === historyModalType) {
+      getHistoryIndices(historyModalKind).forEach(poolIdx => {
+        const card = createHistoryCard(poolIdx, historyModalKind);
+        if (card) grid.appendChild(card);
+      });
+    } else {
+      getSavedPeriodHistory(historyModalKind, historyModalType).forEach(saved => {
+        const card = createBehaviorHistoryCard(saved, historyModalKind, context.type, context);
+        if (card) grid.appendChild(card);
+      });
+    }
   }
   if (!grid.children.length) {
     const empty = document.createElement('div');
@@ -17544,17 +17847,36 @@ function renderHistoryModal() {
   document.querySelectorAll('#history-list-filter button').forEach(button => {
     button.classList.toggle('active', button.dataset.filter === historyModalFilter);
   });
+  document.querySelectorAll('#history-list-type-filter button').forEach(button => {
+    button.classList.toggle('active', button.dataset.historyType === historyModalType);
+  });
+  const periodFilter = document.getElementById('history-list-filter');
+  periodFilter.hidden = allPeriods;
+  periodFilter.style.display = allPeriods ? 'none' : '';
 }
 
-function openHistoryModal(kind) {
-  if (isRecentCollageRendered()) return;
+function openHistoryModal(kind, options = {}) {
+  if (isRecentCollageRendered() && !options.allowGlobalHistory) return;
   historyModalKind = kind;
-  historyModalFilter = 'period';
+  const context = activeCollageMemoryContext || getCollageMemoryContext();
+  historyModalSource = options.source === 'menu' ? 'menu' : 'collage';
+  historyModalBaseContext = {
+    ...context,
+    specificArtists: [...(context.specificArtists || [])],
+  };
+  historyModalType = normalizeHistoryType(context.type);
+  historyModalFilter = historyModalSource === 'menu' || context.period === 'overall' ? 'all' : 'period';
   renderHistoryModal();
   if (historyModalKind) document.getElementById('history-list-overlay').style.display = 'flex';
 }
 function closeHistoryModal() {
   historyModalKind = null;
+  historyModalSource = 'collage';
+  historyModalBaseContext = null;
+  const periodFilter = document.getElementById('history-list-filter');
+  periodFilter.hidden = false;
+  periodFilter.style.display = '';
+  document.body.classList.remove('mobile-menu-all-history');
   document.getElementById('history-list-overlay').style.display = 'none';
 }
 
@@ -17602,6 +17924,12 @@ document.getElementById('history-list-filter').addEventListener('click', event =
   const button = event.target.closest('button[data-filter]');
   if (!button || !historyModalKind) return;
   historyModalFilter = button.dataset.filter === 'all' ? 'all' : 'period';
+  renderHistoryModal();
+});
+document.getElementById('history-list-type-filter').addEventListener('click', event => {
+  const button = event.target.closest('button[data-history-type]');
+  if (!button || !historyModalKind) return;
+  historyModalType = normalizeHistoryType(button.dataset.historyType);
   renderHistoryModal();
 });
 document.getElementById('history-list-overlay').addEventListener('click', e => { if (e.target.id === 'history-list-overlay') closeHistoryModal(); });
@@ -17682,10 +18010,28 @@ document.getElementById('edit-tile-delete').addEventListener('click', async () =
   await executeDeleteTile(deletedItem);
 });
 
+function applyRecentMetadataLocally(item, targetPoolIdx, original, edited) {
+  const originalRuleKey = recentMetadataRuleKey(original, item._recentUsername);
+  if (recentMetadataFuture.checked) recentMetadataRules.set(originalRuleKey, edited);
+  else recentMetadataRules.delete(originalRuleKey);
+  saveRecentMetadataRules();
+
+  customTexts[targetPoolIdx] = { main: edited.track, album: edited.album, sub: edited.artist };
+  item.name = edited.track;
+  item.albumName = edited.album;
+  item.artist = { ...(item.artist || {}), name: edited.artist };
+  if (recentMetadataFuture.checked) {
+    allFetchedItems.forEach(candidate => {
+      if (recentMetadataRuleKey(getRecentOriginalMetadata(candidate), candidate._recentUsername) === originalRuleKey) {
+        applyRecentMetadataRule(candidate);
+      }
+    });
+  }
+}
+
 recentMetadataSave.addEventListener('click', async () => {
   const item = activeClickItem;
   if (!item || !isRecentCollageRendered()) return;
-  if (!await requireLastfmWriteAuthorization()) return;
   const targetPoolIdx = allFetchedItems.indexOf(item);
   if (targetPoolIdx < 0) return;
   const original = { ...getRecentOriginalMetadata(item) };
@@ -17699,37 +18045,55 @@ recentMetadataSave.addEventListener('click', async () => {
     return;
   }
 
+  const metadataChanged = edited.track !== original.track
+    || edited.artist !== original.artist
+    || edited.album !== original.album;
+  if (recentMetadataReplace.checked && !metadataChanged && !item._lastfmReplacementPendingDelete) {
+    setRecentMetadataStatus('Nenhum metadado foi alterado.', true);
+    return;
+  }
+
   recentMetadataSave.disabled = true;
   setRecentMetadataStatus('Salvando edição...');
-  const originalRuleKey = recentMetadataRuleKey(original, item._recentUsername);
-  if (recentMetadataFuture.checked) recentMetadataRules.set(originalRuleKey, edited);
-  else recentMetadataRules.delete(originalRuleKey);
-  saveRecentMetadataRules();
-
-  customTexts[targetPoolIdx] = { main: edited.track, album: edited.album, sub: edited.artist };
-  if (recentMetadataFuture.checked) {
-    allFetchedItems.forEach(candidate => {
-      if (recentMetadataRuleKey(getRecentOriginalMetadata(candidate), candidate._recentUsername) === originalRuleKey) applyRecentMetadataRule(candidate);
-    });
-  }
-  await runDraw();
-  scheduleDownloadRefresh();
 
   try {
     if (recentMetadataReplace.checked) {
-      if (item._nowPlaying) throw new Error('A faixa ainda está sendo escutada e não possui um scrobble para substituir.');
-      await sendLastfmWrite({ action: 'replace', original, edited, deleteOriginal: true });
-      item.name = edited.track;
-      item.albumName = edited.album;
-      item.artist = { ...(item.artist || {}), name: edited.artist };
-      item._lastfmOriginal = { ...edited, timestamp: original.timestamp };
-      delete customTexts[targetPoolIdx];
-      setRecentMetadataStatus('Metadados atualizados no Last.fm. A tela continuará acompanhando novos scrobbles.');
-      appendStatusHistoryEntry(`Scrobble editado: ${edited.artist} — ${edited.track}.`);
+      validateRecentReplacementAge(original);
+      await requireCollagerLastfmExtension();
+      if (!await requireLastfmWriteAuthorization()) throw new Error(lastfmAuthorizationRequiredMessage());
+
+      const pending = item._lastfmReplacementPendingDelete;
+      const replacementEdited = pending?.edited || edited;
+      if (!pending) {
+        const confirmed = window.confirm(
+          'Este processo substitui o scrobble: um novo registro corrigido será enviado e o registro original será excluído. Deseja continuar?'
+        );
+        if (!confirmed) {
+          setRecentMetadataStatus('Substituição cancelada.');
+          return;
+        }
+        setRecentMetadataStatus('Enviando o scrobble corrigido ao Last.fm...');
+        await sendLastfmWrite({ action: 'replace', original, edited: replacementEdited, deleteOriginal: false });
+        item._lastfmReplacementPendingDelete = { original: { ...original }, edited: { ...replacementEdited } };
+      }
+
+      setRecentMetadataStatus('Scrobble corrigido enviado. Excluindo o registro original...');
+      try {
+        await collagerExtensionRequest('deleteScrobble', recentExtensionDeletePayload(item, original));
+      } catch (error) {
+        throw new Error(`O scrobble corrigido foi enviado, mas o original não foi excluído. Não salve novamente: tente concluir a exclusão neste mesmo botão. ${error.message}`);
+      }
+      delete item._lastfmReplacementPendingDelete;
+      item._lastfmOriginal = { ...replacementEdited, timestamp: original.timestamp };
+      applyRecentMetadataLocally(item, targetPoolIdx, original, replacementEdited);
+      setRecentMetadataStatus('Scrobble substituído com sucesso no Last.fm.');
+      appendStatusHistoryEntry(`Scrobble substituído: ${replacementEdited.artist} — ${replacementEdited.track}.`);
     } else {
+      applyRecentMetadataLocally(item, targetPoolIdx, original, edited);
       setRecentMetadataStatus(recentMetadataFuture.checked
         ? 'Edição salva no collager.fm e aplicada aos próximos scrobbles correspondentes.'
         : 'Edição aplicada somente a este quadro.');
+      appendStatusHistoryEntry(`Edição local salva: ${edited.artist} — ${edited.track}.`);
     }
     await runDraw();
     scheduleDownloadRefresh();
@@ -17743,25 +18107,28 @@ recentMetadataSave.addEventListener('click', async () => {
 recentScrobbleDelete.addEventListener('click', async () => {
   const item = activeClickItem;
   if (!item || !isRecentCollageRendered() || item._nowPlaying || item._lastfmDeleted) return;
-  if (!await requireLastfmWriteAuthorization()) return;
-  const visualIndex = paintedItems.indexOf(item);
   recentScrobbleDelete.disabled = true;
-  if (visualIndex >= 0) showDeletingOverlay(visualIndex, 'Excluindo...', '#ff8b8b');
-  setRecentMetadataStatus('Excluindo scrobble do Last.fm...');
   try {
-    await sendLastfmWrite({ action: 'delete', original: getRecentOriginalMetadata(item) });
+    await requireCollagerLastfmExtension();
+    if (!await requireLastfmWriteAuthorization()) throw new Error(lastfmAuthorizationRequiredMessage());
+    if (!window.confirm('Excluir definitivamente este scrobble do seu histórico do Last.fm?')) {
+      setRecentMetadataStatus('Exclusão cancelada.');
+      return;
+    }
+    setRecentMetadataStatus('Excluindo scrobble do Last.fm...');
+    const original = getRecentOriginalMetadata(item);
+    await collagerExtensionRequest('deleteScrobble', recentExtensionDeletePayload(item, original));
     item._lastfmDeleted = true;
     recentScrobbleDelete.textContent = 'SCROBBLE EXCLUÍDO';
-    setRecentMetadataStatus('Scrobble excluído do Last.fm. O quadro foi mantido nesta collage.');
-    appendStatusHistoryEntry(`Scrobble excluído: ${item.artist?.name || ''} — ${item.name || ''}.`);
-    triggerHapticFeedback('short');
+    setRecentMetadataStatus('Scrobble excluído do Last.fm.');
+    appendStatusHistoryEntry(`Scrobble excluído do Last.fm: ${original.artist} — ${original.track}.`);
     await runDraw();
     scheduleDownloadRefresh();
+    triggerHapticFeedback('short');
   } catch (error) {
-    recentScrobbleDelete.disabled = false;
     setRecentMetadataStatus(error.message, true);
   } finally {
-    if (visualIndex >= 0) hideDeletingOverlay(visualIndex);
+    recentScrobbleDelete.disabled = Boolean(item._lastfmDeleted);
   }
 });
 // Clicar fora do modal (no fundo escurecido) NÃO fecha mais — evita fechar
@@ -18778,6 +19145,9 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       mainFontColorOverride, albumFontColorOverride, subFontColorOverride,
       headerDefaultLogoColor,
       headerUsernameColor,
+      headerBgColor1,
+      headerBgColor2,
+      headerBgColor3,
       headerSubtitleOverride,
       headerTextColorOverride,
       headerSubtitleInputValue: document.getElementById('header-subtitle-input')?.value || '',
@@ -18843,6 +19213,15 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
         syncHeaderUsernameColorUi();
       }
     }
+    ['headerBgColor1', 'headerBgColor2', 'headerBgColor3'].forEach(key => {
+      if (!Object.prototype.hasOwnProperty.call(js, key)) return;
+      const savedColor = js[key];
+      if (savedColor !== null && !/^#[0-9a-f]{6}$/i.test(savedColor || '')) return;
+      if (key === 'headerBgColor1') headerBgColor1 = savedColor;
+      else if (key === 'headerBgColor2') headerBgColor2 = savedColor;
+      else headerBgColor3 = savedColor;
+    });
+    syncHeaderGradientUI();
     if (Object.prototype.hasOwnProperty.call(js, 'headerSubtitleOverride')) headerSubtitleOverride = js.headerSubtitleOverride ?? null;
     if (Object.prototype.hasOwnProperty.call(js, 'headerTextColorOverride')) headerTextColorOverride = js.headerTextColorOverride ?? null;
     syncHeaderTextColorUi();
@@ -19323,7 +19702,9 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
 
     try {
       const structuralFirst = ['type-selector', 'period-mode-toggle', 'tile-ratio', 'fit-mode'];
-      (preset.settings.buttonGroups || [])
+      const presetButtonGroups = (preset.settings.buttonGroups || [])
+        .filter(group => preset.id !== 'default' || group.id !== 'type-selector');
+      presetButtonGroups
         .slice()
         .sort((a, b) => structuralFirst.indexOf(b.id) - structuralFirst.indexOf(a.id))
         .forEach(applyButtonGroup);
@@ -19335,6 +19716,21 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       syncHeaderLogoColorUi();
       (preset.settings.fields || []).forEach(applyFormField);
       applyJsState(preset.settings.jsState);
+      if (preset.id === 'default') {
+        headerBgColor1 = DEFAULTS.headerBgColor1;
+        headerBgColor2 = DEFAULTS.headerBgColor2;
+        headerBgColor3 = DEFAULTS.headerBgColor3;
+        headerTextColorOverride = DEFAULTS.headerTextColorOverride;
+        headerDefaultLogoColor = DEFAULTS.headerDefaultLogoColor;
+        headerUsernameColor = DEFAULTS.headerUsernameColor;
+        syncHeaderGradientUI();
+        syncHeaderTextColorUi();
+        syncHeaderLogoColorUi();
+        syncHeaderUsernameColorUi();
+        // O preset Padrão reseta a aparência, mas preserva o tipo de collage
+        // escolhido e restaura os padrões de texto próprios desse tipo.
+        setArtistSubDefaultsForEffectiveType(getEffectiveType());
+      }
 
       const dateFrom = periodMode === 'custom' ? document.getElementById('date-from')?.value || '' : null;
       const dateTo = periodMode === 'custom' ? document.getElementById('date-to')?.value || '' : null;
@@ -19817,7 +20213,7 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
   document.getElementById('settings-export-btn').addEventListener('click', () => {
     settingsExportAll.checked = false;
     settingsExportPrivate.checked = false;
-    settingsExportHistory.checked = false;
+    settingsExportHistory.checked = true;
     syncSettingsExportDialog();
     settingsExportOverlay.style.display = 'flex';
   });
@@ -20177,6 +20573,7 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
         if (typeof syncOverlaySize === 'function') syncOverlaySize();
       });
     }
+    window.updateMobileEditPreview = updateMobileEditPreview;
 
     function syncMobileGenerateButton() {
       mobileGenerate.disabled = desktopGenerate.disabled;
@@ -20428,9 +20825,10 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
     function openAllHistoryList(kind) {
       closeMobileDrawer();
       body.classList.add('mobile-menu-all-history');
-      openHistoryModal(kind === 'merged' ? 'merged' : 'deleted');
-      const allButton = document.querySelector('#history-list-filter button[data-filter="all"]');
-      if (allButton && !allButton.classList.contains('active')) allButton.click();
+      openHistoryModal(kind === 'merged' ? 'merged' : 'deleted', {
+        allowGlobalHistory: true,
+        source: 'menu',
+      });
     }
     document.getElementById('mobile-deleted-list-btn').addEventListener('click', () => openAllHistoryList('deleted'));
     document.getElementById('mobile-merged-list-btn').addEventListener('click', () => openAllHistoryList('merged'));

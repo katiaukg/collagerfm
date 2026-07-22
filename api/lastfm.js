@@ -4,6 +4,8 @@ const {
   cacheTtlForMethod,
   getQueueStatus,
   noteLastfmRateLimit,
+  releaseQueueOwner,
+  renewQueueOwner,
   redisConfigured,
   resilientCachedRequest,
 } = require('./_lastfm-resilience');
@@ -78,6 +80,16 @@ module.exports = async function handler(request, response) {
   if (request.method !== 'POST') return sendJson(response, 405, { error: 'Metodo nao permitido.' });
   if (!isOriginAllowed(request)) return sendJson(response, 403, { error: 'Origem nao permitida.' });
 
+  const body = getRequestBody(request);
+  if (String(body.action || '') === 'queue-release') {
+    const released = await releaseQueueOwner(body.queueGroup);
+    return sendJson(response, 200, { released });
+  }
+  if (String(body.action || '') === 'queue-heartbeat') {
+    const renewed = await renewQueueOwner(body.queueGroup);
+    return sendJson(response, 200, { renewed });
+  }
+
   const apiKey = String(process.env.LASTFM_API_KEY || '').trim();
   if (!apiKey) {
     return sendJson(response, 503, {
@@ -87,8 +99,8 @@ module.exports = async function handler(request, response) {
   }
 
   try {
-    const body = getRequestBody(request);
     const requestId = String(body.requestId || '').trim();
+    const queueGroup = String(body.queueGroup || '').trim();
     const source = body && typeof body.params === 'object' ? body.params : {};
     const method = String(source.method || '').trim().toLowerCase();
     if (!ALLOWED_METHODS.has(method)) return sendJson(response, 403, { error: 'Metodo do Last.fm nao permitido.' });
@@ -125,7 +137,7 @@ module.exports = async function handler(request, response) {
         throw error;
       }
       return payload;
-    }, cacheTtlForMethod(method), { requestId });
+    }, cacheTtlForMethod(method), { requestId, queueGroup });
     response.setHeader('X-Collager-Cache', result.cache);
     response.setHeader('X-Collager-Persistent-Cache', redisConfigured() ? 'enabled' : 'disabled');
     return sendJson(response, 200, result.payload);
@@ -136,6 +148,7 @@ module.exports = async function handler(request, response) {
         error: error.message,
         retryable: true,
         retryAfterMs: error.retryAfterMs || 1000,
+        position: error.queuePosition || 1,
       });
     }
     const lastfmCode = Number(error.code || 0);

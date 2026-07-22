@@ -11,6 +11,8 @@ let localBackoffUntil = 0;
 const CACHE_PREFIX = 'collager:lastfm:cache:v1:';
 const LOCK_PREFIX = 'collager:lastfm:lock:v1:';
 const QUEUE_KEY = 'collager:lastfm:queue:v1';
+const JOB_QUEUE_KEY = 'collager:lastfm:job-queue:v1';
+const JOB_LEASE_PREFIX = 'collager:lastfm:job-lease:v1:';
 const BACKOFF_KEY = 'collager:lastfm:backoff:v1';
 const STATUS_PREFIX = 'collager:lastfm:status:v1:';
 const DEFAULT_INTERVAL_MS = 1100;
@@ -174,9 +176,11 @@ async function waitForDistributedResult(cacheKey, maximumWaitMs = 15000) {
   return null;
 }
 
-async function reserveGlobalSlot(requestId = '') {
+async function reserveGlobalSlot(requestId = '', queueGroup = '') {
   const intervalMs = numberFromEnv('LASTFM_MIN_INTERVAL_MS', DEFAULT_INTERVAL_MS, 250, 10000);
   const maximumWaitMs = numberFromEnv('LASTFM_MAX_QUEUE_WAIT_MS', DEFAULT_MAX_QUEUE_WAIT_MS, 1000, 25000);
+  const ownerLeaseMs = numberFromEnv('LASTFM_QUEUE_OWNER_LEASE_MS', 8000, 1000, 30000);
+  const owner = cleanRequestId(queueGroup);
   const now = Date.now();
   const credentials = redisCredentials();
 
@@ -186,20 +190,53 @@ async function reserveGlobalSlot(requestId = '') {
       'local interval=tonumber(ARGV[2])',
       'local maxwait=tonumber(ARGV[3])',
       'local ttl=tonumber(ARGV[4])',
+      'local owner=ARGV[5]',
+      'local ownerlease=tonumber(ARGV[6])',
+      'local leaseprefix=ARGV[7]',
+      'if owner~="" then',
+      'redis.call("ZADD",KEYS[3],"NX",now,owner)',
+      'redis.call("SET",leaseprefix..owner,"1","PX",ownerlease)',
+      'end',
+      'local jobs=redis.call("ZRANGE",KEYS[3],0,-1)',
+      'for i=1,#jobs do',
+      'if redis.call("EXISTS",leaseprefix..jobs[i])==0 then redis.call("ZREM",KEYS[3],jobs[i]) end',
+      'end',
+      'redis.call("PEXPIRE",KEYS[3],86400000)',
+      'if owner~="" then',
+      'local rank=redis.call("ZRANK",KEYS[3],owner)',
+      'if rank and rank>0 then return {-2,rank+1,1000} end',
+      'end',
       'local next=tonumber(redis.call("GET",KEYS[1]) or "0")',
       'local backoff=tonumber(redis.call("GET",KEYS[2]) or "0")',
       'local slot=math.max(now,next,backoff)',
       'local wait=slot-now',
       'if wait>maxwait then return {-1,wait} end',
       'redis.call("SET",KEYS[1],slot+interval,"PX",ttl)',
-      'return {slot,wait}',
+      'return {slot,wait,0}',
     ].join(';');
     try {
       const reserved = await redisCommand([
-        'EVAL', script, '2', QUEUE_KEY, BACKOFF_KEY,
+        'EVAL', script, '3', QUEUE_KEY, BACKOFF_KEY, JOB_QUEUE_KEY,
         String(now), String(intervalMs), String(maximumWaitMs), String(Math.max(60000, maximumWaitMs + intervalMs)),
+        owner, String(ownerLeaseMs), JOB_LEASE_PREFIX,
       ]);
       const result = Array.isArray(reserved.result) ? reserved.result.map(Number) : [];
+      if (result[0] === -2) {
+        const queuePosition = Math.max(1, result[1] || 1);
+        const retryAfterMs = Math.max(500, result[2] || 1000);
+        await setQueueStatus(requestId, {
+          state: 'queued',
+          position: queuePosition,
+          waitMs: retryAfterMs,
+          waitUntil: Date.now() + retryAfterMs,
+          intervalMs,
+        });
+        const error = new Error('Outra collage esta concluindo as consultas ao Last.fm.');
+        error.code = 'LASTFM_QUEUE_BUSY';
+        error.retryAfterMs = retryAfterMs;
+        error.queuePosition = queuePosition;
+        throw error;
+      }
       if (result[0] === -1) {
         const error = new Error('A fila do Last.fm esta cheia. Tente novamente em alguns segundos.');
         error.code = 'LASTFM_QUEUE_BUSY';
@@ -253,6 +290,41 @@ async function noteLastfmRateLimit(backoffMs = 60000) {
   catch (_) { /* o recuo local ainda protege esta instancia */ }
 }
 
+async function releaseQueueOwner(queueGroup = '') {
+  const owner = cleanRequestId(queueGroup);
+  if (!owner || !redisCredentials()) return false;
+  const script = [
+    'local removed=redis.call("ZREM",KEYS[1],ARGV[1])',
+    'redis.call("DEL",ARGV[2]..ARGV[1])',
+    'return removed',
+  ].join(';');
+  try {
+    const released = await redisCommand(['EVAL', script, '1', JOB_QUEUE_KEY, owner, JOB_LEASE_PREFIX]);
+    return Number(released.result) > 0;
+  } catch (_) {
+    return false;
+  }
+}
+
+async function renewQueueOwner(queueGroup = '') {
+  const owner = cleanRequestId(queueGroup);
+  if (!owner || !redisCredentials()) return false;
+  const ownerLeaseMs = numberFromEnv('LASTFM_QUEUE_OWNER_LEASE_MS', 8000, 1000, 30000);
+  const script = [
+    'if redis.call("ZSCORE",KEYS[1],ARGV[1]) then',
+    'redis.call("PEXPIRE",ARGV[3]..ARGV[1],ARGV[2])',
+    'return 1',
+    'end',
+    'return 0',
+  ].join(';');
+  try {
+    const renewed = await redisCommand(['EVAL', script, '1', JOB_QUEUE_KEY, owner, String(ownerLeaseMs), JOB_LEASE_PREFIX]);
+    return Number(renewed.result) > 0;
+  } catch (_) {
+    return false;
+  }
+}
+
 async function resilientCachedRequest(params, fetcher, ttlMs = cacheTtlForMethod(params?.method), options = {}) {
   const requestId = cleanRequestId(options.requestId);
   const cacheKey = normalizeCacheKey(params);
@@ -285,7 +357,7 @@ async function resilientCachedRequest(params, fetcher, ttlMs = cacheTtlForMethod
         await setQueueStatus(requestId, { state: 'done', position: 0, cache: 'HIT' });
         return { payload: secondCheck, cache: 'HIT' };
       }
-      await reserveGlobalSlot(requestId);
+      await reserveGlobalSlot(requestId, options.queueGroup);
       const payload = await fetcher();
       await writeCache(cacheKey, payload, ttlMs);
       await setQueueStatus(requestId, { state: 'done', position: 0, cache: 'MISS' });
@@ -307,6 +379,8 @@ module.exports = {
   getQueueStatus,
   normalizeCacheKey,
   noteLastfmRateLimit,
+  releaseQueueOwner,
+  renewQueueOwner,
   redisConfigured: () => Boolean(redisCredentials()),
   reserveGlobalSlot,
   resilientCachedRequest,

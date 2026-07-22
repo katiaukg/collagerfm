@@ -1,6 +1,7 @@
 'use strict';
 
 const { callLastfmWrite, readSession } = require('./_lastfm-session');
+const MAX_REPLACEMENT_AGE_SECONDS = 14 * 24 * 60 * 60;
 
 function bodyOf(request) {
   if (request.body && typeof request.body === 'object') return request.body;
@@ -29,11 +30,14 @@ function originalParams(original, sessionKey) {
   const track = cleanMetadata(original?.track);
   const timestamp = Math.floor(Number(original?.timestamp));
   if (!artist || !track || !Number.isFinite(timestamp) || timestamp <= 0) throw new Error('Este scrobble nao possui artista, faixa e horario validos.');
+  const age = Math.floor(Date.now() / 1000) - timestamp;
+  if (age < -300 || age > MAX_REPLACEMENT_AGE_SECONDS) {
+    const error = new Error('O Last.fm aceita reenviar scrobbles somente por aproximadamente 14 dias.');
+    error.statusCode = 422;
+    error.code = 'scrobble_too_old';
+    throw error;
+  }
   return { artist, track, timestamp: String(timestamp), sk: sessionKey };
-}
-
-async function removeScrobble(original, sessionKey) {
-  return callLastfmWrite({ method: 'library.removeScrobble', ...originalParams(original, sessionKey) });
 }
 
 module.exports = async function handler(request, response) {
@@ -50,8 +54,11 @@ module.exports = async function handler(request, response) {
 
   try {
     if (body.action === 'delete') {
-      await removeScrobble(body.original, session.key);
-      return send(response, 200, { deleted: true, username: session.name });
+      return send(response, 501, {
+        error: 'O Last.fm não oferece exclusão de scrobble na API pública. Abra o histórico no Last.fm para excluir este registro manualmente.',
+        unsupported: true,
+        manualActionRequired: true,
+      });
     }
     if (body.action === 'replace') {
       const original = originalParams(body.original, session.key);
@@ -63,7 +70,11 @@ module.exports = async function handler(request, response) {
       if (!metadataChanged) return send(response, 200, { replaced: false, unchanged: true, username: session.name });
 
       if (body.deleteOriginal !== false) {
-        await removeScrobble(body.original, session.key);
+        return send(response, 501, {
+          error: 'O Last.fm não oferece edição nem exclusão de scrobble na API pública. A correção continua salva somente no collager.fm.',
+          unsupported: true,
+          manualActionRequired: true,
+        });
       }
 
       try {
@@ -74,34 +85,14 @@ module.exports = async function handler(request, response) {
           throw new Error(ignored?.['#text'] || 'O Last.fm nao aceitou o scrobble editado.');
         }
       } catch (error) {
-        if (body.deleteOriginal !== false) {
-          try {
-            await callLastfmWrite({
-              method: 'track.scrobble',
-              artist: original.artist,
-              track: original.track,
-              album: cleanMetadata(body.original?.album),
-              timestamp: original.timestamp,
-              sk: session.key,
-            });
-          } catch (_) {
-            return send(response, 409, {
-              error: `O scrobble antigo foi removido, mas a edicao e a restauracao falharam: ${error.message}`,
-              added: false,
-              deleted: true,
-              restorationFailed: true,
-            });
-          }
-        }
         throw error;
       }
-      return send(response, 200, { replaced: true, added: true, deleted: body.deleteOriginal !== false, username: session.name });
+      return send(response, 200, { replaced: false, added: true, deleted: false, username: session.name });
     }
     return send(response, 400, { error: 'Acao invalida.' });
   } catch (error) {
-    const legacyUnavailable = Number(error.code) === 3 || /invalid method|does not exist/i.test(error.message);
-    return send(response, legacyUnavailable ? 501 : 502, {
-      error: legacyUnavailable ? 'O Last.fm nao disponibilizou a remocao deste scrobble pela API. A edicao nao foi simulada.' : error.message,
+    return send(response, error.statusCode || 502, {
+      error: error.message,
       code: error.code || 0,
     });
   }

@@ -1,7 +1,63 @@
 'use strict';
 
+const crypto = require('crypto');
+
 const CACHE_TTL = 5 * 60 * 1000;
+const STALE_CACHE_TTL = 24 * 60 * 60 * 1000;
+const CACHE_PREFIX = 'collager:obsessions:v1:';
 const responseCache = new Map();
+const LASTFM_PAGE_HEADERS = {
+  Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+  'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+  'Cache-Control': 'no-cache',
+  Pragma: 'no-cache',
+  Referer: 'https://www.last.fm/',
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36',
+};
+
+function redisCredentials() {
+  const url = String(process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL || '').trim().replace(/\/$/, '');
+  const token = String(process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN || '').trim();
+  return url && token ? { url, token } : null;
+}
+
+async function redisCommand(command) {
+  const credentials = redisCredentials();
+  if (!credentials) return null;
+  const response = await fetch(credentials.url, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${credentials.token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(command),
+    signal: AbortSignal.timeout(5000),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok || payload.error) throw new Error(payload.error || `Redis respondeu ${response.status}.`);
+  return payload.result;
+}
+
+function persistentCacheKey(cacheKey) {
+  const hash = crypto.createHash('sha256').update(cacheKey, 'utf8').digest('hex');
+  return `${CACHE_PREFIX}${hash}`;
+}
+
+async function readPersistentCache(cacheKey) {
+  try {
+    const stored = await redisCommand(['GET', persistentCacheKey(cacheKey)]);
+    if (!stored) return null;
+    const entry = typeof stored === 'string' ? JSON.parse(stored) : stored;
+    return entry?.payload && Number(entry.savedAt) ? entry : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+async function writePersistentCache(cacheKey, payload) {
+  try {
+    await redisCommand(['SET', persistentCacheKey(cacheKey), JSON.stringify({ savedAt: Date.now(), payload }), 'PX', STALE_CACHE_TTL]);
+  } catch (_) {
+    // A resposta em memória continua útil quando o Redis estiver indisponível.
+  }
+}
 
 function getSameOrigin(request) {
   const host = String(request.headers.host || '').trim();
@@ -12,7 +68,7 @@ function getSameOrigin(request) {
 
 function isOriginAllowed(request) {
   const origin = String(request.headers.origin || '').trim();
-  if (!origin || origin === getSameOrigin(request)) return true;
+  if (!origin || origin === 'null' || origin === getSameOrigin(request)) return true;
   return String(process.env.ALLOWED_ORIGIN || '')
     .split(',')
     .map(value => value.trim())
@@ -89,19 +145,33 @@ function parseObsessions(html) {
 
 async function fetchPage(user, page) {
   const suffix = page > 1 ? `?page=${page}` : '';
-  const upstream = await fetch(`https://www.last.fm/user/${encodeURIComponent(user)}/obsessions${suffix}`, {
-    headers: {
-      Accept: 'text/html,application/xhtml+xml',
-      'Accept-Language': 'en-US,en;q=0.8',
-      'User-Agent': 'CollagerFM/1.0 (collage generator)',
+  const url = `https://www.last.fm/user/${encodeURIComponent(user)}/obsessions${suffix}`;
+  let upstream;
+  const retryHeaders = [
+    LASTFM_PAGE_HEADERS,
+    { ...LASTFM_PAGE_HEADERS, Cookie: 'lfmanon=1; not_first_visit=1' },
+    {
+      ...LASTFM_PAGE_HEADERS,
+      'Accept-Language': 'en-US,en;q=0.9',
+      Cookie: `lfmanon=${Math.random().toString(36).slice(2)}; not_first_visit=1`,
     },
-    redirect: 'follow',
-    signal: AbortSignal.timeout(15000),
-  });
+  ];
+  for (let attempt = 0; attempt < retryHeaders.length; attempt++) {
+    if (attempt) await new Promise(resolve => setTimeout(resolve, 250 + Math.round(Math.random() * 350)));
+    upstream = await fetch(url, {
+      headers: retryHeaders[attempt],
+      redirect: 'follow',
+      signal: AbortSignal.timeout(15000),
+    });
+    if (upstream.status !== 406 && upstream.status !== 600) break;
+  }
   if (!upstream.ok) {
-    const error = new Error(upstream.status === 404
-      ? 'Usuario ou pagina de obsessoes nao encontrada.'
-      : `Last.fm respondeu ${upstream.status}.`);
+    let message = `Last.fm respondeu ${upstream.status}.`;
+    if (upstream.status === 404) message = 'Usuario ou pagina de obsessoes nao encontrada.';
+    if (upstream.status === 406 || upstream.status === 600) {
+      message = 'O Last.fm recusou temporariamente a pagina de obsessoes. Tente novamente em instantes.';
+    }
+    const error = new Error(message);
     error.status = upstream.status;
     throw error;
   }
@@ -109,6 +179,8 @@ async function fetchPage(user, page) {
 }
 
 module.exports = async function handler(request, response) {
+  const requestOrigin = String(request.headers.origin || '').trim();
+  if (requestOrigin === 'null') response.setHeader('Access-Control-Allow-Origin', 'null');
   if (request.method !== 'GET') return sendJson(response, 405, { error: 'Metodo nao permitido.' });
   if (!isOriginAllowed(request)) return sendJson(response, 403, { error: 'Origem nao permitida.' });
 
@@ -119,7 +191,11 @@ module.exports = async function handler(request, response) {
   const cacheKey = `${user.toLowerCase()}|${limit}`;
   const cached = responseCache.get(cacheKey);
   if (cached && cached.expires > Date.now()) return sendJson(response, 200, cached.payload);
-  if (cached) responseCache.delete(cacheKey);
+  const persistent = await readPersistentCache(cacheKey);
+  if (persistent && persistent.savedAt + CACHE_TTL > Date.now()) {
+    responseCache.set(cacheKey, { expires: persistent.savedAt + CACHE_TTL, payload: persistent.payload });
+    return sendJson(response, 200, persistent.payload);
+  }
 
   try {
     const obsessions = [];
@@ -149,8 +225,13 @@ module.exports = async function handler(request, response) {
     }
     const payload = { obsessions: obsessions.slice(0, limit) };
     responseCache.set(cacheKey, { expires: Date.now() + CACHE_TTL, payload });
+    await writePersistentCache(cacheKey, payload);
     return sendJson(response, 200, payload);
   } catch (error) {
+    const stalePayload = cached?.payload || persistent?.payload;
+    if (stalePayload) {
+      return sendJson(response, 200, { ...stalePayload, stale: true });
+    }
     return sendJson(response, error.status || 502, { error: `Falha ao consultar obsessoes: ${error.message}` });
   }
 };

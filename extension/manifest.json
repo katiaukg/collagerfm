@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "collager.fm - Last.fm companion",
+  "version": "0.1.0",
+  "description": "Permite ao collager.fm substituir ou excluir scrobbles usando a sessao web do Last.fm.",
+  "permissions": [
+    "scripting",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://www.last.fm/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://collagerfm.vercel.app/*",
+        "http://127.0.0.1/*",
+        "http://localhost/*"
+      ],
+      "js": ["bridge.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["https://www.last.fm/*"],
+      "js": ["lastfm-content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
