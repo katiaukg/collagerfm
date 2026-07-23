@@ -402,6 +402,35 @@
   .source-key-box { margin-top: 8px; display: none; flex-direction: column; gap: 6px; }
   .source-key-box.visible { display: flex; }
   .source-key-label { font-size: 10px; color: var(--muted); font-weight: 600; }
+  #inline-source-credentials {
+    display: grid; gap: 7px; margin-top: 9px;
+  }
+  #inline-source-credentials[hidden],
+  .inline-source-credential[hidden] { display: none; }
+  .inline-source-credential {
+    display: grid; gap: 7px; padding: 10px;
+    border: 1px solid #343434; border-radius: 7px; background: #1d1d1d;
+  }
+  .inline-source-credential-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    color: var(--text); font-size: 10px; font-weight: 750;
+  }
+  .inline-source-credential-head small {
+    color: #777; font-size: 9px; font-weight: 550; text-align: right;
+  }
+  .inline-source-credential-controls {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; align-items: stretch;
+  }
+  .inline-source-credential-controls input { min-width: 0; }
+  .inline-source-connect {
+    min-width: 78px; padding: 0 9px; border: 1px solid #1ed760;
+    border-radius: 6px; background: #1ed76012; color: #1ed760;
+    font: 800 9px/1 inherit; cursor: pointer;
+  }
+  @media (max-width: 24rem) {
+    .inline-source-credential-controls { grid-template-columns: 1fr; }
+    .inline-source-connect { min-height: 34px; }
+  }
   #lastfm-write-account-state {
     display: grid; gap: 7px; margin-top: 9px; padding-top: 9px;
     border-top: 1px solid var(--border);
@@ -3195,6 +3224,33 @@
           <button class="source-btn" data-source="local_folder" draggable="true"><span class="src-num"></span>Pasta local</button>
         </div>
         <div style="font-size:10px;color:#555;margin-top:6px;">Botões arrastáveis e ativáveis, para ordenar a sua prioridade e preferência de uso.</div>
+
+        <div id="inline-source-credentials" aria-label="Credenciais necessárias para fontes de imagem">
+          <div class="inline-source-credential" data-inline-source-credential="spotify">
+            <div class="inline-source-credential-head">
+              <span>Configurar Spotify</span>
+              <small>Client ID e conexão necessários</small>
+            </div>
+            <div class="inline-source-credential-controls">
+              <input id="inline-spotify-client-id" type="text" placeholder="Spotify Client ID..." autocomplete="off" class="masked">
+              <button type="button" class="inline-source-connect" id="inline-spotify-connect-btn">CONECTAR</button>
+            </div>
+          </div>
+          <div class="inline-source-credential" data-inline-source-credential="youtube">
+            <div class="inline-source-credential-head">
+              <span>Configurar YouTube</span>
+              <small>Chave da YouTube Data API v3</small>
+            </div>
+            <input id="inline-youtube-apikey" type="text" placeholder="YouTube API Key..." autocomplete="off" class="masked">
+          </div>
+          <div class="inline-source-credential" data-inline-source-credential="fanart">
+            <div class="inline-source-credential-head">
+              <span>Configurar Fanart.tv</span>
+              <small>Chave da Fanart.tv</small>
+            </div>
+            <input id="inline-fanart-apikey" type="text" placeholder="Fanart.tv API Key..." autocomplete="off" class="masked">
+          </div>
+        </div>
 
         <div class="source-key-box" id="local-artist-folder-box">
           <span class="source-key-label">Pasta local de imagens</span>
@@ -18849,6 +18905,73 @@ SOURCE_KEY_FIELD_IDS.forEach(id => {
 });
 loadSourceKeys();
 
+const INLINE_SOURCE_CREDENTIAL_FIELDS = [
+  { name: 'spotify', inlineId: 'inline-spotify-client-id', mainId: 'spotify-client-id' },
+  { name: 'youtube', inlineId: 'inline-youtube-apikey', mainId: 'youtube-apikey' },
+  { name: 'fanart', inlineId: 'inline-fanart-apikey', mainId: 'fanart-apikey' },
+];
+
+function sourceCredentialIsReady(name) {
+  if (name === 'spotify') {
+    const clientId = document.getElementById('spotify-client-id')?.value.trim();
+    const auth = typeof readSpotifyAuth === 'function' ? readSpotifyAuth() : null;
+    return Boolean(clientId && (auth?.accessToken || auth?.refreshToken));
+  }
+  const fieldId = name === 'youtube' ? 'youtube-apikey' : 'fanart-apikey';
+  const value = document.getElementById(fieldId)?.value.trim() || '';
+  return value.length >= (name === 'youtube' ? 30 : 24);
+}
+
+function updateInlineSourceCredentials() {
+  const host = document.getElementById('inline-source-credentials');
+  if (!host) return;
+  let hasMissingCredential = false;
+  INLINE_SOURCE_CREDENTIAL_FIELDS.forEach(({ name, inlineId, mainId }) => {
+    const inlineField = document.getElementById(inlineId);
+    const mainField = document.getElementById(mainId);
+    if (inlineField && mainField && document.activeElement !== inlineField) {
+      inlineField.value = mainField.value;
+    }
+    const ready = sourceCredentialIsReady(name);
+    const card = host.querySelector(`[data-inline-source-credential="${name}"]`);
+    if (card) card.hidden = ready;
+    if (!ready) hasMissingCredential = true;
+  });
+  host.hidden = !hasMissingCredential;
+}
+
+INLINE_SOURCE_CREDENTIAL_FIELDS.forEach(({ inlineId, mainId }) => {
+  const inlineField = document.getElementById(inlineId);
+  const mainField = document.getElementById(mainId);
+  if (!inlineField || !mainField) return;
+  const copyToMainField = () => {
+    if (mainField.value === inlineField.value) return;
+    mainField.value = inlineField.value;
+    mainField.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+  inlineField.addEventListener('input', () => {
+    copyToMainField();
+    updateInlineSourceCredentials();
+  });
+  inlineField.addEventListener('change', () => {
+    copyToMainField();
+    updateInlineSourceCredentials();
+  });
+  mainField.addEventListener('change', updateInlineSourceCredentials);
+});
+
+document.getElementById('inline-spotify-connect-btn')?.addEventListener('click', () => {
+  const inlineField = document.getElementById('inline-spotify-client-id');
+  const mainField = document.getElementById('spotify-client-id');
+  if (inlineField && mainField && mainField.value !== inlineField.value) {
+    mainField.value = inlineField.value;
+    mainField.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  document.getElementById('spotify-connect-btn')?.click();
+});
+document.addEventListener('collager:account-state-changed', updateInlineSourceCredentials);
+updateInlineSourceCredentials();
+
 document.getElementById('spotify-connect-btn')?.addEventListener('click', startSpotifyAuthorization);
 document.getElementById('spotify-disconnect-btn')?.addEventListener('click', async () => {
   spotifyTokenCache = null;
@@ -20611,6 +20734,7 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
     function closeDesktopMenu() {
       desktopMenu?.classList.remove('visible');
       desktopMenuToggle?.setAttribute('aria-expanded', 'false');
+      closeDownloadSettings();
     }
 
     function openDesktopMenu() {
@@ -20653,6 +20777,7 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       menuToggle.setAttribute('aria-expanded', 'false');
       menuDrawer.setAttribute('aria-hidden', 'true');
       menuBackdrop.setAttribute('aria-hidden', 'true');
+      closeDownloadSettings();
     }
 
     function openMobileDrawer() {
@@ -21028,8 +21153,8 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
         lastfm: synced,
         spotify: Boolean(document.getElementById('spotify-client-id')?.value.trim())
           && Boolean(spotifyAuth?.accessToken || spotifyAuth?.refreshToken),
-        youtube: Boolean(document.getElementById('youtube-apikey')?.value.trim()),
-        fanart: Boolean(document.getElementById('fanart-apikey')?.value.trim()),
+        youtube: sourceCredentialIsReady('youtube'),
+        fanart: sourceCredentialIsReady('fanart'),
         local: Boolean(localArtistDirHandle || localArtistImages?.size),
       };
       Object.entries(accountStates).forEach(([name, ready]) => {
