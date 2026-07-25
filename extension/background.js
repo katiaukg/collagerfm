@@ -38,6 +38,16 @@ function validateObsessionPayload(payload) {
   return { username: username || pathUsername, url: url.href, obsessionId: match[2] };
 }
 
+function validateTrackActionPayload(payload) {
+  const username = clean(payload?.username, 100);
+  const artist = clean(payload?.artist);
+  const track = clean(payload?.track);
+  if (!username || !artist || !track) {
+    throw new Error('Informe usuario, artista e faixa para definir a obsessao.');
+  }
+  return { username, artist, track };
+}
+
 function waitForTab(tabId, timeoutMs = 20000) {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
@@ -118,6 +128,33 @@ async function deleteObsession(payload) {
   }
 }
 
+async function setObsession(payload) {
+  const safe = validateTrackActionPayload(payload);
+  const trackUrl = `https://www.last.fm/music/${encodeURIComponent(safe.artist)}/_/${encodeURIComponent(safe.track)}`;
+  const tabs = await chrome.tabs.query({ url: 'https://www.last.fm/*' });
+  let tab = tabs.find(candidate => candidate.status === 'complete') || tabs[0];
+  let created = false;
+  if (!tab) {
+    tab = await chrome.tabs.create({ url: trackUrl, active: false });
+    created = true;
+  }
+  await waitForTab(tab.id);
+  try {
+    const result = await sendToLastfmTab(tab.id, 'setObsession', { ...safe, trackUrl });
+    if (!result?.ok) {
+      if (result?.authRequired || result?.manualActionRequired) {
+        await chrome.tabs.update(tab.id, { url: trackUrl, active: true });
+      }
+      throw new Error(result?.error || 'O Last.fm nao confirmou a nova obsessao.');
+    }
+    if (created) await chrome.tabs.remove(tab.id).catch(() => {});
+    return { obsessionSet: true, username: safe.username, artist: safe.artist, track: safe.track };
+  } catch (error) {
+    if (created) await chrome.tabs.update(tab.id, { url: trackUrl, active: true }).catch(() => {});
+    throw error;
+  }
+}
+
 function enqueue(operation) {
   const result = operationQueue.then(operation, operation);
   operationQueue = result.catch(() => {}).then(() => new Promise(resolve => {
@@ -136,8 +173,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     ? Promise.resolve({ available: true, version: chrome.runtime.getManifest().version })
     : message.action === 'deleteScrobble'
       ? enqueue(() => deleteScrobble(message.payload))
-      : message.action === 'deleteObsession'
-        ? enqueue(() => deleteObsession(message.payload))
+    : message.action === 'deleteObsession'
+      ? enqueue(() => deleteObsession(message.payload))
+      : message.action === 'setObsession'
+        ? enqueue(() => setObsession(message.payload))
       : Promise.reject(new Error('Acao nao permitida.'));
   operation.then(sendResponse).catch(error => sendResponse({ __error: error?.message || 'A extensao nao concluiu a operacao.' }));
   return true;

@@ -1,6 +1,6 @@
 # Extensao companheira do collager.fm
 
-Esta extensao Chromium permite que o collager.fm exclua um scrobble pela sessao web do Last.fm. Para substituir metadados, o site primeiro envia um novo scrobble corrigido pela API oficial e, somente depois, pede que a extensao exclua o registro original.
+Esta extensao Chromium permite que o collager.fm exclua um scrobble e gerencie obsessoes pela sessao web do Last.fm. Para substituir metadados, o site primeiro envia um novo scrobble corrigido pela API oficial e, somente depois, pede que a extensao exclua o registro original.
 
 ## Instalar para desenvolvimento
 
@@ -19,3 +19,4 @@ Esta extensao Chromium permite que o collager.fm exclua um scrobble pela sessao 
 - Se a exclusao falhar depois do novo envio, o site avisa que existe um duplicado para ser removido manualmente.
 - O Last.fm normalmente aceita reenvio com timestamp antigo somente por cerca de 14 dias.
 - A exclusao usa uma rota interna do site do Last.fm. Uma mudanca no site pode exigir atualizacao da extensao.
+- Criar ou excluir uma obsessao tambem depende dos controles internos exibidos pelo site do Last.fm.

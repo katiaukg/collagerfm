@@ -66,9 +66,19 @@ function getSameOrigin(request) {
   return `${proto}://${host}`;
 }
 
+function isLocalDevelopmentOrigin(origin) {
+  try {
+    const url = new URL(origin);
+    return (url.protocol === 'http:' || url.protocol === 'https:')
+      && (url.hostname === '127.0.0.1' || url.hostname === 'localhost');
+  } catch (_) {
+    return false;
+  }
+}
+
 function isOriginAllowed(request) {
   const origin = String(request.headers.origin || '').trim();
-  if (!origin || origin === 'null' || origin === getSameOrigin(request)) return true;
+  if (!origin || origin === 'null' || origin === getSameOrigin(request) || isLocalDevelopmentOrigin(origin)) return true;
   return String(process.env.ALLOWED_ORIGIN || '')
     .split(',')
     .map(value => value.trim())
@@ -185,6 +195,8 @@ async function fetchPage(user, page) {
 module.exports = async function handler(request, response) {
   const requestOrigin = String(request.headers.origin || '').trim();
   if (requestOrigin === 'null') response.setHeader('Access-Control-Allow-Origin', 'null');
+  else if (isLocalDevelopmentOrigin(requestOrigin)) response.setHeader('Access-Control-Allow-Origin', requestOrigin);
+  response.setHeader('Vary', 'Origin');
   if (request.method !== 'GET') return sendJson(response, 405, { error: 'Metodo nao permitido.' });
   if (!isOriginAllowed(request)) return sendJson(response, 403, { error: 'Origem nao permitida.' });
 

@@ -116,6 +116,73 @@ if (!globalThis.__collagerLastfmContentInstalled) {
     return { ok: true, deleted: true };
   }
 
+  function encodeLastfmPath(value) {
+    return encodeURIComponent(String(value || '').trim()).replace(/%20/g, '+');
+  }
+
+  async function setObsession(payload) {
+    const username = String(payload?.username || '').trim();
+    const artist = String(payload?.artist || '').trim();
+    const track = String(payload?.track || '').trim();
+    if (!username || !artist || !track) return { ok: false, error: 'Dados da faixa invalidos.' };
+    const trackPath = `/music/${encodeLastfmPath(artist)}/_/${encodeLastfmPath(track)}`;
+    const pageResponse = await fetch(trackPath, { credentials: 'include' });
+    if (pageResponse.status === 403) {
+      return { ok: false, authRequired: true, error: 'Entre na sua conta no Last.fm e tente novamente.' };
+    }
+    if (!pageResponse.ok) return { ok: false, error: `O Last.fm respondeu ${pageResponse.status} ao abrir a faixa.` };
+    const pageDocument = new DOMParser().parseFromString(await pageResponse.text(), 'text/html');
+    const forms = Array.from(pageDocument.querySelectorAll('form[action]'));
+    const form = forms.find(candidate => {
+      const descriptor = [
+        candidate.getAttribute('action'),
+        candidate.getAttribute('aria-label'),
+        candidate.textContent,
+        ...Array.from(candidate.querySelectorAll('button,input')).map(control => [
+          control.getAttribute('name'), control.getAttribute('value'), control.getAttribute('title'), control.textContent,
+        ].join(' ')),
+      ].join(' ').toLocaleLowerCase();
+      return /obsession/.test(descriptor) && !/\bdelete\b|excluir/.test(descriptor);
+    });
+    if (!form) {
+      return {
+        ok: false,
+        manualActionRequired: true,
+        error: 'O Last.fm não exibiu o controle de obsessão. A página da faixa foi aberta para você concluir a ação.',
+      };
+    }
+
+    const body = new URLSearchParams();
+    form.querySelectorAll('input[name],select[name],textarea[name]').forEach(control => {
+      if ((control.type === 'checkbox' || control.type === 'radio') && !control.checked) return;
+      body.append(control.name, control.value || '');
+    });
+    if (!body.get('csrfmiddlewaretoken')) {
+      const csrf = cookieValue('csrftoken') || await csrfToken(username);
+      if (csrf) body.set('csrfmiddlewaretoken', csrf);
+    }
+    const submitControl = Array.from(form.querySelectorAll('button[name],input[type="submit"][name]'))
+      .find(control => /obsession/i.test(`${control.value || ''} ${control.textContent || ''}`));
+    if (submitControl) body.set(submitControl.name, submitControl.value || '');
+
+    const action = new URL(form.getAttribute('action') || trackPath, location.origin);
+    const response = await fetch(action.pathname + action.search, {
+      method: String(form.getAttribute('method') || 'POST').toUpperCase(),
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+      body: body.toString(),
+      redirect: 'follow',
+    });
+    if (response.status === 403) {
+      return { ok: false, authRequired: true, error: 'Sua sessão do Last.fm expirou. Entre novamente e repita a operação.' };
+    }
+    if (response.status === 406 || response.status === 429) {
+      return { ok: false, error: 'O Last.fm limitou esta ação temporariamente. Aguarde alguns segundos e tente novamente.' };
+    }
+    if (!response.ok) return { ok: false, error: `O Last.fm respondeu ${response.status} ao definir a obsessão.` };
+    return { ok: true, obsessionSet: true };
+  }
+
   chrome.runtime.onMessage.addListener(message => {
     if (message?.channel !== 'collager-lastfm-page') return undefined;
     if (message.action === 'deleteScrobble') {
@@ -123,6 +190,9 @@ if (!globalThis.__collagerLastfmContentInstalled) {
     }
     if (message.action === 'deleteObsession') {
       return deleteObsession(message.payload).catch(error => ({ ok: false, error: error?.message || 'Falha ao excluir a obsessao.' }));
+    }
+    if (message.action === 'setObsession') {
+      return setObsession(message.payload).catch(error => ({ ok: false, error: error?.message || 'Falha ao definir a obsessao.' }));
     }
     return undefined;
   });

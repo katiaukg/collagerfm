@@ -53,6 +53,20 @@ module.exports = async function handler(request, response) {
   }
 
   try {
+    if (body.action === 'love') {
+      const artist = cleanMetadata(body.artist);
+      const track = cleanMetadata(body.track);
+      if (!artist || !track) throw new Error('Informe faixa e artista para curtir.');
+      await callLastfmWrite({ method: 'track.love', artist, track, sk: session.key });
+      return send(response, 200, { loved: true, username: session.name, artist, track });
+    }
+    if (body.action === 'unlove') {
+      const artist = cleanMetadata(body.artist);
+      const track = cleanMetadata(body.track);
+      if (!artist || !track) throw new Error('Informe faixa e artista para remover das curtidas.');
+      await callLastfmWrite({ method: 'track.unlove', artist, track, sk: session.key });
+      return send(response, 200, { loved: false, username: session.name, artist, track });
+    }
     if (body.action === 'delete') {
       return send(response, 501, {
         error: 'O Last.fm não oferece exclusão de scrobble na API pública. Abra o histórico no Last.fm para excluir este registro manualmente.',
