@@ -6753,6 +6753,41 @@ let temporalCollagePage = 0;
 let temporalPaginationHasMore = false;
 let temporalPaginationRequestedLimit = 0;
 let temporalPaginationEstimatedTotal = 0;
+const TEMPORAL_API_PAGE_LIMIT = 200;
+let temporalApiPageCache = null;
+
+function resetTemporalApiPageCache() {
+  temporalApiPageCache = null;
+}
+
+function getTemporalApiPageCache(mode, user) {
+  const key = `${mode}|${String(user || '').trim().toLocaleLowerCase()}`;
+  if (!temporalApiPageCache || temporalApiPageCache.key !== key) {
+    temporalApiPageCache = {
+      key,
+      mode,
+      items: [],
+      itemKeys: new Set(),
+      nextPage: 1,
+      totalPages: 1,
+      complete: false,
+    };
+  }
+  return temporalApiPageCache;
+}
+
+function appendTemporalApiPage(cache, items, keyForItem) {
+  let added = 0;
+  items.forEach(item => {
+    const key = keyForItem(item);
+    if (!key || cache.itemKeys.has(key)) return;
+    cache.itemKeys.add(key);
+    cache.items.push(item);
+    added++;
+  });
+  return added;
+}
+
 function rememberTemporalPaginationTotal(value) {
   const total = Number.parseInt(value, 10);
   if (Number.isFinite(total) && total > 0) temporalPaginationEstimatedTotal = total;
@@ -11668,32 +11703,30 @@ async function fetchRecentScrobblePage(user, apikey, limit = 50, options = {}) {
 
 async function getRecentScrobbleItems(user, apikey, maxItems = 50) {
   const target = Math.max(1, Number.parseInt(maxItems, 10) || 50);
-  const pageSize = Math.min(200, target);
-  const out = [];
-  let page = 1;
-  let totalPages = 1;
+  const cache = getTemporalApiPageCache('recent', user);
 
-  while (page <= totalPages && out.length < target) {
+  while (!cache.complete && cache.items.length < target) {
     checkCancel();
-    showStatus(`Buscando scrobbles recentes... página ${page}${totalPages > 1 ? '/' + totalPages : ''}`);
+    const page = cache.nextPage;
+    showStatus(`Buscando scrobbles recentes... página ${page}${cache.totalPages > 1 ? '/' + cache.totalPages : ''}`);
     const data = await apiFetch({
       method: 'user.getRecentTracks', user, api_key: apikey,
-      limit: pageSize, page, extended: 0,
+      limit: TEMPORAL_API_PAGE_LIMIT, page, extended: 0,
     });
     const container = data?.recenttracks;
     const raw = container?.track || [];
     const tracks = Array.isArray(raw) ? raw : (raw ? [raw] : []);
-    totalPages = Number.parseInt(container?.['@attr']?.totalPages || '1', 10) || 1;
+    cache.totalPages = Number.parseInt(container?.['@attr']?.totalPages || '1', 10) || 1;
     rememberTemporalPaginationTotal(container?.['@attr']?.total);
-    tracks.forEach(track => {
-      if (out.length >= target) return;
-      const item = parseRecentScrobbleTrack(track, user);
-      if (item) out.push(item);
-    });
-    if (!tracks.length) break;
-    page++;
+    const parsed = tracks.map(track => parseRecentScrobbleTrack(track, user)).filter(Boolean);
+    appendTemporalApiPage(cache, parsed, recentScrobbleStableKey);
+    cache.nextPage = page + 1;
+    cache.complete = !tracks.length || page >= cache.totalPages;
   }
-  return out.sort((a, b) => Number(Boolean(b._nowPlaying)) - Number(Boolean(a._nowPlaying)));
+
+  return cache.items
+    .slice(0, target)
+    .sort((a, b) => Number(Boolean(b._nowPlaying)) - Number(Boolean(a._nowPlaying)));
 }
 
 async function getRecentObsessionItems(user, maxItems = 50) {
@@ -11752,31 +11785,26 @@ async function getLovedTrackItems(user, apikey, maxItems = 50) {
   checkCancel();
   showStatus('Buscando faixas curtidas...');
   const target = Math.max(1, Number.parseInt(maxItems, 10) || 50);
-  const pageLimit = Math.min(200, target);
-  const out = [];
-  let page = 1;
-  let totalPages = 1;
-  while (out.length < target && page <= totalPages) {
+  const cache = getTemporalApiPageCache('loved', user);
+  while (!cache.complete && cache.items.length < target) {
+    const page = cache.nextPage;
+    showStatus(`Buscando faixas curtidas... página ${page}${cache.totalPages > 1 ? '/' + cache.totalPages : ''}`);
     const data = await apiFetch({
       method: 'user.getLovedTracks',
       user,
       api_key: apikey,
-      // O limite precisa permanecer igual em todas as páginas. Alterá-lo no
-      // último lote muda os intervalos calculados pelo Last.fm e repete itens
-      // recentes no meio da lista.
-      limit: pageLimit,
+      limit: TEMPORAL_API_PAGE_LIMIT,
       page,
     });
     const container = data?.lovedtracks;
     const raw = container?.track || [];
     const tracks = Array.isArray(raw) ? raw : (raw ? [raw] : []);
-    totalPages = Number.parseInt(container?.['@attr']?.totalPages || '1', 10) || 1;
+    cache.totalPages = Number.parseInt(container?.['@attr']?.totalPages || '1', 10) || 1;
     rememberTemporalPaginationTotal(container?.['@attr']?.total);
-    tracks.forEach(track => {
-      if (out.length >= target) return;
+    const parsed = tracks.map(track => {
       const timestamp = Number(track?.date?.uts || 0);
       const dateIso = timestamp > 0 ? new Date(timestamp * 1000).toISOString().slice(0, 10) : '';
-      out.push({
+      return {
         name: track?.name || '',
         artist: { name: track?.artist?.name || track?.artist?.['#text'] || track?.artist || '' },
         albumName: track?.album?.title || track?.album?.['#text'] || '',
@@ -11788,12 +11816,18 @@ async function getLovedTrackItems(user, apikey, maxItems = 50) {
         _temporalDate: dateIso,
         _temporalText: formatObsessionDate(dateIso, track?.date?.['#text'] || ''),
         _lovedUsername: user,
-      });
+      };
     });
-    if (!tracks.length) break;
-    page++;
+    appendTemporalApiPage(cache, parsed, item => [
+      Number(item?._temporalTimestamp || 0),
+      normalizeMemoryPart(item?.artist?.name || ''),
+      normalizeMemoryPart(item?.name || ''),
+    ].join('|'));
+    cache.nextPage = page + 1;
+    cache.complete = !tracks.length || page >= cache.totalPages;
   }
-  return out.sort((left, right) =>
+
+  return cache.items.slice(0, target).sort((left, right) =>
     Number(right?._temporalTimestamp || 0) - Number(left?._temporalTimestamp || 0)
   );
 }
@@ -15835,6 +15869,7 @@ async function generate() {
   temporalPaginationHasMore = false;
   temporalPaginationRequestedLimit = 0;
   temporalPaginationEstimatedTotal = 0;
+  resetTemporalApiPageCache();
 
   cancelRequested = false;
   prefetchGen++; // invalida qualquer pré-carregamento em segundo plano de uma geração anterior
@@ -17214,7 +17249,7 @@ function openTextEditModal(index) {
   recentMetadataActions.style.display = recentMode ? 'flex' : 'none';
   lovedMetadataActions.style.display = lovedMode ? 'flex' : 'none';
   obsessionActions.style.display = obsessionsMode ? 'flex' : 'none';
-  temporalProfileAccess.style.display = temporalMode ? 'flex' : 'none';
+  syncTemporalProfileAccessVisibility(temporalMode);
   const renderedMode = getRenderedQueryState()?.mode || currentType;
   const latestObsession = allFetchedItems.find(candidate => candidate?._temporalType === 'obsessions');
   const isLatestObsession = obsessionsMode && latestObsession === item;
@@ -17325,6 +17360,16 @@ let collagerLastfmExtensionAvailable = false;
 const collagerExtensionRequests = new Map();
 const LASTFM_REPLACEMENT_MAX_AGE_SECONDS = 14 * 24 * 60 * 60;
 
+function syncTemporalProfileAccessVisibility(temporalMode = isTemporalCollageRendered()) {
+  if (!temporalProfileAccess) return;
+  const authorizeVisible = recentLastfmAuthorize?.style.display !== 'none';
+  const extensionVisible = recentExtensionStatus?.style.display !== 'none'
+    && Boolean(recentExtensionStatus.textContent.trim());
+  temporalProfileAccess.style.display = temporalMode && (authorizeVisible || extensionVisible)
+    ? 'flex'
+    : 'none';
+}
+
 function updateRecentExtensionStatus() {
   if (!recentExtensionStatus) return;
   recentExtensionStatus.style.display = collagerLastfmExtensionAvailable ? 'none' : '';
@@ -17332,6 +17377,7 @@ function updateRecentExtensionStatus() {
   recentExtensionStatus.innerHTML = collagerLastfmExtensionAvailable
     ? ''
     : 'Extensão não detectada, instale-a <a href="https://github.com/katiaukg/collagerfm/tree/main/extension" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">clicando aqui</a>.';
+  syncTemporalProfileAccessVisibility();
 }
 
 function collagerExtensionRequest(action, payload = {}, timeoutMs = 25000) {
@@ -17526,6 +17572,7 @@ function applyRecentMetadataAuthState(status) {
   recentLastfmAuthorize.textContent = recentLastfmAuthState.configured
     ? 'AUTORIZAR LAST.FM'
     : 'AUTORIZAÇÃO INDISPONÍVEL';
+  syncTemporalProfileAccessVisibility();
 }
 
 function lastfmAuthorizationRequiredMessage(status = recentLastfmAuthState) {
