@@ -14181,12 +14181,11 @@ async function drawCollage(items, type, cols, rows, headerLabel, apikey, accentO
   canvas.width  = W;
   canvas.height = H;
   const ctx = canvas.getContext('2d');
-  const headerImageAcrossBorders = Boolean(
+  const headerImagePaintsBorders = Boolean(
     tileBorderEnabled && tileBorderFollowHeader && showHeader && headerImage
-    && headerImageMatchesSize(getHeaderImageRecommendedSizes().withBorders)
   );
-  const headerImageBorderFallback = Boolean(
-    tileBorderEnabled && tileBorderFollowHeader && showHeader && headerImage && !headerImageAcrossBorders
+  const headerImageAcrossBorders = Boolean(
+    headerImagePaintsBorders && headerImageMatchesSize(getHeaderImageRecommendedSizes().withBorders)
   );
   const sharedHeaderBorderPaint = tileBorderEnabled && tileBorderFollowHeader && showHeader && headerGradientEnabled && !headerImage
     ? makeLinearGradient(
@@ -14198,12 +14197,12 @@ async function drawCollage(items, type, cols, rows, headerLabel, apikey, accentO
     : null;
 
   // BG
-  ctx.fillStyle = headerImageBorderFallback ? headerImageDominantColor : '#0d0d0d';
+  ctx.fillStyle = '#0d0d0d';
   ctx.fillRect(0, 0, W, H);
-  if (headerImageAcrossBorders) drawCoverTransformed(ctx, headerImage, 0, 0, W, H);
+  if (headerImagePaintsBorders) drawCoverTransformed(ctx, headerImage, 0, 0, W, H);
 
   const tilesOffset = getTilesOffset(HEADER_H);
-  if (tileBorderEnabled && !headerImageAcrossBorders) {
+  if (tileBorderEnabled && !headerImagePaintsBorders) {
     ctx.fillStyle = getTileBorderPaint(ctx, tilesOffset.x, tilesOffset.y, gridW, gridH, accent, sharedHeaderBorderPaint);
     ctx.fillRect(tilesOffset.x, tilesOffset.y, gridW, gridH);
   }
@@ -14211,7 +14210,7 @@ async function drawCollage(items, type, cols, rows, headerLabel, apikey, accentO
   // Header (only if enabled)
   if (showHeader) {
     const headerRect = getHeaderRect(W, H, HEADER_H);
-    const headerBaseColor = headerImageAcrossBorders
+    const headerBaseColor = headerImagePaintsBorders
       ? headerImageDominantColor
       : fillHeaderBackground(ctx, headerRect.x, headerRect.y, headerRect.w, headerRect.h, accent, sharedHeaderBorderPaint);
     if (headerImage && !headerImageAcrossBorders) {
