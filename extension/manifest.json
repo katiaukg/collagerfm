@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "collager.fm - Last.fm companion",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Permite ao collager.fm substituir ou excluir scrobbles e gerenciar obsessoes usando a sessao web do Last.fm.",
   "permissions": [
     "scripting",
@@ -11,7 +11,20 @@
     "https://www.last.fm/*"
   ],
   "background": {
+    "scripts": ["background.js"],
     "service_worker": "background.js"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "collagerfm-companion@katiaukg.github.io",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    },
+    "gecko_android": {
+      "strict_min_version": "142.0"
+    }
   },
   "content_scripts": [
     {
