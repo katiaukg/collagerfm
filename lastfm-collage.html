@@ -5593,6 +5593,10 @@ let spotifyTokenCache = null;
 let spotifyTokenExpiry = 0;
 
 function getSpotifyRedirectUri() {
+  const hostname = window.location.hostname.toLowerCase();
+  if (hostname === 'collagerfm.vercel.app') {
+    return 'https://collagerfm.vercel.app/';
+  }
   return `${window.location.origin}${window.location.pathname}`;
 }
 
