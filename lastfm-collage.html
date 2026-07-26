@@ -949,8 +949,12 @@
     background: #111111ed; box-shadow: 0 10px 30px #000a;
     backdrop-filter: blur(10px);
   }
-  #lastfm-queue-feedback[hidden], #lastfm-queue-status[hidden] { display: none !important; }
-  #lastfm-queue-status { font-size: 12px; line-height: 1.45; }
+  #lastfm-queue-feedback[hidden],
+  #lastfm-queue-status[hidden],
+  #temporal-page-loading-status[hidden] { display: none !important; }
+  #lastfm-queue-status,
+  #temporal-page-loading-status { font-size: 12px; line-height: 1.45; }
+  #temporal-page-loading-status { color: #f3f3f3; font-weight: 700; }
   @media (max-width: 74.999rem) and (min-width: 48rem) {
     #lastfm-queue-feedback { left: calc(var(--sidebar-width) + (100vw - var(--sidebar-width)) / 2); }
   }
@@ -1050,15 +1054,21 @@
     min-width: min(300px, 100%); max-width: 100%; max-height: calc(100vh - 80px);
     object-fit: contain; cursor: pointer;
   }
-  .temporal-page-btn {
+  .temporal-page-control {
     position: fixed; z-index: 72;
+    width: 54px;
+    display: none; flex-direction: column; align-items: center; gap: 7px;
+    color: #ddd;
+  }
+  .temporal-page-control.visible { display: flex; }
+  .temporal-page-btn {
+    position: static;
     width: 38px; height: 52px; padding: 0;
-    display: none; align-items: center; justify-content: center;
+    display: inline-flex; align-items: center; justify-content: center;
     border: 1px solid #ffffff24; border-radius: 7px;
     background: #111e; color: #ddd; box-shadow: 0 8px 24px #0009;
     cursor: pointer; transition: color .15s, border-color .15s, background .15s, opacity .15s;
   }
-  .temporal-page-btn.visible { display: inline-flex; }
   .temporal-page-btn:hover,
   .temporal-page-btn:focus-visible { color: #fff; border-color: #ffffff55; background: #222; outline: none; }
   .temporal-page-btn:disabled { opacity: .2; cursor: default; }
@@ -1066,7 +1076,126 @@
     width: 21px; height: 21px; fill: none; stroke: currentColor;
     stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
   }
+  .temporal-page-number-wrap {
+    position: relative;
+    min-width: 54px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .temporal-page-number {
+    width: 48px; height: 28px; padding: 0 4px;
+    border: 0; border-radius: 5px; background: transparent;
+    color: #f5f5f5; font-family: inherit; font-size: 22px; font-weight: 700; line-height: 1; text-align: center;
+    outline: none; cursor: text; appearance: textfield;
+  }
+  .temporal-page-number::-webkit-outer-spin-button,
+  .temporal-page-number::-webkit-inner-spin-button { margin: 0; appearance: none; }
+  .temporal-page-number:hover,
+  .temporal-page-number:focus { background: #ffffff0d; box-shadow: inset 0 0 0 1px #ffffff24; }
+  .temporal-page-number:disabled { opacity: .22; cursor: default; }
+  .temporal-page-outer {
+    position: absolute; top: 50%; color: #777;
+    font-family: inherit; font-size: 16px; font-weight: 600; line-height: 1;
+    white-space: nowrap; pointer-events: none;
+    transform: translateY(-50%);
+  }
+  .temporal-page-control.prev .temporal-page-outer { right: calc(100% + 2px); }
+  .temporal-page-control.next .temporal-page-outer { left: calc(100% + 2px); }
+  #temporal-page-picker {
+    position: fixed; inset: 0; z-index: 120;
+    display: none; align-items: flex-end; justify-content: center;
+    padding: 18px; background: #0008; backdrop-filter: blur(5px);
+  }
+  body.modal-open { overflow: hidden; }
+  #temporal-page-picker.visible { display: flex; }
+  .temporal-page-picker-sheet {
+    width: min(430px, 100%); padding: 16px;
+    border: 1px solid #ffffff20; border-radius: 8px; background: #171717;
+    box-shadow: 0 22px 70px #000c;
+  }
+  .temporal-page-picker-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px; color: #fff; font-family: inherit; font-size: 13px;
+    font-weight: 800; line-height: 1.2; text-transform: uppercase;
+  }
+  #temporal-page-picker-close {
+    width: 36px; height: 36px; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid #ffffff1c; border-radius: 6px; background: #202020; color: #bbb; cursor: pointer;
+  }
+  #temporal-page-picker-close svg {
+    width: 18px; height: 18px; fill: none; stroke: currentColor;
+    stroke-width: 2; stroke-linecap: round;
+  }
+  #temporal-page-ruler {
+    --ruler-slot: calc(100% / 7);
+    width: 100%; display: flex; overflow-x: auto;
+    padding-inline: calc(var(--ruler-slot) * 3);
+    scrollbar-width: none; scroll-snap-type: x mandatory; overscroll-behavior-x: contain;
+    touch-action: pan-x;
+  }
+  #temporal-page-ruler::-webkit-scrollbar { display: none; }
+  .temporal-page-ruler-number {
+    flex: 0 0 var(--ruler-slot); height: 64px; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 0; border-radius: 6px; background: transparent; color: #777;
+    font-family: inherit; font-size: 19px; font-weight: 700; line-height: 1;
+    scroll-snap-align: center; cursor: pointer;
+    transition: color .15s, background .15s, transform .15s;
+  }
+  .temporal-page-ruler-number.near { color: #aaa; }
+  .temporal-page-ruler-number.selected {
+    color: #fff; background: #ffffff10; transform: scale(1.16);
+  }
+  #temporal-page-picker-confirm {
+    width: 100%; min-height: 44px; margin-top: 12px;
+    border: 1px solid #ef4444; border-radius: 6px; background: #ef44441a;
+    color: #fff; font-family: inherit; font-size: 12px; font-weight: 800; line-height: 1;
+    cursor: pointer;
+  }
   @media (max-width: 47.999rem) {
+    #temporal-page-picker {
+      z-index: 1100;
+      align-items: center;
+      padding:
+        calc(1rem + env(safe-area-inset-top))
+        max(1rem, env(safe-area-inset-right))
+        calc(1rem + env(safe-area-inset-bottom))
+        max(1rem, env(safe-area-inset-left));
+    }
+    .temporal-page-picker-sheet {
+      width: min(26rem, 100%);
+      max-height: calc(100dvh - 2rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+      padding: 1rem;
+      display: grid;
+      grid-template-rows: auto auto auto;
+      overflow: hidden;
+    }
+    #temporal-page-ruler {
+      --ruler-gap: clamp(.45rem, 2vw, .75rem);
+      --ruler-slot: clamp(2rem, 10vw, 2.75rem);
+      --ruler-half-slot: clamp(1rem, 5vw, 1.375rem);
+      gap: var(--ruler-gap);
+      min-height: 4.5rem;
+      padding-inline: calc(50% - var(--ruler-half-slot));
+      scroll-padding-inline: calc(50% - var(--ruler-half-slot));
+      scroll-snap-type: none;
+    }
+    .temporal-page-ruler-number {
+      min-width: 0;
+      height: 4.5rem;
+      font-size: clamp(1rem, 4.6vw, 1.25rem);
+    }
+    #temporal-page-picker-confirm {
+      position: relative;
+      z-index: 1;
+      min-height: 3rem;
+      margin-top: .875rem;
+      border-color: #ef1717;
+      background: #e31515;
+      box-shadow: 0 .5rem 1.25rem #0007;
+    }
+    #temporal-page-picker-confirm:active { background: #c81010; }
+    .temporal-page-control { width: 48px; gap: 4px; }
     .temporal-page-btn {
       width: 42px; height: 58px;
       border-color: #ffffff18; background: #09090980; opacity: .5;
@@ -1075,6 +1204,14 @@
     .temporal-page-btn:hover,
     .temporal-page-btn:focus-visible { background: #090909b8; opacity: .85; }
     .temporal-page-btn:disabled { opacity: .12; }
+    .temporal-page-number-wrap { min-width: 48px; height: 26px; }
+    .temporal-page-number {
+      width: 44px; height: 26px; color: #fff;
+      font-size: 19px; cursor: pointer; caret-color: transparent;
+    }
+    .temporal-page-number:hover,
+    .temporal-page-number:focus { background: #09090980; box-shadow: none; }
+    .temporal-page-outer { display: none; }
   }
   #interactive-header-layer {
     --interactive-guide-color: #fff;
@@ -4728,6 +4865,7 @@
       Informe seu usuário do Last.fm para começar.
     </div>
     <div id="lastfm-queue-feedback" hidden>
+      <div class="status-msg" id="temporal-page-loading-status" hidden aria-live="polite"></div>
       <div class="status-msg" id="lastfm-queue-status" hidden aria-live="polite"></div>
       <button type="button" id="lastfm-own-key-action" hidden style="max-width:360px;padding:9px 12px;border:1px solid #ffffff24;border-radius:8px;background:#ffffff08;color:var(--muted);font:700 10.5px/1.35 inherit;cursor:pointer;">
         Caso não queira depender de filas, você deve usar sua própria chave API
@@ -4769,12 +4907,36 @@
         <button type="button" id="header-image-editor-save" class="secondary-action-btn">Salvar ajuste</button>
       </div>
     </div>
-    <button type="button" class="temporal-page-btn" id="temporal-page-prev" title="Página anterior" aria-label="Página anterior da collage">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
-    </button>
-    <button type="button" class="temporal-page-btn" id="temporal-page-next" title="Próxima página" aria-label="Próxima página da collage">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
-    </button>
+    <div class="temporal-page-control prev" id="temporal-page-prev-control">
+      <button type="button" class="temporal-page-btn" id="temporal-page-prev" title="Página anterior" aria-label="Página anterior da collage">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <div class="temporal-page-number-wrap">
+        <span class="temporal-page-outer" id="temporal-page-prev-outer" aria-hidden="true"></span>
+        <input class="temporal-page-number" id="temporal-page-prev-number" inputmode="numeric" aria-label="Ir para outra página a partir da anterior">
+      </div>
+    </div>
+    <div class="temporal-page-control next" id="temporal-page-next-control">
+      <button type="button" class="temporal-page-btn" id="temporal-page-next" title="Próxima página" aria-label="Próxima página da collage">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+      <div class="temporal-page-number-wrap">
+        <input class="temporal-page-number" id="temporal-page-next-number" inputmode="numeric" aria-label="Ir para outra página a partir da próxima">
+        <span class="temporal-page-outer" id="temporal-page-next-outer" aria-hidden="true"></span>
+      </div>
+    </div>
+    <div id="temporal-page-picker" role="dialog" aria-modal="true" aria-labelledby="temporal-page-picker-title">
+      <div class="temporal-page-picker-sheet">
+        <div class="temporal-page-picker-head">
+          <span id="temporal-page-picker-title">Escolher página</span>
+          <button type="button" id="temporal-page-picker-close" aria-label="Fechar seletor de página">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+          </button>
+        </div>
+        <div id="temporal-page-ruler" aria-label="Régua de páginas"></div>
+        <button type="button" id="temporal-page-picker-confirm">Ir para página 1</button>
+      </div>
+    </div>
   </div>
   <div id="history-panels">
     <section id="deleted-panel" class="history-panel">
@@ -4991,7 +5153,7 @@
     </div>
     <div id="recent-metadata-actions" style="display:none;flex-direction:column;gap:10px;padding:11px;border:1px solid #22c55e44;border-radius:8px;background:#22c55e09;">
       <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--text);font-size:11px;line-height:1.35;cursor:pointer;">
-        <span>Substituir por esta edição nos próximos scrobbles</span>
+        <span>Aplicar esta correção a scrobbles iguais por 14 dias</span>
         <input type="checkbox" id="recent-metadata-future" checked style="width:16px;height:16px;accent-color:#22c55e;">
       </label>
       <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--text);font-size:11px;line-height:1.35;cursor:pointer;">
@@ -5003,14 +5165,14 @@
         <button type="button" id="edit-scrobble-delete" style="flex:1;padding:10px;border:1px solid #ef444488;border-radius:8px;background:#3f1518;color:#ff9b9b;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">EXCLUIR SCROBBLE</button>
       </div>
       <div style="display:flex;align-items:center;gap:8px;">
-        <button type="button" id="recent-track-love" style="flex:1;padding:10px;border:1px solid #f89bad88;border-radius:8px;background:#f89bad16;color:#ffc1ce;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">CURTIR</button>
+        <button type="button" id="recent-track-love" style="flex:1;padding:10px;border:1px solid #f89bad88;border-radius:8px;background:#f89bad16;color:#ffc1ce;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">CURTIR FAIXA</button>
         <button type="button" id="recent-track-obsession" style="flex:1;padding:10px;border:1px solid #c281ee88;border-radius:8px;background:#c281ee18;color:#deb8fa;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">TORNAR OBSESSÃO</button>
       </div>
       <div id="recent-metadata-status" aria-live="polite" style="display:none;color:var(--muted);font-size:10.5px;line-height:1.4;"></div>
     </div>
     <div id="loved-metadata-actions" style="display:none;flex-direction:column;gap:9px;padding:11px;border:1px solid #f89bad66;border-radius:8px;background:#f89bad0d;">
       <div style="display:flex;align-items:center;gap:8px;">
-        <button type="button" id="loved-metadata-save" style="flex:1;padding:10px;border:1px solid #22c55e88;border-radius:8px;background:#123d24;color:#8af0ad;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">SALVAR (METADATA)</button>
+        <button type="button" id="loved-metadata-save" style="flex:1;padding:10px;border:1px solid #22c55e88;border-radius:8px;background:#123d24;color:#8af0ad;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">SALVAR</button>
         <button type="button" id="loved-track-obsession" style="flex:1;padding:10px;border:1px solid #c281ee88;border-radius:8px;background:#c281ee18;color:#deb8fa;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">TORNAR OBSESSÃO</button>
       </div>
       <button type="button" id="loved-track-remove" style="width:100%;padding:10px;border:1px solid #ef444488;border-radius:8px;background:#3f1518;color:#ff9b9b;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">REMOVER DAS CURTIDAS</button>
@@ -5018,10 +5180,6 @@
     </div>
     <div id="obsession-actions" style="display:none;flex-direction:column;gap:8px;padding:11px;border:1px solid #c281ee55;border-radius:8px;background:#c281ee0d;">
       <button type="button" id="edit-obsession-delete" style="width:100%;padding:10px;border:1px solid #ef444488;border-radius:8px;background:#3f1518;color:#ff9b9b;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">EXCLUIR OBSESSÃO</button>
-      <button type="button" id="edit-obsession-lastfm-link" style="width:100%;padding:9px 10px;display:flex;align-items:center;justify-content:center;gap:7px;border:1px solid #ffffff24;border-radius:8px;background:#ffffff08;color:var(--text);font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;">
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
-        ABRIR NO LAST.FM ESSA OBSESSÃO
-      </button>
       <div id="obsession-action-status" aria-live="polite" style="display:none;color:var(--muted);font-size:10.5px;line-height:1.4;"></div>
     </div>
     <div id="track-obsession-actions" style="display:none;flex-direction:column;gap:8px;padding:11px;border:1px solid #c281ee55;border-radius:8px;background:#c281ee0d;">
@@ -5029,11 +5187,15 @@
       <div id="track-obsession-status" aria-live="polite" style="display:none;color:var(--muted);font-size:10.5px;line-height:1.4;"></div>
     </div>
     <div id="temporal-profile-access" style="display:none;flex-direction:column;gap:7px;padding:11px;border:1px solid #d5100744;border-radius:8px;background:#d5100708;">
-      <button type="button" id="recent-lastfm-authorize" style="display:none;width:100%;padding:9px;border:1px solid #d5100788;border-radius:8px;background:#d5100718;color:#ff8a84;font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;">AUTORIZAR LAST.FM para vincular</button>
+      <button type="button" id="recent-lastfm-authorize" style="display:none;width:100%;padding:9px;border:1px solid #d5100788;border-radius:8px;background:#d5100718;color:#ff8a84;font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;">AUTORIZAR LAST.FM</button>
       <div id="recent-extension-status" aria-live="polite" style="color:#ffb86b;font-size:10.5px;line-height:1.4;">Verificando extensão...</div>
     </div>
     <div id="tile-restore-actions" style="display:flex;flex-direction:column;gap:8px;">
       <hr style="width:100%;border:none;border-top:1px solid #2e2e2e;margin:4px 0;">
+      <button type="button" id="edit-obsession-lastfm-link" style="display:none;width:100%;padding:9px 10px;align-items:center;justify-content:center;gap:7px;border:1px solid #ffffff24;border-radius:8px;background:#ffffff08;color:var(--text);font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+        ABRIR NO LAST.FM ESSA OBSESSÃO
+      </button>
       <button type="button" id="edit-lastfm-link" style="width:100%;padding:9px 10px;display:flex;align-items:center;justify-content:center;gap:7px;border:1px solid #ffffff24;border-radius:8px;background:#ffffff08;color:var(--text);font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
         ABRIR NO LAST.FM NESTE PERÍODO
@@ -6588,6 +6750,14 @@ function getTileLineTypeForUi() {
 
 let currentItems       = [];
 let temporalCollagePage = 0;
+let temporalPaginationHasMore = false;
+let temporalPaginationRequestedLimit = 0;
+let temporalPaginationEstimatedTotal = 0;
+function rememberTemporalPaginationTotal(value) {
+  const total = Number.parseInt(value, 10);
+  if (Number.isFinite(total) && total > 0) temporalPaginationEstimatedTotal = total;
+  return temporalPaginationEstimatedTotal;
+}
 // A sidebar guarda a proxima consulta; a collage visivel usa apenas o
 // snapshot confirmado no ultimo clique em "Gerar Collage".
 let generatedQueryState = null;
@@ -6620,10 +6790,31 @@ let recentLivePoll = null;
 const RECENT_LIVE_MIN_INTERVAL = 5000;
 const RECENT_LIVE_MAX_INTERVAL = 30000;
 const RECENT_METADATA_RULES_STORAGE = 'collagerRecentMetadataRules';
+const RECENT_METADATA_PROCESSED_STORAGE = 'collagerRecentMetadataProcessed';
+const RECENT_METADATA_RULE_TTL_MS = 14 * 24 * 60 * 60 * 1000;
 const recentMetadataRules = new Map();
+const recentMetadataProcessed = new Map();
 try {
   const savedRecentRules = JSON.parse(localStorage.getItem(RECENT_METADATA_RULES_STORAGE) || '{}');
-  Object.entries(savedRecentRules).forEach(([key, value]) => recentMetadataRules.set(key, value));
+  const now = Date.now();
+  Object.entries(savedRecentRules).forEach(([key, value]) => {
+    const edited = value?.edited || value;
+    const expiresAt = Number(value?.expiresAt || 0);
+    if (!edited || (expiresAt && expiresAt <= now)) return;
+    recentMetadataRules.set(key, {
+      edited,
+      createdAt: Number(value?.createdAt || now),
+      expiresAt: expiresAt || now + RECENT_METADATA_RULE_TTL_MS,
+    });
+  });
+} catch (_) { /* armazenamento indisponível ou inválido */ }
+try {
+  const savedProcessed = JSON.parse(localStorage.getItem(RECENT_METADATA_PROCESSED_STORAGE) || '{}');
+  const now = Date.now();
+  Object.entries(savedProcessed).forEach(([key, expiresAt]) => {
+    const expiry = Number(expiresAt || 0);
+    if (expiry > now) recentMetadataProcessed.set(key, expiry);
+  });
 } catch (_) { /* armazenamento indisponível ou inválido */ }
 let scrobblesLabel = DEFAULTS.scrobblesLabel; // texto customizável ao lado do número (Texto 1)
 let numberPos       = DEFAULTS.numberPos;      // left/center/right — posição do número vs texto(s)
@@ -11124,11 +11315,14 @@ const lastfmQueueFeedbackController = (() => {
   const queuedRequests = new Set();
   const feedback = document.getElementById('lastfm-queue-feedback');
   const status = document.getElementById('lastfm-queue-status');
+  const pageLoadingStatus = document.getElementById('temporal-page-loading-status');
   const ownKeyAction = document.getElementById('lastfm-own-key-action');
   let statusHideTimer = 0;
   let actionHideTimer = 0;
 
-  const sync = () => { feedback.hidden = status.hidden && ownKeyAction.hidden; };
+  const sync = () => {
+    feedback.hidden = pageLoadingStatus.hidden && status.hidden && ownKeyAction.hidden;
+  };
   const cancelTimers = () => {
     clearTimeout(statusHideTimer);
     clearTimeout(actionHideTimer);
@@ -11175,7 +11369,17 @@ const lastfmQueueFeedbackController = (() => {
       sync();
     }, milliseconds);
   };
-  return { show, finish, keepAction };
+  const showPageLoading = pageNumber => {
+    pageLoadingStatus.textContent = `Carregando até a página ${pageNumber}...`;
+    pageLoadingStatus.hidden = false;
+    sync();
+  };
+  const hidePageLoading = () => {
+    pageLoadingStatus.hidden = true;
+    pageLoadingStatus.textContent = '';
+    sync();
+  };
+  return { show, finish, keepAction, showPageLoading, hidePageLoading };
 })();
 
 async function apiFetch(params, options = {}) {
@@ -11361,7 +11565,7 @@ function getTemporalMetricText(item) {
 }
 
 function recentMetadataRuleKey(metadata, username = '') {
-  return [username, metadata?.artist, metadata?.track, metadata?.album]
+  return [username, metadata?.artist, metadata?.track]
     .map(value => normalizeMemoryPart(value || ''))
     .join('|');
 }
@@ -11380,13 +11584,44 @@ function saveRecentMetadataRules() {
   catch (_) { /* a edição continua válida nesta sessão */ }
 }
 
+function saveRecentMetadataProcessed() {
+  try { localStorage.setItem(RECENT_METADATA_PROCESSED_STORAGE, JSON.stringify(Object.fromEntries(recentMetadataProcessed))); }
+  catch (_) { /* a automação continua válida nesta sessão */ }
+}
+
+function pruneRecentMetadataAutomation(now = Date.now()) {
+  let rulesChanged = false;
+  let processedChanged = false;
+  recentMetadataRules.forEach((rule, key) => {
+    if (Number(rule?.expiresAt || 0) <= now) {
+      recentMetadataRules.delete(key);
+      rulesChanged = true;
+    }
+  });
+  recentMetadataProcessed.forEach((expiresAt, key) => {
+    if (Number(expiresAt || 0) <= now) {
+      recentMetadataProcessed.delete(key);
+      processedChanged = true;
+    }
+  });
+  if (rulesChanged) saveRecentMetadataRules();
+  if (processedChanged) saveRecentMetadataProcessed();
+}
+
+function getRecentMetadataRule(item) {
+  pruneRecentMetadataAutomation();
+  const original = getRecentOriginalMetadata(item);
+  return recentMetadataRules.get(recentMetadataRuleKey(original, item?._recentUsername)) || null;
+}
+
 function applyRecentMetadataRule(item) {
   const original = getRecentOriginalMetadata(item);
-  const rule = recentMetadataRules.get(recentMetadataRuleKey(original, item?._recentUsername));
+  const rule = getRecentMetadataRule(item);
   if (!rule) return item;
-  item.name = String(rule.track || original.track || '');
-  item.albumName = String(rule.album ?? original.album ?? '');
-  item.artist = { ...(item.artist || {}), name: String(rule.artist || original.artist || '') };
+  const edited = rule.edited || rule;
+  item.name = String(edited.track || original.track || '');
+  item.albumName = String(edited.album ?? original.album ?? '');
+  item.artist = { ...(item.artist || {}), name: String(edited.artist || original.artist || '') };
   item._recentMetadataRuleApplied = true;
   return item;
 }
@@ -11423,6 +11658,7 @@ function recentScrobbleStableKey(item) {
 async function fetchRecentScrobblePage(user, apikey, limit = 50, options = {}) {
   const safeLimit = Math.max(1, Math.min(200, Number.parseInt(limit, 10) || 50));
   const data = await apiFetch({ method: 'user.getRecentTracks', user, api_key: apikey, limit: safeLimit, page: 1, extended: 0 }, options);
+  rememberTemporalPaginationTotal(data?.recenttracks?.['@attr']?.total);
   const raw = data?.recenttracks?.track || [];
   return (Array.isArray(raw) ? raw : (raw ? [raw] : []))
     .map(track => parseRecentScrobbleTrack(track, user))
@@ -11448,6 +11684,7 @@ async function getRecentScrobbleItems(user, apikey, maxItems = 50) {
     const raw = container?.track || [];
     const tracks = Array.isArray(raw) ? raw : (raw ? [raw] : []);
     totalPages = Number.parseInt(container?.['@attr']?.totalPages || '1', 10) || 1;
+    rememberTemporalPaginationTotal(container?.['@attr']?.total);
     tracks.forEach(track => {
       if (out.length >= target) return;
       const item = parseRecentScrobbleTrack(track, user);
@@ -11482,6 +11719,7 @@ async function getRecentObsessionItems(user, maxItems = 50) {
       });
       payload = await response.json().catch(() => ({}));
       if (response.ok) {
+        rememberTemporalPaginationTotal(payload.total);
         lastError = null;
         break;
       }
@@ -11514,6 +11752,7 @@ async function getLovedTrackItems(user, apikey, maxItems = 50) {
   checkCancel();
   showStatus('Buscando faixas curtidas...');
   const target = Math.max(1, Number.parseInt(maxItems, 10) || 50);
+  const pageLimit = Math.min(200, target);
   const out = [];
   let page = 1;
   let totalPages = 1;
@@ -11522,13 +11761,17 @@ async function getLovedTrackItems(user, apikey, maxItems = 50) {
       method: 'user.getLovedTracks',
       user,
       api_key: apikey,
-      limit: Math.min(200, target - out.length),
+      // O limite precisa permanecer igual em todas as páginas. Alterá-lo no
+      // último lote muda os intervalos calculados pelo Last.fm e repete itens
+      // recentes no meio da lista.
+      limit: pageLimit,
       page,
     });
     const container = data?.lovedtracks;
     const raw = container?.track || [];
     const tracks = Array.isArray(raw) ? raw : (raw ? [raw] : []);
     totalPages = Number.parseInt(container?.['@attr']?.totalPages || '1', 10) || 1;
+    rememberTemporalPaginationTotal(container?.['@attr']?.total);
     tracks.forEach(track => {
       if (out.length >= target) return;
       const timestamp = Number(track?.date?.uts || 0);
@@ -11550,7 +11793,9 @@ async function getLovedTrackItems(user, apikey, maxItems = 50) {
     if (!tracks.length) break;
     page++;
   }
-  return out;
+  return out.sort((left, right) =>
+    Number(right?._temporalTimestamp || 0) - Number(left?._temporalTimestamp || 0)
+  );
 }
 
 async function getTopItemsPaged(user, apikey, type, period, maxItems = 1000, onPage) {
@@ -12418,7 +12663,7 @@ function stopRecentLiveUpdates() {
 function startRecentLiveUpdates(user, apikey) {
   stopRecentLiveUpdates();
   const liveGeneration = recentLiveGeneration;
-  const poolSize = Math.max(allFetchedItems.length, getDrawGrid().cols * getDrawGrid().rows + 20);
+  let poolSize = Math.max(allFetchedItems.length, getDrawGrid().cols * getDrawGrid().rows + 20);
   let adaptiveInterval = RECENT_LIVE_MIN_INTERVAL;
 
   const poll = async () => {
@@ -12430,12 +12675,13 @@ function startRecentLiveUpdates(user, apikey) {
     if (!recentLiveBusy) {
       recentLiveBusy = true;
       try {
+        poolSize = Math.max(poolSize, allFetchedItems.length, getDrawGrid().cols * getDrawGrid().rows + 20);
         const previousKeys = new Set(allFetchedItems.map(recentScrobbleStableKey));
         const previousNewestTimestamp = allFetchedItems.reduce((newest, item) => {
           if (item?._nowPlaying) return newest;
           return Math.max(newest, Number(item?._temporalTimestamp) || 0);
         }, 0);
-        const fresh = await fetchRecentScrobblePage(user, apikey, Math.min(100, poolSize), { silentQueue: true });
+        const fresh = await fetchRecentScrobblePage(user, apikey, Math.min(200, poolSize), { silentQueue: true });
         if (liveGeneration !== recentLiveGeneration) return;
         const newScrobbles = fresh.filter(item =>
           !item._nowPlaying
@@ -12454,6 +12700,8 @@ function startRecentLiveUpdates(user, apikey) {
             const newest = newScrobbles[0];
             appendStatusHistoryEntry(`Novo scrobble: ${newest.artist?.name || ''} — ${newest.name || ''}.`);
             triggerHapticFeedback('short');
+            applySavedMetadataRulesToLastfm(allFetchedItems, { redraw: true })
+              .catch(error => console.warn('Correção automática de metadata:', error.message));
           }
         }
       } catch (error) {
@@ -13128,11 +13376,13 @@ function getHeaderUsernameFontSize(headerH, headerFontPx) {
 
 function fitHeaderUsernameFont(ctx, text, desiredPx, maxWidth, headerFontCss, headerWeight) {
   let size = Math.max(3, desiredPx);
+  ctx.save();
   while (size > 3) {
     ctx.font = `${headerWeight} ${size}px ${headerFontCss}`;
     if (ctx.measureText(text || '').width <= maxWidth) break;
     size--;
   }
+  ctx.restore();
   return size;
 }
 
@@ -13189,6 +13439,16 @@ function drawHeaderLabelAligned(ctx, headerLabel, bounds, y, options = {}) {
   const point = getHeaderAlignedTextPoint(bounds);
   const availableWidth = Math.max(1, bounds.right - bounds.left);
   const measuredWidth = ctx.measureText(headerLabel).width;
+  if (options.clipWidth) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(bounds.left, 0, availableWidth, ctx.canvas.height);
+    ctx.clip();
+    ctx.textAlign = point.align;
+    drawHeaderTextWithOutline(ctx, headerLabel, point.x, y);
+    ctx.restore();
+    return;
+  }
   if (options.fitWidth && measuredWidth > availableWidth) {
     ctx.save();
     ctx.translate(point.x, y);
@@ -13287,7 +13547,10 @@ function drawDefaultHeaderTextAndLogo(ctx, W, headerY, headerH, headerLabel, sta
   ctx.textBaseline = 'middle';
 
   function drawLabel(bounds, y) {
-    drawHeaderLabelAligned(ctx, headerLabel, bounds, y, { fitWidth: preserveManualFontSize });
+    drawHeaderLabelAligned(ctx, headerLabel, bounds, y, {
+      clipWidth: preserveManualFontSize,
+      fontSize: fontPx,
+    });
   }
 
   function measureUsername() {
@@ -13782,6 +14045,9 @@ async function drawCollage(items, type, cols, rows, headerLabel, apikey, accentO
       obsessions: COLORS.obsessions,
     };
     accentOverride = modeAccent[queryState.mode];
+  }
+  if (isTemporalCollageRendered()) {
+    headerLabel = `${String(headerLabel || '').replace(/\s*·\s*página\s+\d+\s*$/iu, '')} · página ${temporalCollagePage + 1}`.trim();
   }
   updateCutModeExamples(items, type);
   const liveCanvas = document.getElementById('collage-canvas');
@@ -14419,28 +14685,134 @@ function computeVisibleItems(count) {
 
 const temporalPagePrev = document.getElementById('temporal-page-prev');
 const temporalPageNext = document.getElementById('temporal-page-next');
+const temporalPagePrevControl = document.getElementById('temporal-page-prev-control');
+const temporalPageNextControl = document.getElementById('temporal-page-next-control');
+const temporalPagePrevNumber = document.getElementById('temporal-page-prev-number');
+const temporalPageNextNumber = document.getElementById('temporal-page-next-number');
+const temporalPagePrevOuter = document.getElementById('temporal-page-prev-outer');
+const temporalPageNextOuter = document.getElementById('temporal-page-next-outer');
+const temporalPagePicker = document.getElementById('temporal-page-picker');
+const temporalPageRuler = document.getElementById('temporal-page-ruler');
+const temporalPagePickerConfirm = document.getElementById('temporal-page-picker-confirm');
 let temporalPageChangeBusy = false;
 let temporalPaginationPositionFrame = 0;
+let temporalPagePickerSelection = 1;
+let temporalPageRulerScrollTimer = 0;
+
+function temporalItemStableKey(item) {
+  if (item?._temporalType === 'recent') return recentScrobbleStableKey(item);
+  if (item?._temporalType === 'obsessions') {
+    return `obsession|${item._obsessionId || item._obsessionUrl || ''}|${normalizeMemoryPart(item.artist?.name || '')}|${normalizeMemoryPart(item.name || '')}`;
+  }
+  return `loved|${Number(item?._temporalTimestamp || 0)}|${normalizeMemoryPart(item?.artist?.name || '')}|${normalizeMemoryPart(item?.name || '')}`;
+}
+
+function reconcileTemporalPagedItems(freshItems) {
+  const oldItems = allFetchedItems.slice();
+  const oldByKey = new Map(oldItems.map(item => [temporalItemStableKey(item), item]));
+  const next = freshItems.map(fresh => {
+    const existing = oldByKey.get(temporalItemStableKey(fresh));
+    if (!existing) return fresh;
+    const preserved = {
+      _lastfmDeleted: existing._lastfmDeleted,
+      _lastfmDeleting: existing._lastfmDeleting,
+      _unloved: existing._unloved,
+      _obsessionDeleted: existing._obsessionDeleted,
+      _recentMetadataAutoProcessed: existing._recentMetadataAutoProcessed,
+    };
+    Object.assign(existing, fresh);
+    Object.entries(preserved).forEach(([key, value]) => {
+      if (value !== undefined) existing[key] = value;
+    });
+    return existing;
+  });
+  remapRecentIndexedState(oldItems, next);
+  allFetchedItems = next;
+}
+
+async function loadMoreTemporalItems(pageSize, requestedTarget = 0) {
+  const query = getRenderedQueryState();
+  const mode = query?.mode;
+  const user = query?.username || document.getElementById('username')?.value?.trim() || '';
+  if (!isTemporalCollageType(mode) || !user || !temporalPaginationHasMore) return false;
+
+  const beforeCount = allFetchedItems.length;
+  const target = Math.max(
+    Math.max(0, Number.parseInt(requestedTarget, 10) || 0),
+    beforeCount + Math.max(50, pageSize * 2),
+    temporalPaginationRequestedLimit + Math.max(50, pageSize * 2)
+  );
+  let freshItems = [];
+  if (mode === 'recent') freshItems = await getRecentScrobbleItems(user, currentApiKey, target);
+  else if (mode === 'loved') freshItems = await getLovedTrackItems(user, currentApiKey, target);
+  else freshItems = await getRecentObsessionItems(user, target);
+
+  temporalPaginationRequestedLimit = target;
+  const beforeKeys = new Set(allFetchedItems.map(temporalItemStableKey));
+  const added = freshItems.reduce((count, item) => count + Number(!beforeKeys.has(temporalItemStableKey(item))), 0);
+  if (
+    temporalPaginationEstimatedTotal > 0
+    && freshItems.length < Math.min(target, temporalPaginationEstimatedTotal)
+  ) {
+    temporalPaginationEstimatedTotal = freshItems.length;
+  }
+  temporalPaginationHasMore = temporalPaginationEstimatedTotal > 0
+    ? freshItems.length < temporalPaginationEstimatedTotal && added > 0
+    : freshItems.length >= target && added > 0;
+  if (!added) {
+    temporalPaginationHasMore = false;
+    if (temporalPaginationEstimatedTotal > allFetchedItems.length) {
+      temporalPaginationEstimatedTotal = allFetchedItems.length;
+    }
+    return false;
+  }
+
+  if (mode === 'recent') reconcileRecentItems(freshItems, target);
+  else reconcileTemporalPagedItems(freshItems);
+  return allFetchedItems.length > beforeCount;
+}
 
 function getTemporalPaginationInfo() {
   const { cols, rows } = getDrawGrid();
   const pageSize = Math.max(1, cols * rows);
-  const available = allFetchedItems.reduce((total, _, index) => total + (deletedPoolIndices.has(index) ? 0 : 1), 0);
-  const pages = Math.max(1, Math.ceil(available / pageSize));
+  const available = getTemporalAvailableItemCount();
+  const estimatedAvailable = Math.max(available, temporalPaginationEstimatedTotal);
+  const pages = Math.max(1, Math.ceil(estimatedAvailable / pageSize));
   temporalCollagePage = Math.max(0, Math.min(temporalCollagePage, pages - 1));
-  return { pageSize, pages };
+  return { pageSize, pages, available, estimatedAvailable };
+}
+
+function getTemporalAvailableItemCount() {
+  return allFetchedItems.reduce(
+    (total, _, index) => total + (deletedPoolIndices.has(index) ? 0 : 1),
+    0
+  );
+}
+
+async function ensureTemporalPageIsFilled(pageIndex, pageSize) {
+  const requiredItems = Math.max(1, pageIndex + 1) * Math.max(1, pageSize);
+  let available = getTemporalAvailableItemCount();
+
+  while (available < requiredItems && temporalPaginationHasMore) {
+    const before = available;
+    const loaded = await loadMoreTemporalItems(pageSize, requiredItems);
+    available = getTemporalAvailableItemCount();
+    if (!loaded || available <= before) break;
+  }
+
+  return available;
 }
 
 function positionTemporalPaginationControls() {
   temporalPaginationPositionFrame = 0;
-  if (!temporalPagePrev.classList.contains('visible')) return;
+  if (!temporalPagePrevControl.classList.contains('visible')) return;
   const canvas = document.getElementById('collage-canvas');
   const rect = canvas.getBoundingClientRect();
   if (!rect.width || !rect.height) return;
   const mobile = matchMedia('(max-width: 47.999rem)').matches;
   const inset = mobile ? 8 : 12;
-  const prevWidth = temporalPagePrev.offsetWidth || (mobile ? 42 : 38);
-  const nextWidth = temporalPageNext.offsetWidth || prevWidth;
+  const prevWidth = temporalPagePrevControl.offsetWidth || (mobile ? 48 : 54);
+  const nextWidth = temporalPageNextControl.offsetWidth || prevWidth;
   const buttonHeight = temporalPagePrev.offsetHeight || (mobile ? 58 : 52);
   const top = Math.max(8, Math.min(innerHeight - buttonHeight - 8, rect.top + rect.height / 2 - buttonHeight / 2));
   const prevLeft = mobile
@@ -14449,9 +14821,9 @@ function positionTemporalPaginationControls() {
   const nextLeft = mobile
     ? rect.right - nextWidth - inset
     : Math.min(innerWidth - nextWidth - 8, rect.right + inset);
-  temporalPagePrev.style.left = `${Math.round(prevLeft)}px`;
-  temporalPageNext.style.left = `${Math.round(nextLeft)}px`;
-  temporalPagePrev.style.top = temporalPageNext.style.top = `${Math.round(top)}px`;
+  temporalPagePrevControl.style.left = `${Math.round(prevLeft)}px`;
+  temporalPageNextControl.style.left = `${Math.round(nextLeft)}px`;
+  temporalPagePrevControl.style.top = temporalPageNextControl.style.top = `${Math.round(top)}px`;
 }
 
 function scheduleTemporalPaginationPosition() {
@@ -14462,38 +14834,191 @@ function scheduleTemporalPaginationPosition() {
 function updateTemporalPaginationControls() {
   const { pages } = getTemporalPaginationInfo();
   const wrapVisible = document.getElementById('collage-wrap')?.classList.contains('visible');
-  const visible = Boolean(wrapVisible && isTemporalCollageRendered() && pages > 1);
-  temporalPagePrev.classList.toggle('visible', visible);
-  temporalPageNext.classList.toggle('visible', visible);
-  temporalPagePrev.disabled = temporalPageChangeBusy || temporalCollagePage <= 0;
-  temporalPageNext.disabled = temporalPageChangeBusy || temporalCollagePage >= pages - 1;
-  temporalPagePrev.title = `Página anterior (${temporalCollagePage + 1}/${pages})`;
-  temporalPageNext.title = `Próxima página (${temporalCollagePage + 1}/${pages})`;
+  const visible = Boolean(wrapVisible && isTemporalCollageRendered() && (pages > 1 || temporalPaginationHasMore));
+  const currentPage = temporalCollagePage + 1;
+  const hasPrevious = temporalCollagePage > 0;
+  const hasNext = temporalCollagePage < pages - 1 || temporalPaginationHasMore;
+  const mobile = matchMedia('(max-width: 47.999rem)').matches;
+  temporalPagePrevControl.classList.toggle('visible', visible);
+  temporalPageNextControl.classList.toggle('visible', visible);
+  temporalPagePrev.disabled = temporalPageChangeBusy || !hasPrevious;
+  temporalPageNext.disabled = temporalPageChangeBusy || !hasNext;
+  temporalPagePrevNumber.disabled = temporalPageChangeBusy || !hasPrevious;
+  temporalPageNextNumber.disabled = temporalPageChangeBusy || !hasNext;
+  temporalPagePrevNumber.readOnly = mobile;
+  temporalPageNextNumber.readOnly = mobile;
+  temporalPagePrevNumber.value = String(Math.max(1, currentPage - 1));
+  temporalPageNextNumber.value = String(currentPage + 1);
+  temporalPagePrevOuter.textContent = currentPage > 2 ? `…${currentPage - 2}` : '';
+  temporalPageNextOuter.textContent = hasNext && (currentPage + 1 < pages || temporalPaginationHasMore)
+    ? `${currentPage + 2}…`
+    : '';
+  temporalPagePrev.title = `Página anterior (${currentPage}/${pages})`;
+  temporalPageNext.title = temporalCollagePage >= pages - 1 && temporalPaginationHasMore
+    ? 'Carregar próxima página'
+    : `Próxima página (${currentPage}/${pages})`;
   if (visible) scheduleTemporalPaginationPosition();
 }
 
-async function changeTemporalCollagePage(direction) {
+function updateTemporalPageRulerSelection(pageNumber, center = false) {
+  temporalPagePickerSelection = Math.max(1, Number.parseInt(pageNumber, 10) || 1);
+  const buttons = Array.from(temporalPageRuler.querySelectorAll('.temporal-page-ruler-number'));
+  buttons.forEach(button => {
+    const distance = Math.abs(Number(button.dataset.page) - temporalPagePickerSelection);
+    button.classList.toggle('selected', distance === 0);
+    button.classList.toggle('near', distance > 0 && distance <= 3);
+  });
+  temporalPagePickerConfirm.textContent = `Ir para página ${temporalPagePickerSelection}`;
+  if (center) {
+    const selected = buttons.find(button => Number(button.dataset.page) === temporalPagePickerSelection);
+    if (selected) {
+      const rulerRect = temporalPageRuler.getBoundingClientRect();
+      const selectedRect = selected.getBoundingClientRect();
+      temporalPageRuler.scrollLeft +=
+        selectedRect.left + selectedRect.width / 2 -
+        (rulerRect.left + rulerRect.width / 2);
+    }
+  }
+}
+
+function openTemporalPagePicker(seedPage) {
+  const { pages } = getTemporalPaginationInfo();
+  const currentPage = temporalCollagePage + 1;
+  const requested = Math.max(1, Number.parseInt(seedPage, 10) || currentPage);
+  const lastPage = temporalPaginationEstimatedTotal > 0
+    ? pages
+    : temporalPaginationHasMore
+    ? Math.max(pages + 10, currentPage + 10, requested + 3)
+    : pages;
+  clearTimeout(temporalPageRulerScrollTimer);
+  temporalPageRuler.replaceChildren();
+  for (let page = 1; page <= lastPage; page++) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'temporal-page-ruler-number';
+    button.dataset.page = String(page);
+    button.textContent = String(page);
+    button.setAttribute('aria-label', `Página ${page}`);
+    button.addEventListener('click', () => updateTemporalPageRulerSelection(page, true));
+    temporalPageRuler.appendChild(button);
+  }
+  temporalPageRuler.scrollLeft = 0;
+  temporalPagePicker.classList.add('visible');
+  document.body.classList.add('modal-open');
+  updateTemporalPageRulerSelection(Math.min(requested, lastPage));
+  requestAnimationFrame(() => updateTemporalPageRulerSelection(Math.min(requested, lastPage), true));
+}
+
+function closeTemporalPagePicker() {
+  clearTimeout(temporalPageRulerScrollTimer);
+  temporalPagePicker.classList.remove('visible');
+  document.body.classList.remove('modal-open');
+}
+
+async function goToTemporalCollagePage(pageNumber) {
   if (temporalPageChangeBusy || !isTemporalCollageRendered()) return;
-  const { pageSize, pages } = getTemporalPaginationInfo();
-  const nextPage = Math.max(0, Math.min(pages - 1, temporalCollagePage + direction));
-  if (nextPage === temporalCollagePage) return;
+  const requestedPage = Math.max(1, Number.parseInt(pageNumber, 10) || 1);
+  let pageLoadingVisible = false;
   temporalPageChangeBusy = true;
-  temporalCollagePage = nextPage;
-  currentItems = computeVisibleItems(pageSize);
   updateTemporalPaginationControls();
-  triggerHapticFeedback('short');
   try {
+    let { pageSize, pages } = getTemporalPaginationInfo();
+    const requestedIndex = requestedPage - 1;
+    const destinationNeedsMoreItems =
+      getTemporalAvailableItemCount() < (requestedIndex + 1) * pageSize;
+    if (requestedIndex > temporalCollagePage && destinationNeedsMoreItems && temporalPaginationHasMore) {
+      showStatus(`Carregando até a página ${requestedPage}...`);
+      lastfmQueueFeedbackController.showPageLoading(requestedPage);
+      pageLoadingVisible = true;
+      await ensureTemporalPageIsFilled(requestedIndex, pageSize);
+      ({ pageSize, pages } = getTemporalPaginationInfo());
+      document.getElementById('status').style.display = 'none';
+    }
+    const nextPage = Math.max(0, Math.min(pages - 1, requestedIndex));
+    if (nextPage === temporalCollagePage) return;
+    temporalCollagePage = nextPage;
+    currentItems = computeVisibleItems(pageSize);
+    triggerHapticFeedback('short');
     await runDraw();
     const visibleIndices = currentItems.map(item => allFetchedItems.indexOf(item)).filter(index => index >= 0);
     loadRecentImageIndices(visibleIndices, currentApiKey, recentLiveGeneration).catch(() => {});
+  } catch (error) {
+    showStatus(`Erro ao carregar a próxima página: ${error.message}`, true);
   } finally {
+    if (pageLoadingVisible) lastfmQueueFeedbackController.hidePageLoading();
     temporalPageChangeBusy = false;
     updateTemporalPaginationControls();
   }
 }
 
+function changeTemporalCollagePage(direction) {
+  return goToTemporalCollagePage(temporalCollagePage + 1 + direction);
+}
+
+function handleTemporalPageNumberInteraction(input, event) {
+  if (matchMedia('(max-width: 47.999rem)').matches) {
+    event?.preventDefault();
+    input.blur();
+    openTemporalPagePicker(input.value);
+    return;
+  }
+  const page = Number.parseInt(input.value, 10);
+  if (Number.isFinite(page) && page > 0) goToTemporalCollagePage(page);
+  else updateTemporalPaginationControls();
+}
+
 temporalPagePrev.addEventListener('click', () => changeTemporalCollagePage(-1));
 temporalPageNext.addEventListener('click', () => changeTemporalCollagePage(1));
+[temporalPagePrevNumber, temporalPageNextNumber].forEach(input => {
+  input.addEventListener('focus', event => {
+    if (matchMedia('(max-width: 47.999rem)').matches) {
+      event.preventDefault();
+      input.blur();
+    } else {
+      input.select();
+    }
+  });
+  input.addEventListener('click', event => {
+    if (matchMedia('(max-width: 47.999rem)').matches) handleTemporalPageNumberInteraction(input, event);
+  });
+  input.addEventListener('keydown', event => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      input.blur();
+      handleTemporalPageNumberInteraction(input, event);
+    } else if (event.key === 'Escape') {
+      updateTemporalPaginationControls();
+      input.blur();
+    }
+  });
+  input.addEventListener('change', event => handleTemporalPageNumberInteraction(input, event));
+});
+temporalPageRuler.addEventListener('scroll', () => {
+  clearTimeout(temporalPageRulerScrollTimer);
+  temporalPageRulerScrollTimer = setTimeout(() => {
+    const rulerRect = temporalPageRuler.getBoundingClientRect();
+    const center = rulerRect.left + rulerRect.width / 2;
+    const buttons = Array.from(temporalPageRuler.querySelectorAll('.temporal-page-ruler-number'));
+    const nearest = buttons.reduce((best, button) => {
+      const rect = button.getBoundingClientRect();
+      const distance = Math.abs(rect.left + rect.width / 2 - center);
+      return !best || distance < best.distance ? { button, distance } : best;
+    }, null);
+    if (nearest) updateTemporalPageRulerSelection(nearest.button.dataset.page, true);
+  }, 120);
+}, { passive: true });
+temporalPagePickerConfirm.addEventListener('click', () => {
+  const page = temporalPagePickerSelection;
+  closeTemporalPagePicker();
+  goToTemporalCollagePage(page);
+});
+document.getElementById('temporal-page-picker-close').addEventListener('click', closeTemporalPagePicker);
+temporalPagePicker.addEventListener('click', event => {
+  if (event.target === temporalPagePicker) closeTemporalPagePicker();
+});
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && temporalPagePicker.classList.contains('visible')) closeTemporalPagePicker();
+});
 window.addEventListener('resize', scheduleTemporalPaginationPosition);
 window.addEventListener('scroll', scheduleTemporalPaginationPosition, { passive: true, capture: true });
 window.visualViewport?.addEventListener('resize', scheduleTemporalPaginationPosition);
@@ -15307,6 +15832,9 @@ async function generate() {
   }
   generationQueryState = requestedQueryState;
   temporalCollagePage = 0;
+  temporalPaginationHasMore = false;
+  temporalPaginationRequestedLimit = 0;
+  temporalPaginationEstimatedTotal = 0;
 
   cancelRequested = false;
   prefetchGen++; // invalida qualquer pré-carregamento em segundo plano de uma geração anterior
@@ -15393,6 +15921,12 @@ async function generate() {
 
     if (!items.length) { showStatus('Nenhum dado encontrado para esse período.', true); setLoading(false); return; }
     if (isTemporalMode) {
+      temporalPaginationRequestedLimit = limit;
+      temporalPaginationHasMore = temporalPaginationEstimatedTotal > 0
+        ? items.length < temporalPaginationEstimatedTotal
+        : items.length >= limit;
+    }
+    if (isTemporalMode) {
       // A grafia canônica só afeta links; não deve atrasar a primeira pintura
       // nem de Recentes, Curtidas ou Obsessões.
       canonicalUsernamePromise.then(canonical => {
@@ -15474,7 +16008,11 @@ async function generate() {
       loadRecentImagesProgressively(effectiveType, apikey).catch(error => {
         if (error.message !== 'cancelled') console.warn('Carregamento progressivo da collage temporal:', error);
       });
-      if (isRecentMode) startRecentLiveUpdates(user, apikey);
+      if (isRecentMode) {
+        startRecentLiveUpdates(user, apikey);
+        applySavedMetadataRulesToLastfm(allFetchedItems, { redraw: true })
+          .catch(error => console.warn('Correção automática de metadata:', error.message));
+      }
     }
     else prefetchPoolImages(effectiveType, apikey);
 
@@ -16694,7 +17232,7 @@ function openTextEditModal(index) {
   recentScrobbleDelete.disabled = Boolean(item._nowPlaying || item._lastfmDeleted);
   recentScrobbleDelete.textContent = item._lastfmDeleted ? 'SCROBBLE EXCLUÍDO' : 'EXCLUIR SCROBBLE';
   recentTrackLove.disabled = Boolean(item._loved);
-  recentTrackLove.textContent = item._loved ? 'CURTIDA' : 'CURTIR';
+  recentTrackLove.textContent = item._loved ? 'CURTIDA' : 'CURTIR FAIXA';
   recentTrackObsession.disabled = false;
   lovedMetadataSave.disabled = false;
   lovedTrackObsession.disabled = false;
@@ -16715,6 +17253,7 @@ function openTextEditModal(index) {
   editLastfmLinkBtn.dataset.url = lastfmUrl;
   editLastfmLinkBtn.style.display = obsessionsMode ? 'none' : 'flex';
   const obsessionUrl = obsessionsMode ? getObsessionLastfmUrl(item) : '';
+  obsessionLastfmLinkButton.style.display = obsessionsMode ? 'flex' : 'none';
   obsessionLastfmLinkButton.disabled = !obsessionUrl;
   obsessionLastfmLinkButton.style.opacity = obsessionUrl ? '1' : '.45';
   obsessionLastfmLinkButton.dataset.url = obsessionUrl;
@@ -16859,6 +17398,77 @@ function recentExtensionDeletePayload(item, original = getRecentOriginalMetadata
   };
 }
 
+let recentMetadataAutomationBusy = false;
+
+function recentMetadataProcessedKey(item, original = getRecentOriginalMetadata(item)) {
+  return `${recentMetadataRuleKey(original, item?._recentUsername)}|${Math.floor(Number(original?.timestamp) || 0)}`;
+}
+
+function markRecentMetadataProcessed(item, original = getRecentOriginalMetadata(item)) {
+  const key = recentMetadataProcessedKey(item, original);
+  if (!key.endsWith('|0')) {
+    recentMetadataProcessed.set(key, Date.now() + RECENT_METADATA_RULE_TTL_MS);
+    saveRecentMetadataProcessed();
+  }
+}
+
+async function applySavedMetadataRulesToLastfm(items, options = {}) {
+  if (recentMetadataAutomationBusy || !Array.isArray(items) || !items.length) return;
+  const candidates = items.filter(item => {
+    if (!item || item._nowPlaying || item._lastfmDeleted) return false;
+    const original = getRecentOriginalMetadata(item);
+    const rule = getRecentMetadataRule(item);
+    if (!rule || recentMetadataProcessed.has(recentMetadataProcessedKey(item, original))) return false;
+    const timestamp = Math.floor(Number(original.timestamp));
+    const age = Math.floor(Date.now() / 1000) - timestamp;
+    return timestamp > 0 && age >= -300 && age <= LASTFM_REPLACEMENT_MAX_AGE_SECONDS;
+  });
+  if (!candidates.length) return;
+
+  recentMetadataAutomationBusy = true;
+  try {
+    if (!collagerLastfmExtensionAvailable) {
+      try {
+        const ping = await collagerExtensionRequest('ping', {}, 1400);
+        collagerLastfmExtensionAvailable = Boolean(ping?.available);
+      } catch (_) {
+        collagerLastfmExtensionAvailable = false;
+      }
+    }
+    if (!collagerLastfmExtensionAvailable) return;
+    const auth = await getLastfmWriteAuthStatus().catch(() => ({ connected: false }));
+    if (!auth.connected) return;
+
+    for (const item of candidates) {
+      const original = { ...getRecentOriginalMetadata(item) };
+      const rule = getRecentMetadataRule(item);
+      const edited = rule?.edited || rule;
+      if (!edited) continue;
+      const processedKey = recentMetadataProcessedKey(item, original);
+      if (recentMetadataProcessed.has(processedKey)) continue;
+      try {
+        await sendLastfmWrite({ action: 'replace', original, edited, deleteOriginal: false });
+        await collagerExtensionRequest('deleteScrobble', recentExtensionDeletePayload(item, original));
+        markRecentMetadataProcessed(item, original);
+        item._lastfmOriginal = { ...edited, timestamp: original.timestamp };
+        item.name = edited.track;
+        item.albumName = edited.album;
+        item.artist = { ...(item.artist || {}), name: edited.artist };
+        item._recentMetadataAutoProcessed = true;
+        appendStatusHistoryEntry(`Correção automática aplicada: ${edited.artist} — ${edited.track}.`);
+      } catch (error) {
+        console.warn('Correção automática de metadata:', error.message);
+      }
+    }
+    if (options.redraw !== false && candidates.some(item => item._recentMetadataAutoProcessed)) {
+      await runDraw();
+      scheduleDownloadRefresh();
+    }
+  } finally {
+    recentMetadataAutomationBusy = false;
+  }
+}
+
 setTimeout(() => {
   collagerExtensionRequest('ping', {}, 1400).then(result => {
     collagerLastfmExtensionAvailable = Boolean(result?.available);
@@ -16914,7 +17524,7 @@ function applyRecentMetadataAuthState(status) {
   recentLastfmAuthorize.style.display = recentLastfmAuthState.connected ? 'none' : '';
   recentLastfmAuthorize.disabled = !recentLastfmAuthState.configured;
   recentLastfmAuthorize.textContent = recentLastfmAuthState.configured
-    ? 'AUTORIZAR LAST.FM para vincular'
+    ? 'AUTORIZAR LAST.FM'
     : 'AUTORIZAÇÃO INDISPONÍVEL';
 }
 
@@ -18620,7 +19230,13 @@ document.getElementById('edit-tile-delete').addEventListener('click', async () =
 
 function applyRecentMetadataLocally(item, targetPoolIdx, original, edited) {
   const originalRuleKey = recentMetadataRuleKey(original, item._recentUsername);
-  if (recentMetadataFuture.checked) recentMetadataRules.set(originalRuleKey, edited);
+  if (recentMetadataFuture.checked) {
+    recentMetadataRules.set(originalRuleKey, {
+      edited: { ...edited },
+      createdAt: Date.now(),
+      expiresAt: Date.now() + RECENT_METADATA_RULE_TTL_MS,
+    });
+  }
   else recentMetadataRules.delete(originalRuleKey);
   saveRecentMetadataRules();
 
@@ -18692,6 +19308,7 @@ recentMetadataSave.addEventListener('click', async () => {
         throw new Error(`O scrobble corrigido foi enviado, mas o original não foi excluído. Não salve novamente: tente concluir a exclusão neste mesmo botão. ${error.message}`);
       }
       delete item._lastfmReplacementPendingDelete;
+      markRecentMetadataProcessed(item, original);
       item._lastfmOriginal = { ...replacementEdited, timestamp: original.timestamp };
       applyRecentMetadataLocally(item, targetPoolIdx, original, replacementEdited);
       setRecentMetadataStatus('Scrobble substituído com sucesso no Last.fm.');
@@ -18705,6 +19322,12 @@ recentMetadataSave.addEventListener('click', async () => {
     }
     await runDraw();
     scheduleDownloadRefresh();
+    if (recentMetadataFuture.checked) {
+      applySavedMetadataRulesToLastfm(
+        allFetchedItems.filter(candidate => candidate !== item),
+        { redraw: true }
+      ).catch(error => console.warn('Correção automática de metadata:', error.message));
+    }
   } catch (error) {
     setRecentMetadataStatus(error.message, true);
   } finally {
