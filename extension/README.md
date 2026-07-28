@@ -5,11 +5,25 @@ obsessoes pela sessao web do Last.fm. Para substituir metadados, o site primeiro
 envia um novo scrobble corrigido pela API oficial e, somente depois, pede que a
 extensao exclua o registro original.
 
-O mesmo codigo atende Chromium e Firefox:
+O mesmo codigo atende Chromium e Firefox, com manifestos separados:
 
 - Chrome e Edge usam `background.service_worker`.
 - Firefox desktop e Android usam `background.scripts`.
 - A extensao nao coleta nem transmite dados para armazenamento externo.
+
+## Atividade visual no collager.fm
+
+Ao excluir um scrobble, excluir uma obsessao ou definir uma obsessao, a extensao
+envia ao collager.fm somente o andamento da operacao. O site mostra um balao
+compacto com a acao atual, a faixa envolvida, as etapas recentes e o resultado.
+
+O balao nao incorpora nem reproduz a pagina do Last.fm. Cookies, controles
+internos, HTML da conta e credenciais continuam restritos a extensao.
+Se a sessao precisar de atencao, o balao oferece o botao **Abrir Last.fm** em vez
+de trocar automaticamente a aba atual.
+
+Depois de atualizar os arquivos desta pasta, recarregue a extensao na pagina de
+extensoes do navegador e recarregue o collager.fm.
 
 ## Chrome e Edge
 
@@ -24,11 +38,12 @@ O mesmo codigo atende Chromium e Firefox:
 
 Para desenvolvimento:
 
-1. Abra `about:debugging#/runtime/this-firefox`.
-2. Clique em **Carregar extensao temporaria**.
-3. Escolha o arquivo `manifest.json` desta pasta.
-4. Entre normalmente em [last.fm](https://www.last.fm) no Firefox.
-5. Recarregue o collager.fm.
+1. Execute `build-firefox.cmd` nesta pasta.
+2. Abra `about:debugging#/runtime/this-firefox`.
+3. Clique em **Carregar extensao temporaria**.
+4. Escolha `dist\firefox\manifest.json`.
+5. Entre normalmente em [last.fm](https://www.last.fm) no Firefox.
+6. Recarregue o collager.fm.
 
 A instalacao temporaria termina ao fechar o Firefox. Para instalacao permanente,
 o pacote precisa ser assinado e publicado no

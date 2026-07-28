@@ -101,6 +101,11 @@
   .source-btn .ui-icon { margin-left: 4px; }
   .warning .ui-icon { margin-right: 6px; }
   .icon-text { display: inline-flex; align-items: center; gap: 6px; }
+  .extension-dependent-action:disabled {
+    opacity: .42 !important;
+    cursor: not-allowed !important;
+    filter: saturate(.45);
+  }
   .settings-transfer-control {
     height: 28px; display: flex; align-items: stretch; overflow: hidden;
     border: 1px solid var(--border); border-radius: 6px; background: var(--surface2);
@@ -2989,9 +2994,254 @@
       transition-duration: .01ms !important;
     }
   }
+
+  /* Atividade visual da extensão companheira */
+  #extension-activity-panel {
+    --extension-progress: 0%;
+    position: fixed;
+    right: 1.25rem;
+    bottom: 1.25rem;
+    z-index: 3900;
+    width: min(22rem, calc(100vw - 2rem));
+    overflow: visible;
+    border: 1px solid #ffffff30;
+    border-radius: 8px;
+    background: #171717f7;
+    color: var(--text);
+    box-shadow: 0 1rem 3rem #000b;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(1rem);
+    transition: opacity .2s ease, transform .2s ease, visibility .2s;
+  }
+  .extension-activity-tail {
+    position: absolute;
+    right: 1.4rem;
+    bottom: -.42rem;
+    width: .8rem;
+    height: .8rem;
+    z-index: -1;
+    border-right: 1px solid #ffffff30;
+    border-bottom: 1px solid #ffffff30;
+    background: #171717;
+    transform: rotate(45deg);
+  }
+  #extension-activity-panel.visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+  #extension-activity-panel::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #d51007 var(--extension-progress), #ffffff12 var(--extension-progress));
+    transition: background .25s ease;
+  }
+  .extension-activity-head {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    padding: .75rem .75rem .6rem;
+    border-bottom: 1px solid #ffffff12;
+  }
+  .extension-activity-mark {
+    position: relative;
+    width: 1.75rem;
+    height: 1.75rem;
+    flex: 0 0 1.75rem;
+    display: grid;
+    place-items: center;
+    border: 1px solid #d5100766;
+    border-radius: 50%;
+    background: #d5100718;
+    color: #ff817b;
+  }
+  .extension-activity-mark svg {
+    width: 1rem;
+    height: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  #extension-activity-panel.running .extension-activity-mark::after {
+    content: "";
+    position: absolute;
+    inset: -.22rem;
+    border: 1px solid #d51007;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: extension-activity-spin .8s linear infinite;
+  }
+  #extension-activity-panel.success .extension-activity-mark {
+    border-color: #35d06f88;
+    background: #35d06f16;
+    color: #6ee79a;
+  }
+  #extension-activity-panel.error .extension-activity-mark {
+    border-color: #ff5f6d88;
+    background: #ff5f6d18;
+    color: #ff8f98;
+  }
+  @keyframes extension-activity-spin { to { transform: rotate(360deg); } }
+  .extension-activity-heading {
+    min-width: 0;
+    flex: 1;
+  }
+  .extension-activity-eyebrow {
+    display: block;
+    margin-bottom: .1rem;
+    color: #a7a7a7;
+    font-size: .58rem;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  #extension-activity-title {
+    display: block;
+    overflow: hidden;
+    color: #fff;
+    font-size: .78rem;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  #extension-activity-close {
+    width: 1.8rem;
+    height: 1.8rem;
+    flex: 0 0 1.8rem;
+    display: grid;
+    place-items: center;
+    border: 1px solid #ffffff16;
+    border-radius: 6px;
+    background: #ffffff08;
+    color: #aaa;
+    cursor: pointer;
+  }
+  #extension-activity-close:hover { color: #fff; border-color: #ffffff30; }
+  #extension-activity-close svg {
+    width: .9rem;
+    height: .9rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+  .extension-activity-body {
+    overflow: hidden;
+    padding: .7rem .75rem .8rem;
+    border-radius: 0 0 8px 8px;
+  }
+  #extension-activity-target {
+    display: none;
+    overflow: hidden;
+    margin-bottom: .55rem;
+    color: #ddd;
+    font-size: .68rem;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  #extension-activity-target.visible { display: block; }
+  #extension-activity-message {
+    min-height: 1rem;
+    color: #fff;
+    font-size: .7rem;
+    line-height: 1.4;
+  }
+  #extension-activity-events {
+    display: flex;
+    flex-direction: column;
+    gap: .28rem;
+    margin-top: .55rem;
+  }
+  .extension-activity-event {
+    display: grid;
+    grid-template-columns: .45rem minmax(0, 1fr);
+    align-items: start;
+    gap: .45rem;
+    color: #777;
+    font-size: .61rem;
+    line-height: 1.35;
+    transition: color .15s ease;
+  }
+  .extension-activity-event::before {
+    content: "";
+    width: .34rem;
+    height: .34rem;
+    margin-top: .18rem;
+    border-radius: 50%;
+    background: #555;
+  }
+  .extension-activity-event.current { color: #d6d6d6; }
+  .extension-activity-event.current::before { background: #d51007; box-shadow: 0 0 0 3px #d5100720; }
+  #extension-activity-panel.success .extension-activity-event.current::before { background: #35d06f; box-shadow: 0 0 0 3px #35d06f20; }
+  #extension-activity-panel.error .extension-activity-event.current::before { background: #ff5f6d; box-shadow: 0 0 0 3px #ff5f6d20; }
+  .extension-activity-actions {
+    display: none;
+    margin-top: .7rem;
+  }
+  .extension-activity-actions.visible { display: flex; }
+  #extension-activity-open-lastfm {
+    min-height: 2.2rem;
+    width: 100%;
+    border: 1px solid #d51007aa;
+    border-radius: 6px;
+    background: #d5100718;
+    color: #ffaaa6;
+    font-size: .65rem;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  #extension-activity-open-lastfm:hover,
+  #extension-activity-open-lastfm:focus-visible {
+    border-color: #ff453d;
+    background: #d5100730;
+    color: #fff;
+    outline: none;
+  }
+
+  @media (max-width: 48rem) {
+    #extension-activity-panel {
+      right: .75rem;
+      bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
+      left: .75rem;
+      width: auto;
+    }
+  }
 </style>
 </head>
 <body>
+<section id="extension-activity-panel" role="status" aria-live="polite" aria-atomic="false" aria-hidden="true">
+  <span class="extension-activity-tail" aria-hidden="true"></span>
+  <div class="extension-activity-head">
+    <div class="extension-activity-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M8 3v3M16 3v3M7 6h10a2 2 0 0 1 2 2v3a7 7 0 0 1-14 0V8a2 2 0 0 1 2-2Z"/><path d="M12 18v3M9 21h6"/></svg>
+    </div>
+    <div class="extension-activity-heading">
+      <span class="extension-activity-eyebrow">Extensão em ação</span>
+      <span id="extension-activity-title">Preparando ação</span>
+    </div>
+    <button type="button" id="extension-activity-close" aria-label="Fechar atividade da extensão" title="Fechar">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="extension-activity-body">
+    <div id="extension-activity-target"></div>
+    <div id="extension-activity-message">Conectando ao Last.fm...</div>
+    <div id="extension-activity-events" aria-label="Etapas da operação"></div>
+    <div id="extension-activity-actions" class="extension-activity-actions">
+      <button type="button" id="extension-activity-open-lastfm">ABRIR LAST.FM</button>
+    </div>
+  </div>
+</section>
 <div id="specific-artists-floating-list"></div>
 
 <header id="mobile-app-header" aria-label="Navegação mobile">
@@ -4362,6 +4612,69 @@
           </div>
         </div>
 
+        <!-- Padronização visual de maiúsculas e minúsculas -->
+        <div id="text-case-options-section">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:10px;">
+            <span class="section-label" style="margin-bottom:0;">Padronização de caixa</span>
+            <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted);">
+              <span>Usar a mesma para tudo</span>
+              <label class="toggle-switch" style="transform:scale(.8);">
+                <input type="checkbox" id="sync-text-case">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div id="text-case-all-row" style="display:none;">
+            <label style="font-size:10px;color:var(--muted);margin-bottom:4px;display:block;">Todos</label>
+            <div class="red-slash-toggle text-case-toggle" data-text-case-kind="all">
+              <button type="button" class="active" data-case="default">Padrão</button>
+              <span class="slash-sep">/</span>
+              <button type="button" data-case="lower">Caixa baixa</button>
+              <span class="slash-sep">/</span>
+              <button type="button" data-case="upper">Caixa alta</button>
+            </div>
+          </div>
+
+          <div id="text-case-individual-rows" style="display:flex;flex-direction:column;gap:8px;">
+            <div id="text-case-main-row">
+              <label style="font-size:10px;color:var(--muted);margin-bottom:4px;display:block;">Faixa</label>
+              <div class="red-slash-toggle text-case-toggle" data-text-case-kind="main">
+                <button type="button" class="active" data-case="default">Padrão</button>
+                <span class="slash-sep">/</span>
+                <button type="button" data-case="lower">Caixa baixa</button>
+                <span class="slash-sep">/</span>
+                <button type="button" data-case="upper">Caixa alta</button>
+              </div>
+            </div>
+            <div id="text-case-album-row">
+              <label style="font-size:10px;color:var(--muted);margin-bottom:4px;display:block;">Álbum</label>
+              <div class="red-slash-toggle text-case-toggle" data-text-case-kind="album">
+                <button type="button" class="active" data-case="default">Padrão</button>
+                <span class="slash-sep">/</span>
+                <button type="button" data-case="lower">Caixa baixa</button>
+                <span class="slash-sep">/</span>
+                <button type="button" data-case="upper">Caixa alta</button>
+              </div>
+            </div>
+            <div id="text-case-sub-row">
+              <label style="font-size:10px;color:var(--muted);margin-bottom:4px;display:block;">Artista</label>
+              <div class="red-slash-toggle text-case-toggle" data-text-case-kind="sub">
+                <button type="button" class="active" data-case="default">Padrão</button>
+                <span class="slash-sep">/</span>
+                <button type="button" data-case="lower">Caixa baixa</button>
+                <span class="slash-sep">/</span>
+                <button type="button" data-case="upper">Caixa alta</button>
+              </div>
+            </div>
+          </div>
+
+          <input type="hidden" id="text-case-all" value="default">
+          <input type="hidden" id="text-case-main" value="default">
+          <input type="hidden" id="text-case-album" value="default">
+          <input type="hidden" id="text-case-sub" value="default">
+        </div>
+
         <!-- Fontes: uma seleção independente para cada tipo de texto -->
         <div id="font-family-options-section">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
@@ -5152,21 +5465,23 @@
       <div id="merge-search-hotkey-hint" class="icon-text" style="font-size:10px;color:var(--muted);line-height:1.4;align-items:flex-start;"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.69.66-1.24 1.16-1.75A6 6 0 1 0 7.75 12.25c.48.48.97 1.05 1.16 1.75"/></svg><span>Você pode arrastar um quadro sobre outro para mesclar. Com o mouse sobre o quadro: pressione <strong>F</strong> para mesclar pesquisando.</span></div>
     </div>
     <div id="recent-metadata-actions" style="display:none;flex-direction:column;gap:10px;padding:11px;border:1px solid #22c55e44;border-radius:8px;background:#22c55e09;">
-      <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--text);font-size:11px;line-height:1.35;cursor:pointer;">
-        <span>Aplicar esta correção a scrobbles iguais por 14 dias</span>
-        <input type="checkbox" id="recent-metadata-future" checked style="width:16px;height:16px;accent-color:#22c55e;">
-      </label>
-      <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--text);font-size:11px;line-height:1.35;cursor:pointer;">
-        <span>Apagar scrobble antigo e manter o atual</span>
-        <input type="checkbox" id="recent-metadata-replace" checked style="width:16px;height:16px;accent-color:#22c55e;">
-      </label>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <button type="button" id="recent-metadata-save" style="flex:1;padding:10px;border:1px solid #22c55e88;border-radius:8px;background:#123d24;color:#8af0ad;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">SALVAR</button>
-        <button type="button" id="edit-scrobble-delete" style="flex:1;padding:10px;border:1px solid #ef444488;border-radius:8px;background:#3f1518;color:#ff9b9b;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">EXCLUIR SCROBBLE</button>
+      <div id="recent-extension-metadata-options" style="display:none;flex-direction:column;gap:10px;">
+        <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--text);font-size:11px;line-height:1.35;cursor:pointer;">
+          <span>Aplicar esta correção a scrobbles iguais por 14 dias</span>
+          <input type="checkbox" id="recent-metadata-future" checked style="width:16px;height:16px;accent-color:#22c55e;">
+        </label>
+        <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--text);font-size:11px;line-height:1.35;cursor:pointer;">
+          <span>Apagar scrobble antigo e manter o atual</span>
+          <input type="checkbox" id="recent-metadata-replace" checked style="width:16px;height:16px;accent-color:#22c55e;">
+        </label>
       </div>
       <div style="display:flex;align-items:center;gap:8px;">
-        <button type="button" id="recent-track-love" style="flex:1;padding:10px;border:1px solid #f89bad88;border-radius:8px;background:#f89bad16;color:#ffc1ce;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">CURTIR FAIXA</button>
-        <button type="button" id="recent-track-obsession" style="flex:1;padding:10px;border:1px solid #c281ee88;border-radius:8px;background:#c281ee18;color:#deb8fa;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">TORNAR OBSESSÃO</button>
+        <button type="button" id="recent-metadata-save" class="extension-dependent-action" style="flex:1;padding:10px;border:1px solid #22c55e88;border-radius:8px;background:#123d24;color:#8af0ad;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">SALVAR</button>
+        <button type="button" id="edit-scrobble-delete" class="extension-dependent-action" style="flex:1;padding:10px;border:1px solid #ef444488;border-radius:8px;background:#3f1518;color:#ff9b9b;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">EXCLUIR SCROBBLE</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button type="button" id="recent-track-love" class="extension-dependent-action" style="flex:1;padding:10px;border:1px solid #f89bad88;border-radius:8px;background:#f89bad16;color:#ffc1ce;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">CURTIR FAIXA</button>
+        <button type="button" id="recent-track-obsession" class="extension-dependent-action" style="flex:1;padding:10px;border:1px solid #c281ee88;border-radius:8px;background:#c281ee18;color:#deb8fa;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">TORNAR OBSESSÃO</button>
       </div>
       <div id="recent-metadata-status" aria-live="polite" style="display:none;color:var(--muted);font-size:10.5px;line-height:1.4;"></div>
     </div>
@@ -5187,7 +5502,7 @@
       <div id="track-obsession-status" aria-live="polite" style="display:none;color:var(--muted);font-size:10.5px;line-height:1.4;"></div>
     </div>
     <div id="temporal-profile-access" style="display:none;flex-direction:column;gap:7px;padding:11px;border:1px solid #d5100744;border-radius:8px;background:#d5100708;">
-      <button type="button" id="recent-lastfm-authorize" style="display:none;width:100%;padding:9px;border:1px solid #d5100788;border-radius:8px;background:#d5100718;color:#ff8a84;font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;">AUTORIZAR LAST.FM</button>
+      <button type="button" id="recent-lastfm-authorize" class="extension-dependent-action" style="display:none;width:100%;padding:9px;border:1px solid #d5100788;border-radius:8px;background:#d5100718;color:#ff8a84;font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;">AUTORIZAR LAST.FM</button>
       <div id="recent-extension-status" aria-live="polite" style="color:#ffb86b;font-size:10.5px;line-height:1.4;">Verificando extensão...</div>
     </div>
     <div id="tile-restore-actions" style="display:flex;flex-direction:column;gap:8px;">
@@ -5892,6 +6207,8 @@ const DEFAULTS = {
   cols: 3, rows: 5, tileDirection: 'ltr',
   mainAlign: 'left', albumAlign: 'left', subAlign: 'left', playsAlign: 'left',
   mainVPos: 'bottom', albumVPos: 'bottom', subVPos: 'bottom', playsVPos: 'bottom',
+  syncTextCase: false,
+  allTextCase: 'default', mainTextCase: 'default', albumTextCase: 'default', subTextCase: 'default',
   tileShadingEnabled: true,
   tileShadingColor: '#000000',
   tileShadingAlpha: 80,
@@ -6662,6 +6979,11 @@ let mainVPos   = DEFAULTS.mainVPos;
 let albumVPos  = DEFAULTS.albumVPos;
 let subVPos    = DEFAULTS.subVPos;
 let playsVPos  = DEFAULTS.playsVPos;
+let syncTextCase = DEFAULTS.syncTextCase;
+let allTextCase = DEFAULTS.allTextCase;
+let mainTextCase = DEFAULTS.mainTextCase;
+let albumTextCase = DEFAULTS.albumTextCase;
+let subTextCase = DEFAULTS.subTextCase;
 let tileShadingEnabled = DEFAULTS.tileShadingEnabled;
 let tileShadingAutoDisabled = false;
 let tileShadingColor = DEFAULTS.tileShadingColor;
@@ -7633,6 +7955,85 @@ document.querySelectorAll('.cut-opt').forEach(el => {
   el.addEventListener('click', () => { cutMode = el.dataset.mode; applyCutModeUI(); redrawIfReady(); });
 });
 
+// ─────────────────────────────────────────────────────────────
+// PADRONIZAÇÃO DE CAIXA — afeta somente a apresentação. O texto
+// original e as edições de metadados permanecem intactos.
+// ─────────────────────────────────────────────────────────────
+const TEXT_CASE_MODES = new Set(['default', 'lower', 'upper']);
+const TEXT_CASE_STATE = {
+  all:  { get: () => allTextCase,   set: value => { allTextCase = value; } },
+  main: { get: () => mainTextCase,  set: value => { mainTextCase = value; } },
+  album:{ get: () => albumTextCase, set: value => { albumTextCase = value; } },
+  sub:  { get: () => subTextCase,   set: value => { subTextCase = value; } },
+};
+
+function normalizeTextCaseMode(value) {
+  return TEXT_CASE_MODES.has(value) ? value : 'default';
+}
+
+function getEffectiveTextCaseMode(kind) {
+  if (syncTextCase) return allTextCase;
+  return TEXT_CASE_STATE[kind]?.get() || 'default';
+}
+
+function applyTextCase(value, mode) {
+  const text = String(value ?? '');
+  if (mode === 'lower') return text.toLocaleLowerCase();
+  if (mode === 'upper') return text.toLocaleUpperCase();
+  return text;
+}
+
+function syncTextCaseUi() {
+  const syncCheckbox = document.getElementById('sync-text-case');
+  if (syncCheckbox) syncCheckbox.checked = syncTextCase;
+  const allRow = document.getElementById('text-case-all-row');
+  const individualRows = document.getElementById('text-case-individual-rows');
+  if (allRow) allRow.style.display = syncTextCase ? '' : 'none';
+  if (individualRows) individualRows.style.display = syncTextCase ? 'none' : 'flex';
+
+  Object.entries(TEXT_CASE_STATE).forEach(([kind, state]) => {
+    const value = normalizeTextCaseMode(state.get());
+    state.set(value);
+    const field = document.getElementById(`text-case-${kind}`);
+    if (field) field.value = value;
+    document.querySelectorAll(`.text-case-toggle[data-text-case-kind="${kind}"] button`).forEach(button => {
+      button.classList.toggle('active', button.dataset.case === value);
+    });
+  });
+}
+
+function setTextCaseMode(kind, value, redraw = true) {
+  const state = TEXT_CASE_STATE[kind];
+  if (!state) return;
+  state.set(normalizeTextCaseMode(value));
+  syncTextCaseUi();
+  updateCutModeExamples();
+  if (redraw) redrawIfReady();
+}
+
+document.querySelectorAll('.text-case-toggle').forEach(toggle => {
+  toggle.addEventListener('click', event => {
+    const button = event.target.closest('button[data-case]');
+    if (!button) return;
+    setTextCaseMode(toggle.dataset.textCaseKind, button.dataset.case);
+  });
+});
+
+Object.keys(TEXT_CASE_STATE).forEach(kind => {
+  document.getElementById(`text-case-${kind}`)?.addEventListener('change', event => {
+    setTextCaseMode(kind, event.target.value);
+  });
+});
+
+document.getElementById('sync-text-case')?.addEventListener('change', event => {
+  syncTextCase = event.target.checked;
+  syncTextCaseUi();
+  syncTextKindControlVisibility();
+  updateCutModeExamples();
+  redrawIfReady();
+});
+syncTextCaseUi();
+
 // ── Fontes: popula os 4 selects (Header/Título/Artista/Scrobbles) e liga
 // cada um ao seu próprio estado — cada tipo de texto escolhe a fonte
 // independentemente dos outros três ──
@@ -8363,6 +8764,7 @@ function organizeCustomizationSections() {
   // Título/texto: conteúdo, ordem, posicionamento, fontes e efeitos.
   [
     'title-text-options-section',
+    'text-case-options-section',
     'font-size-options-section',
     'text-transparency-options-section',
     'text-effects-options-section'
@@ -8399,6 +8801,7 @@ function organizeCustomizationSections() {
     [
       document.getElementById('scrobble-custom-panel'),
       document.getElementById('title-text-options-section'),
+      document.getElementById('text-case-options-section'),
       document.getElementById('font-family-options-section'),
       document.getElementById('font-size-options-section'),
       document.getElementById('text-transparency-options-section'),
@@ -8437,19 +8840,23 @@ function updateCutModeExamples(items = currentItems, type = getDrawType?.() || c
   const lineOrder = tileLineOrder[type] || TILE_LINE_DEFAULTS[type] || [];
   const enabled = id => lineOrder.some(line => line.id === id && line.enabled);
   const fields = [
-    { id: 'main', getText: item => item?.name },
-    { id: 'album', getText: item => item?.albumName || item?.album?.title || item?.album?.['#text'] },
+    { id: 'main', getText: item => item?.name, caseKind: type === 'albums' ? 'album' : type === 'artists' ? 'sub' : 'main' },
+    { id: 'album', getText: item => item?.albumName || item?.album?.title || item?.album?.['#text'], caseKind: 'album' },
   ];
   let chosen = '';
   for (const field of fields) {
     if (!enabled(field.id)) continue;
     const item = (items || []).find(entry => String(field.getText(entry) || '').trim().length > 19);
     if (item) {
-      chosen = String(field.getText(item)).trim();
+      chosen = applyTextCase(
+        String(field.getText(item)).trim(),
+        getEffectiveTextCaseMode(field.caseKind)
+      );
       break;
     }
   }
-  const text = chosen || 'Never Gonna Give You Up';
+  const fallbackKind = type === 'albums' ? 'album' : type === 'artists' ? 'sub' : 'main';
+  const text = chosen || applyTextCase('Never Gonna Give You Up', getEffectiveTextCaseMode(fallbackKind));
   document.getElementById('cut-example-ellipsis').textContent = text.slice(0, 16) + '...';
   document.getElementById('cut-example-hard').textContent = text.slice(0, 19);
 }
@@ -10754,6 +11161,9 @@ function syncTextKindControlVisibility() {
     setVisible(document.getElementById(config.align)?.parentElement, visible);
     setVisible(row(config.line), visible);
     setVisible(document.getElementById(config.family)?.parentElement, visible);
+    if (kind !== 'plays') {
+      setVisible(document.getElementById(`text-case-${kind}-row`), visible && !syncTextCase);
+    }
     const autoCheckbox = config.auto ? document.getElementById(config.auto) : null;
     setVisible(row(config.size), visible && !(autoCheckbox?.checked));
     if (config.auto) {
@@ -10769,6 +11179,11 @@ function syncTextKindControlVisibility() {
       .forEach(id => setVisible(document.getElementById(id), visible));
   });
 
+  const hasEnabledText = ['main', 'album', 'sub'].some(kind =>
+    isEnabled(kind) && (kind !== 'main' || type === 'tracks'));
+  setVisible(document.getElementById('text-case-options-section'), hasEnabledText);
+  setVisible(document.getElementById('text-case-all-row'), hasEnabledText && syncTextCase);
+  setVisible(document.getElementById('text-case-individual-rows'), hasEnabledText && !syncTextCase);
   setVisible(document.getElementById('scrobble-custom-panel'), isEnabled('plays'));
   setVisible(document.getElementById('text-topic-personalize'), hasEnabledLine);
   if (!hasEnabledLine && tileShadingEnabled) {
@@ -10823,6 +11238,12 @@ function reorderTextKindControlGroups() {
     main: [document.getElementById('main-lines')?.closest('.slider-row')],
     album: [document.getElementById('album-lines')?.closest('.slider-row')],
     sub: [document.getElementById('sub-lines')?.closest('.slider-row')],
+  });
+
+  applyOrdered({
+    main: [document.getElementById('text-case-main-row')],
+    album: [document.getElementById('text-case-album-row')],
+    sub: [document.getElementById('text-case-sub-row')],
   });
 
   applyOrdered({
@@ -14397,15 +14818,19 @@ async function drawCollage(items, type, cols, rows, headerLabel, apikey, accentO
     // Chaveado por poolIdx (identidade), não pela posição na grid.
     const plays    = getEffectivePoolPlays(item, poolIdx) || '?';
     const textOverride = customTexts[poolIdx];
-    const subName  = type === 'artists'
+    const rawSubName = type === 'artists'
       ? (textOverride?.main !== undefined ? textOverride.main : (item.name || ''))
       : (textOverride?.sub !== undefined ? textOverride.sub : (item.artist?.name||''));
-    const mainName = textOverride?.main !== undefined ? textOverride.main : (item.name||'');
-    const albumName = type === 'tracks'
+    const rawMainName = textOverride?.main !== undefined ? textOverride.main : (item.name||'');
+    const rawAlbumName = type === 'tracks'
       ? (textOverride?.album !== undefined
           ? textOverride.album
           : (item.albumName || item.album?.title || item.album?.['#text'] || ''))
-      : type === 'albums' ? mainName : '';
+      : type === 'albums' ? rawMainName : '';
+    const mainCaseKind = type === 'artists' ? 'sub' : type === 'albums' ? 'album' : 'main';
+    const subName = applyTextCase(rawSubName, getEffectiveTextCaseMode('sub'));
+    const mainName = applyTextCase(rawMainName, getEffectiveTextCaseMode(mainCaseKind));
+    const albumName = applyTextCase(rawAlbumName, getEffectiveTextCaseMode('album'));
     const maxW     = tileW - pad * 2;
     const textBottom = y + tileH - pad;
 
@@ -15258,13 +15683,17 @@ function getStandaloneTileTextModel(item, type, accent) {
   const poolIdx = allFetchedItems.indexOf(item);
   const override = customTexts[poolIdx] || {};
   const isArtist = type === 'artists';
-  const mainName = override.main !== undefined ? override.main : (item?.name || '');
-  const artistName = isArtist
-    ? mainName
+  const rawMainName = override.main !== undefined ? override.main : (item?.name || '');
+  const rawArtistName = isArtist
+    ? rawMainName
     : (override.sub !== undefined ? override.sub : getItemArtistName(item, type));
-  const albumName = type === 'tracks'
+  const rawAlbumName = type === 'tracks'
     ? (override.album !== undefined ? override.album : getItemAlbumName(item, type))
-    : type === 'albums' ? mainName : '';
+    : type === 'albums' ? rawMainName : '';
+  const mainCaseKind = type === 'artists' ? 'sub' : type === 'albums' ? 'album' : 'main';
+  const mainName = applyTextCase(rawMainName, getEffectiveTextCaseMode(mainCaseKind));
+  const artistName = applyTextCase(rawArtistName, getEffectiveTextCaseMode('sub'));
+  const albumName = applyTextCase(rawAlbumName, getEffectiveTextCaseMode('album'));
   const plays = getEffectivePoolPlays(item, poolIdx) || '?';
   const temporalMetric = getTemporalMetricText(item);
   const playsNumber = temporalMetric || Number(plays).toLocaleString('pt-BR');
@@ -16156,19 +16585,42 @@ function hitTestTile(clientX, clientY) {
 }
 
 // Mantém qualquer canvas de interação exatamente sobre o canvas principal.
-// O canvas pode estar centralizado dentro de um contêiner mais largo, então
-// left/top precisam acompanhar o deslocamento real em vez de permanecer em 0.
+// Quando ambos compartilham o mesmo offsetParent, usamos as coordenadas de
+// layout diretamente. Isso evita que zoom do navegador, centralização flex e
+// barras de rolagem sejam convertidos duas vezes via coordenadas de viewport.
 function positionCanvasOverlay(element) {
-  const rect = mainCanvas.getBoundingClientRect();
   const containingBlock = element.offsetParent || mainCanvas.parentElement;
-  const containingRect = containingBlock.getBoundingClientRect();
-  const left = rect.left - containingRect.left - containingBlock.clientLeft + containingBlock.scrollLeft;
-  const top = rect.top - containingRect.top - containingBlock.clientTop + containingBlock.scrollTop;
+  const canvasContainingBlock = mainCanvas.offsetParent || mainCanvas.parentElement;
+  let left;
+  let top;
+  let width;
+  let height;
+
+  if (containingBlock === canvasContainingBlock) {
+    left = mainCanvas.offsetLeft;
+    top = mainCanvas.offsetTop;
+    width = mainCanvas.offsetWidth;
+    height = mainCanvas.offsetHeight;
+  } else {
+    const rect = mainCanvas.getBoundingClientRect();
+    const containingRect = containingBlock.getBoundingClientRect();
+    const scaleX = containingBlock.offsetWidth > 0
+      ? containingRect.width / containingBlock.offsetWidth
+      : 1;
+    const scaleY = containingBlock.offsetHeight > 0
+      ? containingRect.height / containingBlock.offsetHeight
+      : 1;
+    left = (rect.left - containingRect.left) / (scaleX || 1) - containingBlock.clientLeft + containingBlock.scrollLeft;
+    top = (rect.top - containingRect.top) / (scaleY || 1) - containingBlock.clientTop + containingBlock.scrollTop;
+    width = rect.width / (scaleX || 1);
+    height = rect.height / (scaleY || 1);
+  }
+
   element.style.position = 'absolute';
   element.style.left = left + 'px';
   element.style.top = top + 'px';
-  element.style.width = rect.width + 'px';
-  element.style.height = rect.height + 'px';
+  element.style.width = width + 'px';
+  element.style.height = height + 'px';
 }
 
 let interactiveHeaderIdleTimer = 0;
@@ -17144,6 +17596,7 @@ const editTextSubWrap = document.getElementById('edit-text-sub-wrap');
 const tileImageSection = document.getElementById('tile-image-section');
 const tileMergeActions = document.getElementById('tile-merge-actions');
 const recentMetadataActions = document.getElementById('recent-metadata-actions');
+const recentExtensionMetadataOptions = document.getElementById('recent-extension-metadata-options');
 const recentMetadataFuture = document.getElementById('recent-metadata-future');
 const recentMetadataReplace = document.getElementById('recent-metadata-replace');
 const recentMetadataSave = document.getElementById('recent-metadata-save');
@@ -17252,6 +17705,7 @@ function openTextEditModal(index) {
   recentMetadataActions.style.display = recentMode ? 'flex' : 'none';
   lovedMetadataActions.style.display = lovedMode ? 'flex' : 'none';
   obsessionActions.style.display = obsessionsMode ? 'flex' : 'none';
+  if (temporalMode) syncTemporalAuthorizePlacement();
   syncTemporalProfileAccessVisibility(temporalMode);
   const renderedMode = getRenderedQueryState()?.mode || currentType;
   const latestObsession = allFetchedItems.find(candidate => candidate?._temporalType === 'obsessions');
@@ -17365,12 +17819,38 @@ const LASTFM_REPLACEMENT_MAX_AGE_SECONDS = 14 * 24 * 60 * 60;
 
 function syncTemporalProfileAccessVisibility(temporalMode = isTemporalCollageRendered()) {
   if (!temporalProfileAccess) return;
-  const authorizeVisible = recentLastfmAuthorize?.style.display !== 'none';
   const extensionVisible = recentExtensionStatus?.style.display !== 'none'
     && Boolean(recentExtensionStatus.textContent.trim());
-  temporalProfileAccess.style.display = temporalMode && (authorizeVisible || extensionVisible)
+  temporalProfileAccess.style.display = temporalMode && extensionVisible
     ? 'flex'
     : 'none';
+}
+
+function syncTemporalAuthorizePlacement() {
+  const host = isRecentCollageRendered()
+    ? recentMetadataActions
+    : isLovedCollageRendered()
+      ? lovedMetadataActions
+      : isObsessionsCollageRendered()
+        ? obsessionActions
+        : temporalProfileAccess;
+  if (!host || !recentLastfmAuthorize || recentLastfmAuthorize.parentElement === host) return;
+  const statusElement = host.querySelector('[aria-live="polite"]');
+  host.insertBefore(recentLastfmAuthorize, statusElement || null);
+}
+
+function syncRecentExtensionDependentControls() {
+  const extensionReady = collagerLastfmExtensionAvailable;
+  if (recentExtensionMetadataOptions) {
+    recentExtensionMetadataOptions.style.display = extensionReady ? 'flex' : 'none';
+  }
+
+  const itemUnavailable = Boolean(activeClickItem?._nowPlaying || activeClickItem?._lastfmDeleted);
+  recentMetadataSave.disabled = !extensionReady || itemUnavailable;
+  recentScrobbleDelete.disabled = !extensionReady || itemUnavailable;
+  recentTrackLove.disabled = !extensionReady || Boolean(activeClickItem?._loved);
+  recentTrackObsession.disabled = !extensionReady;
+  recentLastfmAuthorize.disabled = !extensionReady || !recentLastfmAuthState.configured;
 }
 
 function updateRecentExtensionStatus() {
@@ -17380,17 +17860,161 @@ function updateRecentExtensionStatus() {
   recentExtensionStatus.innerHTML = collagerLastfmExtensionAvailable
     ? ''
     : 'Extensão não detectada, instale-a <a href="https://github.com/katiaukg/collagerfm/tree/main/extension" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">clicando aqui</a>.';
+  syncRecentExtensionDependentControls();
   syncTemporalProfileAccessVisibility();
 }
 
-function collagerExtensionRequest(action, payload = {}, timeoutMs = 25000) {
+const extensionActivityPanel = document.getElementById('extension-activity-panel');
+const extensionActivityTitle = document.getElementById('extension-activity-title');
+const extensionActivityTarget = document.getElementById('extension-activity-target');
+const extensionActivityMessage = document.getElementById('extension-activity-message');
+const extensionActivityEvents = document.getElementById('extension-activity-events');
+const extensionActivityClose = document.getElementById('extension-activity-close');
+const extensionActivityActions = document.getElementById('extension-activity-actions');
+const extensionActivityOpenLastfm = document.getElementById('extension-activity-open-lastfm');
+const EXTENSION_ACTION_LABELS = {
+  deleteScrobble: 'Excluindo scrobble',
+  deleteObsession: 'Excluindo obsessão',
+  setObsession: 'Definindo obsessão',
+};
+const EXTENSION_SUCCESS_MESSAGES = {
+  deleteScrobble: 'Scrobble excluído com sucesso.',
+  deleteObsession: 'Obsessão excluída com sucesso.',
+  setObsession: 'Obsessão atualizada com sucesso.',
+};
+let extensionActivityRequestId = '';
+let extensionActivityDismissedRequestId = '';
+let extensionActivityHideTimer = null;
+let extensionActivityLog = [];
+
+function extensionActivityTargetText(payload = {}) {
+  const artist = String(payload.artist || '').trim();
+  const track = String(payload.track || '').trim();
+  if (artist && track) return `${artist} — ${track}`;
+  if (track) return track;
+  const username = String(payload.username || '').trim();
+  return username ? `Conta ${username}` : '';
+}
+
+function setExtensionActivityLastfmUrl(rawUrl = '') {
+  let safeUrl = '';
+  try {
+    const parsed = new URL(String(rawUrl || ''));
+    if (parsed.origin === 'https://www.last.fm') safeUrl = parsed.href;
+  } catch (_) {}
+  if (extensionActivityOpenLastfm) extensionActivityOpenLastfm.dataset.url = safeUrl;
+  extensionActivityActions?.classList.toggle('visible', Boolean(safeUrl));
+}
+
+function showExtensionActivity(requestId, action, payload = {}) {
+  if (!extensionActivityPanel || action === 'ping') return;
+  clearTimeout(extensionActivityHideTimer);
+  extensionActivityRequestId = requestId;
+  extensionActivityDismissedRequestId = '';
+  extensionActivityLog = [];
+  extensionActivityPanel.classList.remove('success', 'error');
+  extensionActivityPanel.classList.add('visible', 'running');
+  extensionActivityPanel.setAttribute('aria-hidden', 'false');
+  extensionActivityPanel.style.setProperty('--extension-progress', '5%');
+  extensionActivityTitle.textContent = EXTENSION_ACTION_LABELS[action] || 'Executando ação';
+  const target = extensionActivityTargetText(payload);
+  extensionActivityTarget.textContent = target;
+  extensionActivityTarget.classList.toggle('visible', Boolean(target));
+  extensionActivityMessage.textContent = 'Enviando comando à extensão...';
+  setExtensionActivityLastfmUrl();
+  addExtensionActivityEvent('Solicitação recebida pelo collager.fm.');
+}
+
+function addExtensionActivityEvent(message) {
+  const text = String(message || '').trim();
+  if (!text || !extensionActivityEvents) return;
+  if (extensionActivityLog.at(-1) === text) return;
+  extensionActivityLog.push(text);
+  extensionActivityLog = extensionActivityLog.slice(-4);
+  extensionActivityEvents.innerHTML = '';
+  extensionActivityLog.forEach((entry, index) => {
+    const row = document.createElement('div');
+    row.className = 'extension-activity-event' + (index === extensionActivityLog.length - 1 ? ' current' : '');
+    row.textContent = entry;
+    extensionActivityEvents.appendChild(row);
+  });
+}
+
+function updateExtensionActivity(requestId, detail = {}) {
+  if (!extensionActivityPanel || requestId !== extensionActivityRequestId
+      || requestId === extensionActivityDismissedRequestId) return;
+  clearTimeout(extensionActivityHideTimer);
+  const progress = Math.max(5, Math.min(98, Number(detail.progress) || 5));
+  const message = String(detail.message || 'A extensão está trabalhando...').trim();
+  extensionActivityPanel.classList.remove('success', 'error');
+  extensionActivityPanel.classList.add('visible', 'running');
+  extensionActivityPanel.setAttribute('aria-hidden', 'false');
+  extensionActivityPanel.style.setProperty('--extension-progress', `${progress}%`);
+  extensionActivityMessage.textContent = message;
+  addExtensionActivityEvent(message);
+}
+
+function finishExtensionActivity(requestId, action, ok, message = '', openUrl = '') {
+  if (!extensionActivityPanel || action === 'ping' || requestId !== extensionActivityRequestId
+      || requestId === extensionActivityDismissedRequestId) return;
+  clearTimeout(extensionActivityHideTimer);
+  const finalMessage = String(message || (ok
+    ? EXTENSION_SUCCESS_MESSAGES[action] || 'Ação concluída com sucesso.'
+    : 'A extensão não concluiu a ação.')).trim();
+  extensionActivityPanel.classList.remove('running', 'success', 'error');
+  extensionActivityPanel.classList.add('visible', ok ? 'success' : 'error');
+  extensionActivityPanel.setAttribute('aria-hidden', 'false');
+  extensionActivityPanel.style.setProperty('--extension-progress', '100%');
+  extensionActivityMessage.textContent = finalMessage;
+  setExtensionActivityLastfmUrl(ok ? '' : openUrl);
+  addExtensionActivityEvent(finalMessage);
+  extensionActivityHideTimer = setTimeout(() => {
+    extensionActivityPanel.classList.remove('visible');
+    extensionActivityPanel.setAttribute('aria-hidden', 'true');
+  }, ok ? 5500 : 9000);
+}
+
+function expireCollagerExtensionRequest(requestId) {
+  const pending = collagerExtensionRequests.get(requestId);
+  if (!pending) return;
+  collagerExtensionRequests.delete(requestId);
+  const error = new Error('A extensão companheira não respondeu. Recarregue a extensão e tente novamente.');
+  finishExtensionActivity(requestId, pending.action, false, error.message);
+  pending.reject(error);
+}
+
+function refreshCollagerExtensionTimeout(requestId) {
+  const pending = collagerExtensionRequests.get(requestId);
+  if (!pending) return;
+  clearTimeout(pending.timeout);
+  pending.timeout = setTimeout(() => expireCollagerExtensionRequest(requestId), pending.timeoutMs);
+}
+
+extensionActivityClose?.addEventListener('click', () => {
+  extensionActivityDismissedRequestId = extensionActivityRequestId;
+  clearTimeout(extensionActivityHideTimer);
+  extensionActivityPanel.classList.remove('visible');
+  extensionActivityPanel.setAttribute('aria-hidden', 'true');
+});
+
+extensionActivityOpenLastfm?.addEventListener('click', () => {
+  const url = extensionActivityOpenLastfm.dataset.url || '';
+  if (!url) return;
+  window.open(url, '_blank', 'noopener');
+});
+
+function collagerExtensionRequest(action, payload = {}, timeoutMs = 45000) {
   return new Promise((resolve, reject) => {
     const requestId = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    const timeout = setTimeout(() => {
-      collagerExtensionRequests.delete(requestId);
-      reject(new Error('A extensão companheira não respondeu. Instale-a ou recarregue a página.'));
-    }, timeoutMs);
-    collagerExtensionRequests.set(requestId, { resolve, reject, timeout });
+    showExtensionActivity(requestId, action, payload);
+    collagerExtensionRequests.set(requestId, {
+      resolve,
+      reject,
+      timeout: null,
+      timeoutMs,
+      action,
+    });
+    refreshCollagerExtensionTimeout(requestId);
     window.postMessage({
       type: 'collager-lastfm-extension-request', requestId, action, payload,
     }, location.origin);
@@ -17404,13 +18028,25 @@ window.addEventListener('message', event => {
     updateRecentExtensionStatus();
     return;
   }
+  if (event.data?.type === 'collager-lastfm-extension-progress') {
+    refreshCollagerExtensionTimeout(event.data.requestId);
+    updateExtensionActivity(event.data.requestId, event.data);
+    return;
+  }
   if (event.data?.type !== 'collager-lastfm-extension-response') return;
   const pending = collagerExtensionRequests.get(event.data.requestId);
   if (!pending) return;
   clearTimeout(pending.timeout);
   collagerExtensionRequests.delete(event.data.requestId);
-  if (event.data.ok) pending.resolve(event.data.result);
-  else pending.reject(new Error(event.data.error || 'A extensão não concluiu a operação.'));
+  if (event.data.ok) {
+    finishExtensionActivity(event.data.requestId, pending.action, true);
+    pending.resolve(event.data.result);
+  } else {
+    const error = new Error(event.data.error || 'A extensão não concluiu a operação.');
+    error.openUrl = event.data.openUrl || '';
+    finishExtensionActivity(event.data.requestId, pending.action, false, error.message, error.openUrl);
+    pending.reject(error);
+  }
 });
 
 async function requireCollagerLastfmExtension() {
@@ -17575,6 +18211,7 @@ function applyRecentMetadataAuthState(status) {
   recentLastfmAuthorize.textContent = recentLastfmAuthState.configured
     ? 'AUTORIZAR LAST.FM'
     : 'AUTORIZAÇÃO INDISPONÍVEL';
+  syncRecentExtensionDependentControls();
   syncTemporalProfileAccessVisibility();
 }
 
@@ -19585,6 +20222,8 @@ obsessionDeleteButton.addEventListener('click', async () => {
     await requireCollagerLastfmExtension();
     await collagerExtensionRequest('deleteObsession', {
       username: item._obsessionUsername || getRenderedQueryState()?.username || document.getElementById('username')?.value || '',
+      artist: item.artist?.name || item.artist?.['#text'] || '',
+      track: item.name || '',
       url: obsessionUrl,
       obsessionId: item._obsessionId || '',
     });
@@ -20232,6 +20871,18 @@ populateUsernameDatalist();
 window.addEventListener('resize', () => {
   if (currentItems.length) syncOverlaySize();
 });
+
+let overlayLayoutSyncFrame = 0;
+const overlayLayoutObserver = new ResizeObserver(() => {
+  if (!currentItems.length || overlayLayoutSyncFrame) return;
+  overlayLayoutSyncFrame = requestAnimationFrame(() => {
+    overlayLayoutSyncFrame = 0;
+    syncOverlaySize();
+    if (typeof syncDeletingOverlay === 'function') syncDeletingOverlay();
+  });
+});
+overlayLayoutObserver.observe(mainCanvas);
+overlayLayoutObserver.observe(document.getElementById('collage-wrap'));
 
 // ─────────────────────────────────────────────────────────────
 // DRAG-AND-DROP sobre tile + tecla R para restaurar

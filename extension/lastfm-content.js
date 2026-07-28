@@ -3,6 +3,26 @@
 if (!globalThis.__collagerLastfmContentInstalled) {
   globalThis.__collagerLastfmContentInstalled = true;
 
+  async function timedFetch(input, init = {}, timeoutMs = 20000) {
+    const controller = new AbortController();
+    const sourceSignal = init.signal;
+    const abortFromSource = () => controller.abort(sourceSignal?.reason);
+    if (sourceSignal?.aborted) abortFromSource();
+    else sourceSignal?.addEventListener('abort', abortFromSource, { once: true });
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      return await fetch(input, { ...init, signal: controller.signal });
+    } catch (error) {
+      if (controller.signal.aborted && !sourceSignal?.aborted) {
+        throw new Error('O Last.fm demorou demais para responder.');
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeout);
+      sourceSignal?.removeEventListener('abort', abortFromSource);
+    }
+  }
+
   function cookieValue(name) {
     const prefix = `${name}=`;
     const part = document.cookie.split(';').map(value => value.trim()).find(value => value.startsWith(prefix));
@@ -12,7 +32,7 @@ if (!globalThis.__collagerLastfmContentInstalled) {
   async function csrfToken(username) {
     const fromCookie = cookieValue('csrftoken');
     if (fromCookie) return fromCookie;
-    const response = await fetch(`/user/${encodeURIComponent(username)}/library`, { credentials: 'include' });
+    const response = await timedFetch(`/user/${encodeURIComponent(username)}/library`, { credentials: 'include' });
     const html = await response.text();
     const documentCopy = new DOMParser().parseFromString(html, 'text/html');
     return documentCopy.querySelector('input[name="csrfmiddlewaretoken"]')?.value || '';
@@ -43,7 +63,7 @@ if (!globalThis.__collagerLastfmContentInstalled) {
       timestamp: String(timestamp),
       ajax: '1',
     });
-    const response = await fetch(`/user/${encodeURIComponent(username)}/library/delete`, {
+    const response = await timedFetch(`/user/${encodeURIComponent(username)}/library/delete`, {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -78,7 +98,7 @@ if (!globalThis.__collagerLastfmContentInstalled) {
       return { ok: false, error: 'Endereco da obsessao invalido.' };
     }
 
-    const pageResponse = await fetch(url.pathname, { credentials: 'include' });
+    const pageResponse = await timedFetch(url.pathname, { credentials: 'include' });
     if (pageResponse.status === 403) {
       return { ok: false, authRequired: true, error: 'Sua sessao do Last.fm expirou. Entre novamente e repita a operacao.' };
     }
@@ -93,7 +113,7 @@ if (!globalThis.__collagerLastfmContentInstalled) {
     }
 
     const body = new URLSearchParams({ csrfmiddlewaretoken: csrf, action: 'delete' });
-    const response = await fetch(form.getAttribute('action') || url.pathname, {
+    const response = await timedFetch(form.getAttribute('action') || url.pathname, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
@@ -126,7 +146,7 @@ if (!globalThis.__collagerLastfmContentInstalled) {
     const track = String(payload?.track || '').trim();
     if (!username || !artist || !track) return { ok: false, error: 'Dados da faixa invalidos.' };
     const trackPath = `/music/${encodeLastfmPath(artist)}/_/${encodeLastfmPath(track)}`;
-    const pageResponse = await fetch(trackPath, { credentials: 'include' });
+    const pageResponse = await timedFetch(trackPath, { credentials: 'include' });
     if (pageResponse.status === 403) {
       return { ok: false, authRequired: true, error: 'Entre na sua conta no Last.fm e tente novamente.' };
     }
@@ -166,7 +186,7 @@ if (!globalThis.__collagerLastfmContentInstalled) {
     if (submitControl) body.set(submitControl.name, submitControl.value || '');
 
     const action = new URL(form.getAttribute('action') || trackPath, location.origin);
-    const response = await fetch(action.pathname + action.search, {
+    const response = await timedFetch(action.pathname + action.search, {
       method: String(form.getAttribute('method') || 'POST').toUpperCase(),
       credentials: 'include',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
@@ -183,17 +203,25 @@ if (!globalThis.__collagerLastfmContentInstalled) {
     return { ok: true, obsessionSet: true };
   }
 
-  chrome.runtime.onMessage.addListener(message => {
+  chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (message?.channel !== 'collager-lastfm-page') return undefined;
+    let operation;
+    let fallbackError;
     if (message.action === 'deleteScrobble') {
-      return deleteScrobble(message.payload).catch(error => ({ ok: false, error: error?.message || 'Falha ao excluir o scrobble.' }));
+      operation = deleteScrobble(message.payload);
+      fallbackError = 'Falha ao excluir o scrobble.';
+    } else if (message.action === 'deleteObsession') {
+      operation = deleteObsession(message.payload);
+      fallbackError = 'Falha ao excluir a obsessao.';
+    } else if (message.action === 'setObsession') {
+      operation = setObsession(message.payload);
+      fallbackError = 'Falha ao definir a obsessao.';
+    } else {
+      return false;
     }
-    if (message.action === 'deleteObsession') {
-      return deleteObsession(message.payload).catch(error => ({ ok: false, error: error?.message || 'Falha ao excluir a obsessao.' }));
-    }
-    if (message.action === 'setObsession') {
-      return setObsession(message.payload).catch(error => ({ ok: false, error: error?.message || 'Falha ao definir a obsessao.' }));
-    }
-    return undefined;
+    operation
+      .then(sendResponse)
+      .catch(error => sendResponse({ ok: false, error: error?.message || fallbackError }));
+    return true;
   });
 }
