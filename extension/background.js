@@ -242,6 +242,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   };
   const operation = message.action === 'ping'
     ? Promise.resolve({ available: true, version: chrome.runtime.getManifest().version })
+    : message.action === 'openHistory'
+      ? chrome.tabs.create({ url: chrome.runtime.getURL('history.html') }).then(() => ({ opened: true }))
     : message.action === 'deleteScrobble'
       ? enqueue(() => deleteScrobble(message.payload, report), report)
     : message.action === 'deleteObsession'

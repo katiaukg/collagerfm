@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Histórico da extensão - collager.fm</title>
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="history.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-icon"><img src="icons/icon.svg" alt=""></span>
+      <div>
+        <span>Extensão collager.fm</span>
+        <h1>Atividade e regras automáticas</h1>
+      </div>
+    </div>
+  </header>
+
+  <nav class="tabs" aria-label="Seções da extensão">
+    <button class="tab active" type="button" data-view="history">Histórico</button>
+    <button class="tab" type="button" data-view="changed">Alterados</button>
+    <button class="tab" type="button" data-view="deleted">Apagados</button>
+  </nav>
+
+  <main>
+    <section class="view active" data-panel="history">
+      <div class="section-heading">
+        <div><span>Operações</span><h2>Histórico completo</h2></div>
+        <strong class="count" data-count="history">0</strong>
+      </div>
+      <div class="list" data-list="history"></div>
+    </section>
+
+    <section class="view" data-panel="changed">
+      <div class="section-heading">
+        <div><span>Regras automáticas</span><h2>Metadatas alterados</h2></div>
+        <strong class="count" data-count="changed">0</strong>
+      </div>
+      <div class="list" data-list="changed"></div>
+    </section>
+
+    <section class="view" data-panel="deleted">
+      <div class="section-heading">
+        <div><span>Regras automáticas</span><h2>Metadatas apagados</h2></div>
+        <strong class="count" data-count="deleted">0</strong>
+      </div>
+      <div class="list" data-list="deleted"></div>
+    </section>
+  </main>
+
+  <script src="history.js"></script>
+</body>
+</html>

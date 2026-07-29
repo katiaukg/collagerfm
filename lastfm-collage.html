@@ -7177,15 +7177,15 @@ try {
   const now = Date.now();
   Object.entries(savedRecentRules).forEach(([key, value]) => {
     const edited = value?.edited || value;
-    const expiresAt = Number(value?.expiresAt || 0);
     // Regras antigas não guardavam o álbum e podiam alcançar faixas diferentes.
     // Elas são ignoradas em favor das novas regras de metadata exata.
-    if (!edited || !value?.original || (expiresAt && expiresAt <= now)) return;
+    if (!edited || !value?.original) return;
     recentMetadataRules.set(key, {
       edited,
       original: value?.original || null,
+      username: String(value?.username || key.split('|')[0] || ''),
       createdAt: Number(value?.createdAt || now),
-      expiresAt: expiresAt || now + RECENT_METADATA_RULE_TTL_MS,
+      expiresAt: 0,
       applyMetadataCorrection: value?.applyMetadataCorrection !== false,
       correctionConfigured: value?.correctionConfigured !== false,
       deleteFutureScrobbles: Boolean(value?.deleteFutureScrobbles),
@@ -12055,6 +12055,33 @@ function recentMetadataRuleKey(metadata, username = '') {
     .join('|');
 }
 
+function findRecentMetadataRule(item) {
+  const original = getRecentOriginalMetadata(item);
+  const exactKey = item?._recentMetadataRuleKey
+    || recentMetadataRuleKey(original, item?._recentUsername);
+  const exactRule = recentMetadataRules.get(exactKey);
+  if (exactRule) return { key: exactKey, rule: exactRule };
+
+  const username = normalizeMemoryPart(item?._recentUsername || '');
+  const artist = normalizeMemoryPart(original?.artist || '');
+  const track = normalizeMemoryPart(original?.track || '');
+  const album = normalizeMemoryPart(original?.album || '');
+  if (!artist || !track) return null;
+
+  const compatible = Array.from(recentMetadataRules.entries()).filter(([, rule]) => {
+    const ruleUsername = normalizeMemoryPart(rule?.username || '');
+    const ruleArtist = normalizeMemoryPart(rule?.original?.artist || '');
+    const ruleTrack = normalizeMemoryPart(rule?.original?.track || '');
+    const ruleAlbum = normalizeMemoryPart(rule?.original?.album || '');
+    const usernameMatches = !ruleUsername || !username || ruleUsername === username;
+    const albumMatches = !ruleAlbum || !album || ruleAlbum === album;
+    return usernameMatches && ruleArtist === artist && ruleTrack === track && albumMatches;
+  });
+  return compatible.length === 1
+    ? { key: compatible[0][0], rule: compatible[0][1] }
+    : null;
+}
+
 function getRecentOriginalMetadata(item) {
   return item?._lastfmOriginal || {
     artist: item?.artist?.name || '',
@@ -12109,7 +12136,7 @@ function updateRecentMetadataRuleFromExtension(key, field, enabled) {
   if (!rule || !['applyMetadataCorrection', 'deleteFutureScrobbles'].includes(field)) return false;
   const now = Date.now();
   rule[field] = Boolean(enabled);
-  rule.expiresAt = now + RECENT_METADATA_RULE_TTL_MS;
+  rule.expiresAt = 0;
   if (field === 'applyMetadataCorrection') {
     rule.correctionConfigured = true;
   } else {
@@ -12151,36 +12178,57 @@ function updateRecentMetadataRuleFromExtension(key, field, enabled) {
   return true;
 }
 
+function deleteRecentMetadataRuleOperation(key, field) {
+  const ruleKey = String(key || '');
+  const rule = recentMetadataRules.get(ruleKey);
+  if (!rule || !['applyMetadataCorrection', 'deleteFutureScrobbles'].includes(field)) return false;
+  if (field === 'applyMetadataCorrection') {
+    rule.applyMetadataCorrection = false;
+    rule.correctionConfigured = false;
+  } else {
+    rule.deleteFutureScrobbles = false;
+    rule.deletionConfigured = false;
+    rule.deleteFutureStartedAt = 0;
+  }
+  const keepRule = Boolean(rule.correctionConfigured || rule.deletionConfigured);
+  if (keepRule) {
+    rule.expiresAt = 0;
+  } else {
+    recentMetadataRules.delete(ruleKey);
+    allFetchedItems.forEach(item => {
+      if (item?._recentMetadataRuleKey === ruleKey) delete item._recentMetadataRuleKey;
+    });
+  }
+  saveRecentMetadataRules();
+  if (activeClickItem?._recentMetadataRuleKey === ruleKey) {
+    recentMetadataFuture.checked = Boolean(rule.applyMetadataCorrection);
+    recentMetadataDeleteFuture.checked = Boolean(rule.deleteFutureScrobbles);
+  }
+  return true;
+}
+
 function saveRecentMetadataProcessed() {
   try { localStorage.setItem(RECENT_METADATA_PROCESSED_STORAGE, JSON.stringify(Object.fromEntries(recentMetadataProcessed))); }
   catch (_) { /* a automação continua válida nesta sessão */ }
 }
 
 function pruneRecentMetadataAutomation(now = Date.now()) {
-  let rulesChanged = false;
   let processedChanged = false;
-  recentMetadataRules.forEach((rule, key) => {
-    if (Number(rule?.expiresAt || 0) <= now) {
-      recentMetadataRules.delete(key);
-      rulesChanged = true;
-    }
-  });
   recentMetadataProcessed.forEach((expiresAt, key) => {
     if (Number(expiresAt || 0) <= now) {
       recentMetadataProcessed.delete(key);
       processedChanged = true;
     }
   });
-  if (rulesChanged) saveRecentMetadataRules();
   if (processedChanged) saveRecentMetadataProcessed();
 }
 
 function getRecentMetadataRule(item) {
   pruneRecentMetadataAutomation();
-  const original = getRecentOriginalMetadata(item);
-  const key = item?._recentMetadataRuleKey
-    || recentMetadataRuleKey(original, item?._recentUsername);
-  return recentMetadataRules.get(key) || null;
+  const match = findRecentMetadataRule(item);
+  if (!match) return null;
+  item._recentMetadataRuleKey = match.key;
+  return match.rule;
 }
 
 function applyRecentMetadataRule(item) {
@@ -13274,9 +13322,11 @@ function startRecentLiveUpdates(user, apikey) {
             appendStatusHistoryEntry(`Novo scrobble: ${newest.artist?.name || ''} — ${newest.name || ''}.`);
             triggerHapticFeedback('short');
           }
-          applySavedMetadataRulesToLastfm(allFetchedItems, { redraw: true })
-            .catch(error => console.warn('Correção automática de metadata:', error.message));
         }
+        // Reconfere regras mesmo sem mudança visual. Se a extensão ou o Last.fm
+        // falharem em um ciclo, o scrobble pendente será tentado novamente.
+        applySavedMetadataRulesToLastfm(allFetchedItems, { redraw: true })
+          .catch(error => console.warn('Correção automática de metadata:', error.message));
       } catch (error) {
         if (error.message !== 'cancelled') console.warn('Atualização de Recentes:', error.message);
         adaptiveInterval = Math.min(
@@ -15385,12 +15435,33 @@ function positionTemporalPaginationControls() {
   const canvas = document.getElementById('collage-canvas');
   const rect = canvas.getBoundingClientRect();
   if (!rect.width || !rect.height) return;
+  let visibleTop = Math.max(0, rect.top);
+  let visibleBottom = Math.min(innerHeight, rect.bottom);
+  let ancestor = canvas.parentElement;
+  while (ancestor && ancestor !== document.body) {
+    const style = getComputedStyle(ancestor);
+    const clipsVertically = /(auto|scroll|hidden|clip)/.test(`${style.overflow} ${style.overflowY}`);
+    if (clipsVertically) {
+      const ancestorRect = ancestor.getBoundingClientRect();
+      visibleTop = Math.max(visibleTop, ancestorRect.top);
+      visibleBottom = Math.min(visibleBottom, ancestorRect.bottom);
+    }
+    ancestor = ancestor.parentElement;
+  }
+  if (visibleBottom <= visibleTop) return;
   const mobile = matchMedia('(max-width: 47.999rem)').matches;
   const inset = mobile ? 8 : 12;
   const prevWidth = temporalPagePrevControl.offsetWidth || (mobile ? 48 : 54);
   const nextWidth = temporalPageNextControl.offsetWidth || prevWidth;
-  const buttonHeight = temporalPagePrev.offsetHeight || (mobile ? 58 : 52);
-  const top = Math.max(8, Math.min(innerHeight - buttonHeight - 8, rect.top + rect.height / 2 - buttonHeight / 2));
+  const controlHeight = Math.max(
+    temporalPagePrevControl.offsetHeight || 0,
+    temporalPageNextControl.offsetHeight || 0,
+    mobile ? 88 : 87
+  );
+  const availableHeight = visibleBottom - visibleTop;
+  const top = availableHeight <= controlHeight
+    ? visibleTop
+    : visibleTop + (availableHeight - controlHeight) / 2;
   const prevLeft = mobile
     ? rect.left + inset
     : Math.max(8, rect.left - prevWidth - inset);
@@ -16699,39 +16770,25 @@ function hitTestTile(clientX, clientY) {
 }
 
 // Mantém qualquer camada de interação exatamente sobre o canvas principal.
-// Quando o zoom nativo troca o breakpoint, o canvas pode ficar estreito e
-// centralizado dentro de um wrapper largo. Nesse caso, offsetLeft/offsetTop
-// são a fonte mais estável porque já pertencem ao sistema de coordenadas do
-// containing block; getBoundingClientRect fica apenas como fallback.
+// O zoom nativo e os breakpoints de tablet podem mudar o tamanho visual do
+// canvas sem mudar seus offsets de layout na mesma batida; por isso usamos o
+// retângulo visual como fonte única e o convertemos para o bloco pai.
 function positionCanvasOverlay(element) {
   const containingBlock = element.offsetParent || mainCanvas.parentElement;
-  const canvasContainingBlock = mainCanvas.offsetParent || mainCanvas.parentElement;
-  let left;
-  let top;
-  let width;
-  let height;
-
-  if (containingBlock === canvasContainingBlock) {
-    left = mainCanvas.offsetLeft;
-    top = mainCanvas.offsetTop;
-    width = mainCanvas.offsetWidth;
-    height = mainCanvas.offsetHeight;
-  } else {
-    const rect = mainCanvas.getBoundingClientRect();
-    const containingRect = containingBlock.getBoundingClientRect();
-    const scaleX = containingBlock.clientWidth > 0
-      ? containingRect.width / containingBlock.clientWidth
-      : 1;
-    const scaleY = containingBlock.clientHeight > 0
-      ? containingRect.height / containingBlock.clientHeight
-      : 1;
-    left = (rect.left - containingRect.left - containingBlock.clientLeft * scaleX) / (scaleX || 1)
-      + containingBlock.scrollLeft;
-    top = (rect.top - containingRect.top - containingBlock.clientTop * scaleY) / (scaleY || 1)
-      + containingBlock.scrollTop;
-    width = rect.width / (scaleX || 1);
-    height = rect.height / (scaleY || 1);
-  }
+  const rect = mainCanvas.getBoundingClientRect();
+  const containingRect = containingBlock.getBoundingClientRect();
+  const scaleX = containingBlock.clientWidth > 0
+    ? containingRect.width / containingBlock.clientWidth
+    : 1;
+  const scaleY = containingBlock.clientHeight > 0
+    ? containingRect.height / containingBlock.clientHeight
+    : 1;
+  const left = (rect.left - containingRect.left - containingBlock.clientLeft * scaleX) / (scaleX || 1)
+    + containingBlock.scrollLeft;
+  const top = (rect.top - containingRect.top - containingBlock.clientTop * scaleY) / (scaleY || 1)
+    + containingBlock.scrollTop;
+  const width = rect.width / (scaleX || 1);
+  const height = rect.height / (scaleY || 1);
 
   element.style.position = 'absolute';
   element.style.left = left + 'px';
@@ -18183,6 +18240,15 @@ window.addEventListener('message', event => {
     window.postMessage({
       type: 'collager-lastfm-metadata-rule-toggle-response',
       requestId: String(event.data.requestId || ''),
+      ok,
+    }, location.origin);
+    return;
+  }
+  if (event.data?.type === 'collager-lastfm-metadata-rule-delete-request') {
+    const ok = deleteRecentMetadataRuleOperation(event.data.key, event.data.field);
+    window.postMessage({
+      type: 'collager-lastfm-metadata-rule-delete-response',
+      requestId: event.data.requestId,
       ok,
     }, location.origin);
     return;
@@ -20298,7 +20364,7 @@ function applyRecentMetadataLocally(item, targetPoolIdx, original, edited) {
       },
       username: String(item._recentUsername || getRenderedQueryState()?.username || ''),
       createdAt: Number(previousRule?.createdAt || now),
-      expiresAt: now + RECENT_METADATA_RULE_TTL_MS,
+      expiresAt: 0,
       applyMetadataCorrection,
       correctionConfigured: Boolean(previousRule?.correctionConfigured || applyMetadataCorrection),
       deleteFutureScrobbles,

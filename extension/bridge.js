@@ -10,9 +10,12 @@ const PAGE_RULES_REQUEST = 'collager-lastfm-metadata-rules-request';
 const PAGE_RULES_SYNC = 'collager-lastfm-metadata-rules-sync';
 const PAGE_RULE_TOGGLE_REQUEST = 'collager-lastfm-metadata-rule-toggle-request';
 const PAGE_RULE_TOGGLE_RESPONSE = 'collager-lastfm-metadata-rule-toggle-response';
+const PAGE_RULE_DELETE_REQUEST = 'collager-lastfm-metadata-rule-delete-request';
+const PAGE_RULE_DELETE_RESPONSE = 'collager-lastfm-metadata-rule-delete-response';
 const HISTORY_STORAGE_KEY = 'collager.fm.extension-history.v2';
 const RULES_STORAGE_KEY = 'collager.fm.metadata-rules.v1';
 const HISTORY_LIMIT = 60;
+const COMPACT_RULES_PER_PAGE = 2;
 const ALLOWED_ORIGINS = new Set([
   'https://collagerfm.vercel.app',
   'http://127.0.0.1:8767',
@@ -35,6 +38,8 @@ let metadataRulesLoaded = false;
 let pendingMetadataRulesSync = null;
 let historyView = 'history';
 const pendingRuleToggles = new Map();
+const pendingRuleDeletes = new Map();
+const ruleSectionPages = { changed: 0, deleted: 0 };
 
 function isAllowedPage() {
   return ALLOWED_ORIGINS.has(location.origin);
@@ -235,21 +240,23 @@ function metadataRuleHasCorrection(rule) {
   );
 }
 
-function metadataRuleExpiry(rule) {
-  const expiresAt = Number(rule?.expiresAt || 0);
-  if (!expiresAt) return '';
+function metadataRuleActivation(rule, field) {
+  const activatedAt = field === 'deleteFutureScrobbles'
+    ? Number(rule?.deleteFutureStartedAt || rule?.createdAt || 0)
+    : Number(rule?.createdAt || 0);
+  if (!activatedAt) return '';
   try {
-    return `Ativa até ${new Intl.DateTimeFormat('pt-BR', {
+    return `Ativa desde ${new Intl.DateTimeFormat('pt-BR', {
       dateStyle: 'short',
       timeStyle: 'short',
-    }).format(new Date(expiresAt))}`;
+    }).format(new Date(activatedAt))}`;
   } catch (_) {
     return '';
   }
 }
 
 function buildRuleRow(rule, field, description) {
-  const row = document.createElement('label');
+  const row = document.createElement('div');
   row.className = 'rule-row';
   const copy = document.createElement('span');
   copy.className = 'rule-copy';
@@ -258,9 +265,9 @@ function buildRuleRow(rule, field, description) {
   const detail = document.createElement('span');
   detail.textContent = description(rule);
   const album = metadataRuleAlbum(rule);
-  const expiry = metadataRuleExpiry(rule);
+  const activation = metadataRuleActivation(rule, field);
   const meta = document.createElement('small');
-  meta.textContent = [album ? `Álbum: ${album}` : '', expiry].filter(Boolean).join(' · ');
+  meta.textContent = [album ? `Álbum: ${album}` : '', activation].filter(Boolean).join(' · ');
   copy.append(title, detail);
   if (meta.textContent) copy.append(meta);
   const toggle = document.createElement('input');
@@ -269,20 +276,44 @@ function buildRuleRow(rule, field, description) {
   toggle.disabled = pendingRuleToggles.has(`${rule.key}|${field}`);
   toggle.dataset.key = rule.key;
   toggle.dataset.field = field;
-  row.append(copy, toggle);
+  toggle.setAttribute('aria-label', `Ativar ou desativar ${metadataRuleLabel(rule)}`);
+  const remove = document.createElement('button');
+  remove.type = 'button';
+  remove.className = 'rule-remove';
+  remove.dataset.key = rule.key;
+  remove.dataset.field = field;
+  remove.disabled = pendingRuleDeletes.has(`${rule.key}|${field}`);
+  remove.setAttribute('aria-label', `Excluir operação de ${metadataRuleLabel(rule)}`);
+  remove.title = 'Excluir operação';
+  remove.textContent = '×';
+  const controls = document.createElement('span');
+  controls.className = 'rule-controls';
+  controls.append(toggle, remove);
+  row.append(copy, controls);
   return row;
 }
 
-function renderRuleSection(container, rules, field, emptyMessage, description) {
+function renderRuleSection(container, pagination, rules, field, emptyMessage, description, sectionKey) {
   container.innerHTML = '';
   if (!rules.length) {
     const empty = document.createElement('div');
     empty.className = 'rules-empty';
     empty.textContent = emptyMessage;
     container.appendChild(empty);
+    pagination.hidden = true;
     return;
   }
-  rules.forEach(rule => container.appendChild(buildRuleRow(rule, field, description)));
+  const totalPages = Math.max(1, Math.ceil(rules.length / COMPACT_RULES_PER_PAGE));
+  const page = Math.max(0, Math.min(ruleSectionPages[sectionKey] || 0, totalPages - 1));
+  ruleSectionPages[sectionKey] = page;
+  const start = page * COMPACT_RULES_PER_PAGE;
+  rules.slice(start, start + COMPACT_RULES_PER_PAGE)
+    .forEach(rule => container.appendChild(buildRuleRow(rule, field, description)));
+  pagination.hidden = totalPages <= 1;
+  pagination.querySelector('.rule-page-position').textContent = `${page + 1} de ${totalPages}`;
+  pagination.querySelector('[data-rule-page="-1"]').disabled = page <= 0;
+  pagination.querySelector('[data-rule-page="1"]').disabled = page >= totalPages - 1;
+  pagination.dataset.section = sectionKey;
 }
 
 function renderRuleSettings() {
@@ -293,17 +324,21 @@ function renderRuleSettings() {
   const deleted = metadataRules.filter(rule => rule?.deletionConfigured);
   renderRuleSection(
     historyUi.changedRules,
+    historyUi.changedPagination,
     changed,
     'applyMetadataCorrection',
     'Nenhuma correção automática foi configurada.',
-    metadataRuleEditDescription
+    metadataRuleEditDescription,
+    'changed'
   );
   renderRuleSection(
     historyUi.deletedRules,
+    historyUi.deletedPagination,
     deleted,
     'deleteFutureScrobbles',
     'Nenhuma exclusão automática foi configurada.',
-    rule => `Mesmo metadata de ${metadataRuleLabel(rule)}`
+    rule => `Mesmo metadata de ${metadataRuleLabel(rule)}`,
+    'deleted'
   );
 }
 
@@ -344,6 +379,76 @@ function requestRuleToggle(key, field, enabled) {
   }, location.origin);
 }
 
+function requestRuleDelete(key, field) {
+  const pendingKey = `${key}|${field}`;
+  if (!key || pendingRuleDeletes.has(pendingKey)) return;
+  const rule = metadataRules.find(candidate => candidate.key === key);
+  if (!rule) return;
+  const operation = field === 'applyMetadataCorrection' ? 'alteração automática' : 'exclusão automática';
+  if (!window.confirm(`Deseja excluir a operação de ${operation} para ${metadataRuleLabel(rule)}?`)) return;
+  const requestId = randomId();
+  pendingRuleDeletes.set(pendingKey, requestId);
+  renderRuleSettings();
+  window.postMessage({
+    type: PAGE_RULE_DELETE_REQUEST,
+    requestId,
+    key,
+    field,
+  }, location.origin);
+}
+
+function installLauncherDrag(ui) {
+  let drag = null;
+  let suppressClick = false;
+  const launcher = ui.launcher;
+
+  launcher.addEventListener('pointerdown', event => {
+    if (event.button !== 0) return;
+    const rect = launcher.getBoundingClientRect();
+    drag = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      left: rect.left,
+      top: rect.top,
+      moved: false,
+    };
+    launcher.setPointerCapture(event.pointerId);
+  });
+
+  launcher.addEventListener('pointermove', event => {
+    if (!drag || event.pointerId !== drag.pointerId) return;
+    const deltaX = event.clientX - drag.startX;
+    const deltaY = event.clientY - drag.startY;
+    if (!drag.moved && Math.hypot(deltaX, deltaY) < 5) return;
+    drag.moved = true;
+    launcher.classList.add('dragging');
+    ui.panel.classList.remove('open');
+    ui.panel.setAttribute('aria-hidden', 'true');
+    const width = launcher.offsetWidth || 44;
+    const height = launcher.offsetHeight || 44;
+    const left = Math.max(8, Math.min(innerWidth - width - 8, drag.left + deltaX));
+    const top = Math.max(8, Math.min(innerHeight - height - 8, drag.top + deltaY));
+    launcher.style.left = `${left}px`;
+    launcher.style.top = `${top}px`;
+    launcher.style.right = 'auto';
+    launcher.style.bottom = 'auto';
+    event.preventDefault();
+  });
+
+  const finish = event => {
+    if (!drag || event.pointerId !== drag.pointerId) return;
+    suppressClick = drag.moved;
+    launcher.classList.remove('dragging');
+    if (launcher.hasPointerCapture(event.pointerId)) launcher.releasePointerCapture(event.pointerId);
+    drag = null;
+    setTimeout(() => { suppressClick = false; }, 0);
+  };
+  launcher.addEventListener('pointerup', finish);
+  launcher.addEventListener('pointercancel', finish);
+  return () => suppressClick;
+}
+
 function mountHistoryUi() {
   if (!isAllowedPage() || historyUi || !document.documentElement) return;
   const host = document.createElement('div');
@@ -359,8 +464,9 @@ function mountHistoryUi() {
         width: 2.75rem; height: 2.75rem; display: grid; place-items: center;
         padding: 0; border: 1px solid #ef4444; border-radius: 50%;
         background: #ef444426; color: #fff; box-shadow: 0 .6rem 1.7rem #0009;
-        cursor: pointer;
+        cursor: grab; touch-action: none; user-select: none;
       }
+      .launcher.dragging { cursor: grabbing; }
       .launcher svg { width: 1.45rem; height: 1.45rem; fill: currentColor; }
       .panel {
         position: fixed; top: 4.25rem; right: 1rem; z-index: 2147483646;
@@ -415,22 +521,51 @@ function mountHistoryUi() {
       .rule-row {
         display: flex; align-items: center; justify-content: space-between; gap: .7rem;
         padding: .65rem; border: 1px solid #ffffff14; border-radius: 6px;
-        background: #ffffff05; cursor: pointer;
+        background: #ffffff05;
       }
       .rule-copy { min-width: 0; display: flex; flex-direction: column; gap: .12rem; }
       .rule-copy strong { overflow-wrap: anywhere; color: #fff; font-size: .68rem; }
       .rule-copy > span { overflow-wrap: anywhere; color: #aaa; font-size: .61rem; }
       .rule-copy small { color: #777; font-size: .55rem; }
+      .rule-controls {
+        flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: .35rem;
+      }
       .rule-row input {
         width: 1rem; height: 1rem; flex: 0 0 1rem; margin: 0;
-        accent-color: #22c55e;
+        accent-color: #22c55e; cursor: pointer;
+      }
+      .rule-remove {
+        width: 1.25rem; height: 1.25rem; display: grid; place-items: center;
+        padding: 0; border: 1px solid #ef444466; border-radius: 4px;
+        background: #ef444414; color: #ff8f98; font-size: 1rem; line-height: 1;
+        cursor: pointer;
+      }
+      .rule-remove:disabled { opacity: .35; cursor: default; }
+      .rule-pagination {
+        display: flex; align-items: center; justify-content: center; gap: .5rem;
+        padding-top: .5rem;
+      }
+      .rule-pagination[hidden] { display: none !important; }
+      .rule-page-button {
+        width: 1.65rem; height: 1.65rem; display: grid; place-items: center;
+        padding: 0; border: 1px solid #ffffff18; border-radius: 5px;
+        background: #ffffff08; color: #bbb; cursor: pointer;
+      }
+      .rule-page-button:disabled { opacity: .25; cursor: default; }
+      .rule-page-position { min-width: 3.2rem; color: #888; font-size: .58rem; text-align: center; }
+      .rule-page-button svg {
+        width: .85rem; height: .85rem; fill: none; stroke: currentColor;
+        stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
       }
       .rules-empty {
         padding: .75rem; border: 1px dashed #ffffff16; border-radius: 6px;
         color: #777; font-size: .62rem; text-align: center;
       }
       @media (max-width: 47.999rem) {
-        .launcher { top: auto; right: .75rem; bottom: calc(5.2rem + env(safe-area-inset-bottom, 0px)); }
+        .launcher {
+          top: auto; right: auto; left: .75rem;
+          bottom: calc(5.2rem + env(safe-area-inset-bottom, 0px));
+        }
         .panel {
           top: 50%; right: .75rem; left: .75rem; width: auto;
           max-height: calc(100dvh - 8rem); transform: translateY(-50%);
@@ -444,6 +579,9 @@ function mountHistoryUi() {
       <div class="head">
         <span class="badge" aria-hidden="true"><svg viewBox="0 0 294 294"><path d="${EXTENSION_ICON_PATH}"/></svg></span>
         <div class="heading"><small class="kicker">Histórico da extensão</small><strong class="title">Nenhuma ação registrada</strong></div>
+        <button class="icon open-full" type="button" aria-label="Abrir visão completa" title="Abrir visão completa">
+          <svg viewBox="0 0 24 24"><path d="M14 3h7v7M21 3l-9 9M19 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6"/></svg>
+        </button>
         <button class="icon clear" type="button" aria-label="Excluir histórico" title="Excluir histórico">
           <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 10v6M14 10v6"/></svg>
         </button>
@@ -467,10 +605,20 @@ function mountHistoryUi() {
         <section class="rules-section">
           <h3>Alterados</h3>
           <div class="rules-list changed-rules"></div>
+          <div class="rule-pagination changed-pagination" hidden>
+            <button class="rule-page-button" type="button" data-rule-page="-1" aria-label="Página anterior"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+            <span class="rule-page-position">1 de 1</span>
+            <button class="rule-page-button" type="button" data-rule-page="1" aria-label="Próxima página"><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+          </div>
         </section>
         <section class="rules-section">
           <h3>Apagados</h3>
           <div class="rules-list deleted-rules"></div>
+          <div class="rule-pagination deleted-pagination" hidden>
+            <button class="rule-page-button" type="button" data-rule-page="-1" aria-label="Página anterior"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+            <span class="rule-page-position">1 de 1</span>
+            <button class="rule-page-button" type="button" data-rule-page="1" aria-label="Próxima página"><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+          </div>
         </section>
       </div>
       <div class="nav">
@@ -487,6 +635,7 @@ function mountHistoryUi() {
     panel: find('.panel'),
     kicker: find('.kicker'),
     title: find('.title'),
+    openFull: find('.open-full'),
     settings: find('.settings'),
     clear: find('.clear'),
     close: find('.close'),
@@ -494,6 +643,8 @@ function mountHistoryUi() {
     rulesView: find('.rules-view'),
     changedRules: find('.changed-rules'),
     deletedRules: find('.deleted-rules'),
+    changedPagination: find('.changed-pagination'),
+    deletedPagination: find('.deleted-pagination'),
     empty: find('.empty'),
     content: find('.content'),
     time: find('.time'),
@@ -506,7 +657,9 @@ function mountHistoryUi() {
     position: find('.position'),
     nav: find('.nav'),
   };
+  const launcherWasDragged = installLauncherDrag(historyUi);
   historyUi.launcher.addEventListener('click', () => {
+    if (launcherWasDragged()) return;
     const open = !historyUi.panel.classList.contains('open');
     historyUi.panel.classList.toggle('open', open);
     historyUi.panel.setAttribute('aria-hidden', String(!open));
@@ -533,10 +686,33 @@ function mountHistoryUi() {
   historyUi.settings.addEventListener('click', () => {
     setHistoryView(historyView === 'rules' ? 'history' : 'rules');
   });
+  historyUi.openFull.addEventListener('click', () => {
+    chrome.runtime.sendMessage({
+      channel: 'collager-lastfm',
+      action: 'openHistory',
+      requestId: randomId(),
+    }).catch(() => {});
+  });
   historyUi.rulesView.addEventListener('change', event => {
     const toggle = event.target.closest('input[data-key][data-field]');
     if (!toggle) return;
     requestRuleToggle(toggle.dataset.key, toggle.dataset.field, toggle.checked);
+  });
+  historyUi.rulesView.addEventListener('click', event => {
+    const remove = event.target.closest('.rule-remove[data-key][data-field]');
+    if (remove) {
+      requestRuleDelete(remove.dataset.key, remove.dataset.field);
+      return;
+    }
+    const pageButton = event.target.closest('[data-rule-page]');
+    const pagination = pageButton?.closest('.rule-pagination[data-section]');
+    if (!pageButton || !pagination || pageButton.disabled) return;
+    const section = pagination.dataset.section;
+    ruleSectionPages[section] = Math.max(
+      0,
+      Number(ruleSectionPages[section] || 0) + Number(pageButton.dataset.rulePage || 0)
+    );
+    renderRuleSettings();
   });
   historyUi.clear.addEventListener('click', async () => {
     if (!historyEntries.length || !window.confirm('Deseja excluir todo o histórico da extensão?')) return;
@@ -591,6 +767,14 @@ window.addEventListener('message', event => {
     if (pendingEntry) pendingRuleToggles.delete(pendingEntry[0]);
     if (!event.data.ok) window.postMessage({ type: PAGE_RULES_REQUEST }, location.origin);
     renderRuleSettings();
+    return;
+  }
+
+  if (event.data?.type === PAGE_RULE_DELETE_RESPONSE) {
+    const pendingEntry = Array.from(pendingRuleDeletes.entries())
+      .find(([, requestId]) => requestId === event.data.requestId);
+    if (pendingEntry) pendingRuleDeletes.delete(pendingEntry[0]);
+    window.postMessage({ type: PAGE_RULES_REQUEST }, location.origin);
     return;
   }
 
