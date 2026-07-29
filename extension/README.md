@@ -11,14 +11,20 @@ O mesmo codigo atende Chromium e Firefox, com manifestos separados:
 - Firefox desktop e Android usam `background.scripts`.
 - A extensao nao coleta nem transmite dados para armazenamento externo.
 
-## Atividade visual no collager.fm
+## Atividade visual e histórico
 
 Ao excluir um scrobble, excluir uma obsessao ou definir uma obsessao, a extensao
 envia ao collager.fm somente o andamento da operacao. O site mostra um balao
 compacto com a acao atual, a faixa envolvida, as etapas recentes e o resultado.
-As acoes concluidas tambem ficam em um historico local do navegador, acessivel
-pelo botao circular da extensao nas collages Recentes, Curtidas e Obsessoes.
-Esse historico pode ser percorrido ou apagado pelo proprio usuario.
+As acoes concluidas ficam em um historico criado pela propria extensao e salvo
+em `chrome.storage.local`. O botao circular e o painel sao injetados somente
+quando a extensao esta instalada; o site nao possui copia, interface nem cache
+desse historico.
+
+Edicoes de metadata aparecem como **Edicao salva**, em vez de serem exibidas
+apenas como uma remocao. Exclusoes manuais recentes oferecem
+**Recolocar scrobble**, que reenvia os dados e o horario originais enquanto o
+Last.fm ainda aceitar aquele timestamp.
 
 O balao nao incorpora nem reproduz a pagina do Last.fm. Cookies, controles
 internos, HTML da conta e credenciais continuam restritos a extensao.

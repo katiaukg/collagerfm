@@ -103,6 +103,31 @@ module.exports = async function handler(request, response) {
       }
       return send(response, 200, { replaced: false, added: true, deleted: false, username: session.name });
     }
+    if (body.action === 'restore') {
+      const source = body.scrobble || body.original || {};
+      const original = originalParams(source, session.key);
+      const album = cleanMetadata(source.album);
+      const scrobble = await callLastfmWrite({
+        method: 'track.scrobble',
+        artist: original.artist,
+        track: original.track,
+        album,
+        timestamp: original.timestamp,
+        sk: session.key,
+      });
+      const accepted = Number(scrobble?.scrobbles?.['@attr']?.accepted || 0);
+      if (!accepted) {
+        const ignored = scrobble?.scrobbles?.scrobble?.ignoredMessage;
+        throw new Error(ignored?.['#text'] || 'O Last.fm nao aceitou recolocar este scrobble.');
+      }
+      return send(response, 200, {
+        restored: true,
+        username: session.name,
+        artist: original.artist,
+        track: original.track,
+        timestamp: Number(original.timestamp),
+      });
+    }
     return send(response, 400, { error: 'Acao invalida.' });
   } catch (error) {
     return send(response, error.statusCode || 502, {

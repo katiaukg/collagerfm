@@ -3224,193 +3224,6 @@
     }
   }
 
-  #extension-history-launcher {
-    position: fixed;
-    top: 1rem;
-    right: 1rem;
-    z-index: 3850;
-    width: 2.5rem;
-    height: 2.5rem;
-    display: grid;
-    place-items: center;
-    padding: 0;
-    border: 1px solid #ef4444;
-    border-radius: 50%;
-    background: #ef444426;
-    color: #fff;
-    box-shadow: 0 .5rem 1.5rem #0008;
-    cursor: pointer;
-  }
-  #extension-history-launcher:hover,
-  #extension-history-launcher:focus-visible,
-  #extension-history-launcher.active {
-    border-color: #ef4444;
-    background: #ef444426;
-    outline: none;
-  }
-  #extension-history-launcher svg {
-    width: 1.35rem;
-    height: 1.35rem;
-    fill: currentColor;
-  }
-  #extension-history-dialog {
-    position: fixed;
-    top: 4rem;
-    right: 1rem;
-    z-index: 3860;
-    width: min(23rem, calc(100vw - 2rem));
-    display: none;
-    overflow: hidden;
-    border: 1px solid #ffffff24;
-    border-radius: 8px;
-    background: #171717f8;
-    color: var(--text);
-    box-shadow: 0 1rem 3rem #000c;
-  }
-  #extension-history-dialog.visible { display: block; }
-  .extension-history-head,
-  .extension-history-nav {
-    display: flex;
-    align-items: center;
-    gap: .55rem;
-  }
-  .extension-history-head {
-    padding: .75rem;
-    border-bottom: 1px solid #ffffff12;
-  }
-  .extension-history-head .extension-history-icon {
-    width: 1.9rem;
-    height: 1.9rem;
-    flex: 0 0 1.9rem;
-    display: grid;
-    place-items: center;
-    border: 1px solid #ef4444;
-    border-radius: 50%;
-    background: #ef444426;
-    color: #fff;
-  }
-  .extension-history-head .extension-history-icon svg {
-    width: 1rem;
-    height: 1rem;
-    fill: currentColor;
-  }
-  .extension-history-heading { min-width: 0; flex: 1; }
-  .extension-history-heading small {
-    display: block;
-    color: #888;
-    font-size: .56rem;
-    font-weight: 800;
-    text-transform: uppercase;
-  }
-  #extension-history-title {
-    display: block;
-    overflow: hidden;
-    color: #fff;
-    font-size: .78rem;
-    font-weight: 800;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .extension-history-icon-button {
-    width: 2rem;
-    height: 2rem;
-    flex: 0 0 2rem;
-    display: grid;
-    place-items: center;
-    padding: 0;
-    border: 1px solid #ffffff18;
-    border-radius: 6px;
-    background: #ffffff08;
-    color: #aaa;
-    cursor: pointer;
-  }
-  .extension-history-icon-button:hover,
-  .extension-history-icon-button:focus-visible {
-    border-color: #ffffff36;
-    color: #fff;
-    outline: none;
-  }
-  .extension-history-icon-button:disabled { opacity: .3; cursor: default; }
-  .extension-history-icon-button svg {
-    width: 1rem;
-    height: 1rem;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-  .extension-history-body { padding: .8rem; }
-  #extension-history-time {
-    color: #777;
-    font-size: .58rem;
-  }
-  #extension-history-target {
-    margin-top: .45rem;
-    color: #ddd;
-    font-size: .68rem;
-    font-weight: 700;
-  }
-  #extension-history-message {
-    margin-top: .55rem;
-    color: #fff;
-    font-size: .7rem;
-    line-height: 1.45;
-  }
-  #extension-history-events {
-    display: flex;
-    flex-direction: column;
-    gap: .3rem;
-    margin-top: .65rem;
-  }
-  #extension-history-events .extension-activity-event:last-child {
-    color: #d6d6d6;
-  }
-  #extension-history-events .extension-activity-event:last-child::before {
-    background: #ef4444;
-    box-shadow: 0 0 0 3px #ef444420;
-  }
-  .extension-history-empty {
-    padding: 1.2rem .5rem;
-    color: #888;
-    font-size: .7rem;
-    text-align: center;
-  }
-  .extension-history-nav {
-    justify-content: space-between;
-    padding: .65rem .8rem;
-    border-top: 1px solid #ffffff12;
-  }
-  #extension-history-position {
-    min-width: 4rem;
-    color: #888;
-    font-size: .62rem;
-    text-align: center;
-  }
-  #extension-history-clear {
-    color: #ff8f98;
-  }
-  #mobile-extension-history-slot {
-    display: inline-flex;
-    margin-left: auto;
-  }
-
-  @media (max-width: 47.999rem) {
-    #mobile-extension-history-slot #extension-history-launcher {
-      position: static;
-      width: 2.25rem;
-      height: 2.25rem;
-      box-shadow: none;
-    }
-    #extension-history-dialog {
-      top: 50%;
-      right: 1rem;
-      left: 1rem;
-      width: auto;
-      max-height: min(32rem, calc(100dvh - 8rem));
-      transform: translateY(-50%);
-    }
-  }
 </style>
 </head>
 <body>
@@ -3440,44 +3253,6 @@
     <div id="extension-activity-actions" class="extension-activity-actions">
       <button type="button" id="extension-activity-open-lastfm">ABRIR LAST.FM</button>
     </div>
-  </div>
-</section>
-<button type="button" id="extension-history-launcher" hidden aria-label="Abrir histórico da extensão" title="Histórico da extensão" aria-expanded="false">
-  <svg viewBox="0 0 294 294" aria-hidden="true"><use href="#collager-extension-icon"/></svg>
-</button>
-<section id="extension-history-dialog" role="dialog" aria-modal="false" aria-labelledby="extension-history-title" aria-hidden="true">
-  <div class="extension-history-head">
-    <span class="extension-history-icon" aria-hidden="true">
-      <svg viewBox="0 0 294 294"><use href="#collager-extension-icon"/></svg>
-    </span>
-    <div class="extension-history-heading">
-      <small>Histórico da extensão</small>
-      <strong id="extension-history-title">Nenhuma ação registrada</strong>
-    </div>
-    <button type="button" class="extension-history-icon-button" id="extension-history-clear" aria-label="Excluir histórico da extensão" title="Excluir histórico">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 10v6M14 10v6"/></svg>
-    </button>
-    <button type="button" class="extension-history-icon-button" id="extension-history-close" aria-label="Fechar histórico da extensão" title="Fechar">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"/></svg>
-    </button>
-  </div>
-  <div class="extension-history-body">
-    <div id="extension-history-empty" class="extension-history-empty">A extensão ainda não registrou nenhuma ação.</div>
-    <div id="extension-history-content" hidden>
-      <div id="extension-history-time"></div>
-      <div id="extension-history-target"></div>
-      <div id="extension-history-message"></div>
-      <div id="extension-history-events"></div>
-    </div>
-  </div>
-  <div class="extension-history-nav">
-    <button type="button" class="extension-history-icon-button" id="extension-history-older" aria-label="Ver ação anterior" title="Ação anterior">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
-    </button>
-    <span id="extension-history-position">0 de 0</span>
-    <button type="button" class="extension-history-icon-button" id="extension-history-newer" aria-label="Ver ação seguinte" title="Ação seguinte">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
-    </button>
   </div>
 </section>
 <div id="specific-artists-floating-list"></div>
@@ -5520,7 +5295,6 @@
 <section id="mobile-history-sheet" aria-label="Excluídos, mesclados e histórico" aria-hidden="true">
   <div class="mobile-history-head">
     <strong>Histórico da collage</strong>
-    <span id="mobile-extension-history-slot"></span>
     <button type="button" class="mobile-icon-btn" id="mobile-history-close" aria-label="Fechar histórico" title="Fechar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"/></svg>
     </button>
@@ -5708,6 +5482,13 @@
         <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--text);font-size:11px;line-height:1.35;cursor:pointer;">
           <span>Aplicar esta correção a scrobbles iguais por 14 dias</span>
           <input type="checkbox" id="recent-metadata-future" checked style="width:16px;height:16px;accent-color:#22c55e;">
+        </label>
+        <label style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;color:var(--text);font-size:11px;line-height:1.35;cursor:pointer;">
+          <span>
+            Apagar automaticamente somente os próximos scrobbles substituídos
+            <small style="display:block;margin-top:3px;color:var(--muted);font-size:9.5px;">Nunca apaga registros anteriores ao momento em que esta opção for ativada.</small>
+          </span>
+          <input type="checkbox" id="recent-metadata-delete-future" style="width:16px;height:16px;flex:0 0 16px;accent-color:#ef4444;">
         </label>
         <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--text);font-size:11px;line-height:1.35;cursor:pointer;">
           <span>Apagar scrobble antigo e manter o atual</span>
@@ -7405,6 +7186,8 @@ try {
       edited,
       createdAt: Number(value?.createdAt || now),
       expiresAt: expiresAt || now + RECENT_METADATA_RULE_TTL_MS,
+      deleteFutureScrobbles: Boolean(value?.deleteFutureScrobbles),
+      deleteFutureStartedAt: Number(value?.deleteFutureStartedAt || 0),
     });
   });
 } catch (_) { /* armazenamento indisponível ou inválido */ }
@@ -16694,7 +16477,6 @@ async function generate() {
     generatedQueryState = cloneTimelinePlain(requestedQueryState, requestedQueryState);
 
     document.getElementById('collage-wrap').classList.add('visible');
-    syncExtensionHistoryLauncher();
     updateTemporalPaginationControls();
     document.getElementById('status').style.display = 'none';
 
@@ -17823,6 +17605,7 @@ const tileMergeActions = document.getElementById('tile-merge-actions');
 const recentMetadataActions = document.getElementById('recent-metadata-actions');
 const recentExtensionMetadataOptions = document.getElementById('recent-extension-metadata-options');
 const recentMetadataFuture = document.getElementById('recent-metadata-future');
+const recentMetadataDeleteFuture = document.getElementById('recent-metadata-delete-future');
 const recentMetadataReplace = document.getElementById('recent-metadata-replace');
 const recentMetadataSave = document.getElementById('recent-metadata-save');
 const recentScrobbleDelete = document.getElementById('edit-scrobble-delete');
@@ -17839,6 +17622,11 @@ const recentExtensionStatus = document.getElementById('recent-extension-status')
 const recentMetadataStatus = document.getElementById('recent-metadata-status');
 const obsessionActions = document.getElementById('obsession-actions');
 const obsessionDeleteButton = document.getElementById('edit-obsession-delete');
+
+recentMetadataFuture.addEventListener('change', () => {
+  recentMetadataDeleteFuture.disabled = !recentMetadataFuture.checked;
+  if (!recentMetadataFuture.checked) recentMetadataDeleteFuture.checked = false;
+});
 const obsessionLastfmLinkButton = document.getElementById('edit-obsession-lastfm-link');
 const obsessionActionStatus = document.getElementById('obsession-action-status');
 const trackObsessionActions = document.getElementById('track-obsession-actions');
@@ -17942,7 +17730,10 @@ function openTextEditModal(index) {
   trackObsessionButton.disabled = false;
   trackObsessionStatus.style.display = 'none';
   trackObsessionStatus.textContent = '';
+  const savedMetadataRule = getRecentMetadataRule(item);
   recentMetadataFuture.checked = true;
+  recentMetadataDeleteFuture.checked = Boolean(savedMetadataRule?.deleteFutureScrobbles);
+  recentMetadataDeleteFuture.disabled = false;
   recentMetadataReplace.checked = true;
   recentMetadataReplace.disabled = Boolean(item._nowPlaying);
   recentMetadataSave.disabled = recentMode;
@@ -18093,7 +17884,6 @@ function updateRecentExtensionStatus() {
     : 'Extensão não detectada, instale-a <a href="https://github.com/katiaukg/collagerfm/tree/main/extension" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">clicando aqui</a>.';
   syncRecentExtensionDependentControls();
   syncTemporalProfileAccessVisibility();
-  syncExtensionHistoryLauncher();
 }
 
 const extensionActivityPanel = document.getElementById('extension-activity-panel');
@@ -18104,24 +17894,6 @@ const extensionActivityEvents = document.getElementById('extension-activity-even
 const extensionActivityClose = document.getElementById('extension-activity-close');
 const extensionActivityActions = document.getElementById('extension-activity-actions');
 const extensionActivityOpenLastfm = document.getElementById('extension-activity-open-lastfm');
-const extensionHistoryLauncher = document.getElementById('extension-history-launcher');
-const extensionHistoryDialog = document.getElementById('extension-history-dialog');
-const extensionHistoryTitle = document.getElementById('extension-history-title');
-const extensionHistoryTime = document.getElementById('extension-history-time');
-const extensionHistoryTarget = document.getElementById('extension-history-target');
-const extensionHistoryMessage = document.getElementById('extension-history-message');
-const extensionHistoryEvents = document.getElementById('extension-history-events');
-const extensionHistoryEmpty = document.getElementById('extension-history-empty');
-const extensionHistoryContent = document.getElementById('extension-history-content');
-const extensionHistoryPosition = document.getElementById('extension-history-position');
-const extensionHistoryOlder = document.getElementById('extension-history-older');
-const extensionHistoryNewer = document.getElementById('extension-history-newer');
-const extensionHistoryClear = document.getElementById('extension-history-clear');
-const extensionHistoryClose = document.getElementById('extension-history-close');
-const extensionHistoryHome = document.createComment('extension-history-launcher-home');
-extensionHistoryLauncher?.parentNode?.insertBefore(extensionHistoryHome, extensionHistoryLauncher);
-const EXTENSION_HISTORY_STORAGE_KEY = 'collager.fm.extension-history.v1';
-const EXTENSION_HISTORY_LIMIT = 60;
 const EXTENSION_ACTION_LABELS = {
   deleteScrobble: 'Excluindo scrobble',
   deleteObsession: 'Excluindo obsessão',
@@ -18136,103 +17908,6 @@ let extensionActivityRequestId = '';
 let extensionActivityDismissedRequestId = '';
 let extensionActivityHideTimer = null;
 let extensionActivityLog = [];
-let extensionActivityTargetValue = '';
-let extensionHistoryIndex = 0;
-let extensionHistory = (() => {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(EXTENSION_HISTORY_STORAGE_KEY) || '[]');
-    return Array.isArray(parsed) ? parsed.slice(0, EXTENSION_HISTORY_LIMIT) : [];
-  } catch (_) {
-    return [];
-  }
-})();
-
-function persistExtensionHistory() {
-  try {
-    localStorage.setItem(EXTENSION_HISTORY_STORAGE_KEY, JSON.stringify(extensionHistory));
-  } catch (_) {}
-}
-
-function renderExtensionHistory() {
-  const total = extensionHistory.length;
-  extensionHistoryIndex = total ? Math.max(0, Math.min(extensionHistoryIndex, total - 1)) : 0;
-  const entry = total ? extensionHistory[extensionHistoryIndex] : null;
-  extensionHistoryEmpty.hidden = Boolean(entry);
-  extensionHistoryContent.hidden = !entry;
-  extensionHistoryTitle.textContent = entry?.title || 'Nenhuma ação registrada';
-  extensionHistoryPosition.textContent = total ? `${extensionHistoryIndex + 1} de ${total}` : '0 de 0';
-  extensionHistoryOlder.disabled = !entry || extensionHistoryIndex >= total - 1;
-  extensionHistoryNewer.disabled = !entry || extensionHistoryIndex <= 0;
-  extensionHistoryClear.disabled = !total;
-  if (!entry) return;
-  extensionHistoryTime.textContent = new Intl.DateTimeFormat('pt-BR', {
-    dateStyle: 'short',
-    timeStyle: 'medium',
-  }).format(new Date(entry.timestamp));
-  extensionHistoryTarget.textContent = entry.target || '';
-  extensionHistoryTarget.hidden = !entry.target;
-  extensionHistoryMessage.textContent = entry.message || '';
-  extensionHistoryEvents.innerHTML = '';
-  (entry.events || []).forEach(text => {
-    const row = document.createElement('div');
-    row.className = 'extension-activity-event';
-    row.textContent = text;
-    extensionHistoryEvents.appendChild(row);
-  });
-}
-
-function addExtensionHistoryEntry(entry) {
-  extensionHistory.unshift({
-    timestamp: Date.now(),
-    title: 'Ação da extensão',
-    target: '',
-    message: '',
-    events: [],
-    ok: false,
-    ...entry,
-  });
-  extensionHistory = extensionHistory.slice(0, EXTENSION_HISTORY_LIMIT);
-  extensionHistoryIndex = 0;
-  persistExtensionHistory();
-  renderExtensionHistory();
-  syncExtensionHistoryLauncher();
-}
-
-function syncExtensionHistoryLauncher() {
-  if (!extensionHistoryLauncher) return;
-  const collageVisible = document.getElementById('collage-wrap')?.classList.contains('visible');
-  const relevant = Boolean(
-    collageVisible
-    && isTemporalCollageRendered()
-    && collagerLastfmExtensionAvailable
-  );
-  extensionHistoryLauncher.hidden = !relevant;
-  if (!relevant) {
-    extensionHistoryDialog?.classList.remove('visible');
-    extensionHistoryDialog?.setAttribute('aria-hidden', 'true');
-    extensionHistoryLauncher.setAttribute('aria-expanded', 'false');
-    return;
-  }
-  const mobile = window.matchMedia('(max-width: 47.999rem)').matches;
-  const mobileSlot = document.getElementById('mobile-extension-history-slot');
-  if (mobile && mobileSlot) {
-    if (extensionHistoryLauncher.parentElement !== mobileSlot) mobileSlot.appendChild(extensionHistoryLauncher);
-  } else if (extensionHistoryHome.parentNode) {
-    extensionHistoryHome.parentNode.insertBefore(extensionHistoryLauncher, extensionHistoryHome.nextSibling);
-  }
-}
-
-function setExtensionHistoryDialog(open) {
-  if (!extensionHistoryDialog || !extensionHistoryLauncher) return;
-  extensionHistoryDialog.classList.toggle('visible', open);
-  extensionHistoryDialog.setAttribute('aria-hidden', String(!open));
-  extensionHistoryLauncher.classList.toggle('active', open);
-  extensionHistoryLauncher.setAttribute('aria-expanded', String(open));
-  if (open) {
-    extensionHistoryIndex = 0;
-    renderExtensionHistory();
-  }
-}
 
 function extensionActivityTargetText(payload = {}) {
   const artist = String(payload.artist || '').trim();
@@ -18265,7 +17940,6 @@ function showExtensionActivity(requestId, action, payload = {}) {
   extensionActivityPanel.style.setProperty('--extension-progress', '5%');
   extensionActivityTitle.textContent = EXTENSION_ACTION_LABELS[action] || 'Executando ação';
   const target = extensionActivityTargetText(payload);
-  extensionActivityTargetValue = target;
   extensionActivityTarget.textContent = target;
   extensionActivityTarget.classList.toggle('visible', Boolean(target));
   extensionActivityMessage.textContent = 'Enviando comando à extensão...';
@@ -18307,13 +17981,6 @@ function finishExtensionActivity(requestId, action, ok, message = '', openUrl = 
   const finalMessage = String(message || (ok
     ? EXTENSION_SUCCESS_MESSAGES[action] || 'Ação concluída com sucesso.'
     : 'A extensão não concluiu a ação.')).trim();
-  addExtensionHistoryEntry({
-    title: EXTENSION_ACTION_LABELS[action] || 'Ação da extensão',
-    target: extensionActivityTargetValue,
-    message: finalMessage,
-    events: [...extensionActivityLog],
-    ok,
-  });
   if (!extensionActivityPanel || requestId === extensionActivityDismissedRequestId) return;
   clearTimeout(extensionActivityHideTimer);
   extensionActivityPanel.classList.remove('running', 'success', 'error');
@@ -18358,29 +18025,6 @@ extensionActivityOpenLastfm?.addEventListener('click', () => {
   window.open(url, '_blank', 'noopener');
 });
 
-extensionHistoryLauncher?.addEventListener('click', () => {
-  setExtensionHistoryDialog(!extensionHistoryDialog?.classList.contains('visible'));
-});
-extensionHistoryClose?.addEventListener('click', () => setExtensionHistoryDialog(false));
-extensionHistoryOlder?.addEventListener('click', () => {
-  if (extensionHistoryIndex < extensionHistory.length - 1) extensionHistoryIndex += 1;
-  renderExtensionHistory();
-});
-extensionHistoryNewer?.addEventListener('click', () => {
-  if (extensionHistoryIndex > 0) extensionHistoryIndex -= 1;
-  renderExtensionHistory();
-});
-extensionHistoryClear?.addEventListener('click', () => {
-  if (!extensionHistory.length || !window.confirm('Deseja excluir todo o histórico da extensão?')) return;
-  extensionHistory = [];
-  extensionHistoryIndex = 0;
-  persistExtensionHistory();
-  renderExtensionHistory();
-  syncExtensionHistoryLauncher();
-});
-window.matchMedia('(max-width: 47.999rem)').addEventListener('change', syncExtensionHistoryLauncher);
-renderExtensionHistory();
-
 function collagerExtensionRequest(action, payload = {}, timeoutMs = 45000) {
   return new Promise((resolve, reject) => {
     const requestId = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -18401,6 +18045,10 @@ function collagerExtensionRequest(action, payload = {}, timeoutMs = 45000) {
 
 window.addEventListener('message', event => {
   if (event.source !== window || event.origin !== location.origin) return;
+  if (event.data?.type === 'collager-lastfm-extension-restore-request') {
+    restoreDeletedScrobbleFromExtension(event.data);
+    return;
+  }
   if (event.data?.type === 'collager-lastfm-extension-ready') {
     collagerLastfmExtensionAvailable = true;
     updateRecentExtensionStatus();
@@ -18452,13 +18100,16 @@ function validateRecentReplacementAge(original) {
   }
 }
 
-function recentExtensionDeletePayload(item, original = getRecentOriginalMetadata(item)) {
-  return {
+function recentExtensionDeletePayload(item, original = getRecentOriginalMetadata(item), historyContext = null) {
+  const payload = {
     username: item?._recentUsername || getRenderedQueryState()?.username || document.getElementById('username')?.value || '',
     artist: original.artist,
     track: original.track,
+    album: original.album || '',
     timestamp: original.timestamp,
   };
+  if (historyContext) payload.historyContext = historyContext;
+  return payload;
 }
 
 let recentMetadataAutomationBusy = false;
@@ -18481,10 +18132,19 @@ async function applySavedMetadataRulesToLastfm(items, options = {}) {
     if (!item || item._nowPlaying || item._lastfmDeleted) return false;
     const original = getRecentOriginalMetadata(item);
     const rule = getRecentMetadataRule(item);
-    if (!rule || recentMetadataProcessed.has(recentMetadataProcessedKey(item, original))) return false;
+    if (
+      !rule
+      || !rule.deleteFutureScrobbles
+      || Number(rule.deleteFutureStartedAt || 0) <= 0
+      || recentMetadataProcessed.has(recentMetadataProcessedKey(item, original))
+    ) return false;
     const timestamp = Math.floor(Number(original.timestamp));
     const age = Math.floor(Date.now() / 1000) - timestamp;
-    return timestamp > 0 && age >= -300 && age <= LASTFM_REPLACEMENT_MAX_AGE_SECONDS;
+    const strictlyAfterActivation = timestamp >= Math.ceil(Number(rule.deleteFutureStartedAt) / 1000);
+    return timestamp > 0
+      && strictlyAfterActivation
+      && age >= -300
+      && age <= LASTFM_REPLACEMENT_MAX_AGE_SECONDS;
   });
   if (!candidates.length) return;
 
@@ -18511,7 +18171,11 @@ async function applySavedMetadataRulesToLastfm(items, options = {}) {
       if (recentMetadataProcessed.has(processedKey)) continue;
       try {
         await sendLastfmWrite({ action: 'replace', original, edited, deleteOriginal: false });
-        await collagerExtensionRequest('deleteScrobble', recentExtensionDeletePayload(item, original));
+        await collagerExtensionRequest('deleteScrobble', recentExtensionDeletePayload(item, original, {
+          kind: 'metadataEdit',
+          original: { ...original },
+          edited: { ...edited },
+        }));
         markRecentMetadataProcessed(item, original);
         item._lastfmOriginal = { ...edited, timestamp: original.timestamp };
         item.name = edited.track;
@@ -18674,6 +18338,50 @@ async function sendLastfmWrite(payload) {
     throw error;
   }
   return data;
+}
+
+async function restoreDeletedScrobbleFromExtension(request = {}) {
+  const requestId = String(request.requestId || '');
+  const entryId = String(request.entryId || '');
+  const scrobble = request.scrobble || {};
+  try {
+    validateRecentReplacementAge(scrobble);
+    await sendLastfmWrite({ action: 'restore', scrobble });
+    const timestamp = Math.floor(Number(scrobble.timestamp));
+    const artistKey = normalizeMemoryPart(scrobble.artist || '');
+    const trackKey = normalizeMemoryPart(scrobble.track || '');
+    const restoredItem = allFetchedItems.find(candidate => {
+      const original = getRecentOriginalMetadata(candidate);
+      return Math.floor(Number(original.timestamp)) === timestamp
+        && normalizeMemoryPart(original.artist || '') === artistKey
+        && normalizeMemoryPart(original.track || '') === trackKey;
+    });
+    if (restoredItem) {
+      restoredItem._lastfmDeleted = false;
+      if (activeClickItem === restoredItem) {
+        recentScrobbleDelete.disabled = false;
+        recentScrobbleDelete.textContent = 'EXCLUIR SCROBBLE';
+        setRecentMetadataStatus('Scrobble recolocado no Last.fm.');
+      }
+      await runDraw();
+      scheduleDownloadRefresh();
+    }
+    appendStatusHistoryEntry(`Scrobble recolocado no Last.fm: ${scrobble.artist} — ${scrobble.track}.`);
+    window.postMessage({
+      type: 'collager-lastfm-extension-restore-response',
+      requestId,
+      entryId,
+      ok: true,
+    }, location.origin);
+  } catch (error) {
+    window.postMessage({
+      type: 'collager-lastfm-extension-restore-response',
+      requestId,
+      entryId,
+      ok: false,
+      error: error.message || 'Não foi possível recolocar o scrobble.',
+    }, location.origin);
+  }
 }
 
 recentLastfmAuthorize.addEventListener('click', async () => {
@@ -20298,10 +20006,22 @@ document.getElementById('edit-tile-delete').addEventListener('click', async () =
 function applyRecentMetadataLocally(item, targetPoolIdx, original, edited) {
   const originalRuleKey = recentMetadataRuleKey(original, item._recentUsername);
   if (recentMetadataFuture.checked) {
+    const now = Date.now();
+    const previousRule = recentMetadataRules.get(originalRuleKey);
+    const deleteFutureScrobbles = Boolean(recentMetadataDeleteFuture.checked);
+    const deleteFutureStartedAt = deleteFutureScrobbles
+      ? (
+          previousRule?.deleteFutureScrobbles && Number(previousRule?.deleteFutureStartedAt) > 0
+            ? Number(previousRule.deleteFutureStartedAt)
+            : now
+        )
+      : 0;
     recentMetadataRules.set(originalRuleKey, {
       edited: { ...edited },
-      createdAt: Date.now(),
-      expiresAt: Date.now() + RECENT_METADATA_RULE_TTL_MS,
+      createdAt: Number(previousRule?.createdAt || now),
+      expiresAt: now + RECENT_METADATA_RULE_TTL_MS,
+      deleteFutureScrobbles,
+      deleteFutureStartedAt,
     });
   }
   else recentMetadataRules.delete(originalRuleKey);
@@ -20370,7 +20090,11 @@ recentMetadataSave.addEventListener('click', async () => {
 
       setRecentMetadataStatus('Scrobble corrigido enviado. Excluindo o registro original...');
       try {
-        await collagerExtensionRequest('deleteScrobble', recentExtensionDeletePayload(item, original));
+        await collagerExtensionRequest('deleteScrobble', recentExtensionDeletePayload(item, original, {
+          kind: 'metadataEdit',
+          original: { ...original },
+          edited: { ...replacementEdited },
+        }));
       } catch (error) {
         throw new Error(`O scrobble corrigido foi enviado, mas o original não foi excluído. Não salve novamente: tente concluir a exclusão neste mesmo botão. ${error.message}`);
       }
@@ -20383,13 +20107,17 @@ recentMetadataSave.addEventListener('click', async () => {
     } else {
       applyRecentMetadataLocally(item, targetPoolIdx, original, edited);
       setRecentMetadataStatus(recentMetadataFuture.checked
-        ? 'Edição salva no collager.fm e aplicada aos próximos scrobbles correspondentes.'
+        ? (
+            recentMetadataDeleteFuture.checked
+              ? 'Edição salva. Somente novos scrobbles, posteriores à ativação desta opção, poderão substituir e apagar o original.'
+              : 'Edição salva no collager.fm. Nenhum scrobble será apagado automaticamente.'
+          )
         : 'Edição aplicada somente a este quadro.');
       appendStatusHistoryEntry(`Edição local salva: ${edited.artist} — ${edited.track}.`);
     }
     await runDraw();
     scheduleDownloadRefresh();
-    if (recentMetadataFuture.checked) {
+    if (recentMetadataFuture.checked && recentMetadataDeleteFuture.checked) {
       applySavedMetadataRulesToLastfm(
         allFetchedItems.filter(candidate => candidate !== item),
         { redraw: true }
