@@ -1804,6 +1804,14 @@
     pointer-events: none; z-index: 11;
   }
   #deleting-overlay-canvas.active { display: block; }
+  #collage-overlay-canvas,
+  #drag-pulse-overlay,
+  #deleting-overlay-canvas {
+    min-width: 0 !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
   .tile-line-list { display:flex; flex-direction:column; gap:6px; }
   .tile-line-chip { display:flex; align-items:center; gap:8px; padding:7px 8px; border:1px solid var(--border); border-radius:6px; background:var(--surface); cursor:grab; user-select:none; }
   .tile-line-chip.dragging { opacity:.18; }
@@ -16816,43 +16824,28 @@ function hitTestTile(clientX, clientY) {
   };
 }
 
-// Mantém qualquer canvas de interação exatamente sobre o canvas principal.
-// Quando ambos compartilham o mesmo offsetParent, usamos as coordenadas de
-// layout diretamente. Isso evita que zoom do navegador, centralização flex e
-// barras de rolagem sejam convertidos duas vezes via coordenadas de viewport.
+// Mantém qualquer camada de interação exatamente sobre o canvas principal.
+// A posição precisa partir das caixas efetivamente renderizadas: offsetLeft
+// não acompanha a recentralização do canvas quando o zoom do navegador muda
+// o breakpoint da página sem alterar o tamanho intrínseco da imagem.
 function positionCanvasOverlay(element) {
   const containingBlock = element.offsetParent || mainCanvas.parentElement;
-  const canvasContainingBlock = mainCanvas.offsetParent || mainCanvas.parentElement;
-  let left;
-  let top;
-  let width;
-  let height;
-
-  if (containingBlock === canvasContainingBlock) {
-    left = mainCanvas.offsetLeft;
-    top = mainCanvas.offsetTop;
-    width = mainCanvas.offsetWidth;
-    height = mainCanvas.offsetHeight;
-  } else {
-    const rect = mainCanvas.getBoundingClientRect();
-    const containingRect = containingBlock.getBoundingClientRect();
-    const scaleX = containingBlock.offsetWidth > 0
-      ? containingRect.width / containingBlock.offsetWidth
-      : 1;
-    const scaleY = containingBlock.offsetHeight > 0
-      ? containingRect.height / containingBlock.offsetHeight
-      : 1;
-    left = (rect.left - containingRect.left) / (scaleX || 1) - containingBlock.clientLeft + containingBlock.scrollLeft;
-    top = (rect.top - containingRect.top) / (scaleY || 1) - containingBlock.clientTop + containingBlock.scrollTop;
-    width = rect.width / (scaleX || 1);
-    height = rect.height / (scaleY || 1);
-  }
+  const rect = mainCanvas.getBoundingClientRect();
+  const containingRect = containingBlock.getBoundingClientRect();
+  const left = rect.left - containingRect.left
+    - containingBlock.clientLeft + containingBlock.scrollLeft;
+  const top = rect.top - containingRect.top
+    - containingBlock.clientTop + containingBlock.scrollTop;
+  const width = rect.width;
+  const height = rect.height;
 
   element.style.position = 'absolute';
   element.style.left = left + 'px';
   element.style.top = top + 'px';
   element.style.width = width + 'px';
   element.style.height = height + 'px';
+  element.style.maxWidth = 'none';
+  element.style.maxHeight = 'none';
 }
 
 let interactiveHeaderIdleTimer = 0;
@@ -18208,8 +18201,11 @@ function addExtensionHistoryEntry(entry) {
 function syncExtensionHistoryLauncher() {
   if (!extensionHistoryLauncher) return;
   const collageVisible = document.getElementById('collage-wrap')?.classList.contains('visible');
-  const relevant = Boolean(collageVisible && isTemporalCollageRendered()
-    && (collagerLastfmExtensionAvailable || extensionHistory.length));
+  const relevant = Boolean(
+    collageVisible
+    && isTemporalCollageRendered()
+    && collagerLastfmExtensionAvailable
+  );
   extensionHistoryLauncher.hidden = !relevant;
   if (!relevant) {
     extensionHistoryDialog?.classList.remove('visible');
@@ -21251,19 +21247,26 @@ updateAutoFontUI();
 // Popula o histórico de usuários salvos assim que a página carrega
 populateUsernameDatalist();
 
-// Mantém o overlay de hover do mesmo tamanho do canvas se a janela for redimensionada
-window.addEventListener('resize', () => {
-  if (currentItems.length) syncOverlaySize();
-});
-
 let overlayLayoutSyncFrame = 0;
-const overlayLayoutObserver = new ResizeObserver(() => {
-  if (!currentItems.length || overlayLayoutSyncFrame) return;
+function scheduleCanvasOverlayLayoutSync() {
+  if (overlayLayoutSyncFrame) return;
   overlayLayoutSyncFrame = requestAnimationFrame(() => {
     overlayLayoutSyncFrame = 0;
+    if (!mainCanvas.width || !mainCanvas.height) return;
     syncOverlaySize();
     if (typeof syncDeletingOverlay === 'function') syncDeletingOverlay();
   });
+}
+
+// O zoom nativo do navegador pode mudar o viewport e o breakpoint sem
+// redimensionar o bitmap do canvas. Reposicionamos as camadas mesmo quando a
+// lista de itens em uso pertence a uma página temporal/cacheada.
+window.addEventListener('resize', scheduleCanvasOverlayLayoutSync, { passive: true });
+window.visualViewport?.addEventListener('resize', scheduleCanvasOverlayLayoutSync, { passive: true });
+window.visualViewport?.addEventListener('scroll', scheduleCanvasOverlayLayoutSync, { passive: true });
+
+const overlayLayoutObserver = new ResizeObserver(() => {
+  scheduleCanvasOverlayLayoutSync();
 });
 overlayLayoutObserver.observe(mainCanvas);
 overlayLayoutObserver.observe(document.getElementById('collage-wrap'));
