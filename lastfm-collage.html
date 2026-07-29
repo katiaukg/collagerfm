@@ -5480,14 +5480,11 @@
     <div id="recent-metadata-actions" style="display:none;flex-direction:column;gap:10px;padding:11px;border:1px solid #22c55e44;border-radius:8px;background:#22c55e09;">
       <div id="recent-extension-metadata-options" style="display:none;flex-direction:column;gap:10px;">
         <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--text);font-size:11px;line-height:1.35;cursor:pointer;">
-          <span>Aplicar esta correção a scrobbles iguais por 14 dias</span>
+          <span>Aplicar correção de metadata sobre esse scrobble</span>
           <input type="checkbox" id="recent-metadata-future" checked style="width:16px;height:16px;accent-color:#22c55e;">
         </label>
-        <label style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;color:var(--text);font-size:11px;line-height:1.35;cursor:pointer;">
-          <span>
-            Apagar automaticamente somente os próximos scrobbles substituídos
-            <small style="display:block;margin-top:3px;color:var(--muted);font-size:9.5px;">Nunca apaga registros anteriores ao momento em que esta opção for ativada.</small>
-          </span>
+        <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--text);font-size:11px;line-height:1.35;cursor:pointer;">
+          <span>Apagar todos os scrobbles que conter o mesmo metadata</span>
           <input type="checkbox" id="recent-metadata-delete-future" style="width:16px;height:16px;flex:0 0 16px;accent-color:#ef4444;">
         </label>
         <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--text);font-size:11px;line-height:1.35;cursor:pointer;">
@@ -7181,12 +7178,18 @@ try {
   Object.entries(savedRecentRules).forEach(([key, value]) => {
     const edited = value?.edited || value;
     const expiresAt = Number(value?.expiresAt || 0);
-    if (!edited || (expiresAt && expiresAt <= now)) return;
+    // Regras antigas não guardavam o álbum e podiam alcançar faixas diferentes.
+    // Elas são ignoradas em favor das novas regras de metadata exata.
+    if (!edited || !value?.original || (expiresAt && expiresAt <= now)) return;
     recentMetadataRules.set(key, {
       edited,
+      original: value?.original || null,
       createdAt: Number(value?.createdAt || now),
       expiresAt: expiresAt || now + RECENT_METADATA_RULE_TTL_MS,
+      applyMetadataCorrection: value?.applyMetadataCorrection !== false,
+      correctionConfigured: value?.correctionConfigured !== false,
       deleteFutureScrobbles: Boolean(value?.deleteFutureScrobbles),
+      deletionConfigured: Boolean(value?.deletionConfigured || value?.deleteFutureScrobbles),
       deleteFutureStartedAt: Number(value?.deleteFutureStartedAt || 0),
     });
   });
@@ -12047,7 +12050,7 @@ function getTemporalMetricText(item) {
 }
 
 function recentMetadataRuleKey(metadata, username = '') {
-  return [username, metadata?.artist, metadata?.track]
+  return [username, metadata?.artist, metadata?.track, metadata?.album]
     .map(value => normalizeMemoryPart(value || ''))
     .join('|');
 }
@@ -12061,9 +12064,91 @@ function getRecentOriginalMetadata(item) {
   };
 }
 
+function recentMetadataRulesSnapshot() {
+  pruneRecentMetadataAutomation();
+  return Array.from(recentMetadataRules.entries())
+    .filter(([, rule]) => rule?.original?.artist && rule?.original?.track)
+    .map(([key, rule]) => ({
+      key,
+      username: String(rule?.username || ''),
+      original: {
+        artist: String(rule?.original?.artist || ''),
+        track: String(rule?.original?.track || ''),
+        album: String(rule?.original?.album || ''),
+      },
+      edited: {
+        artist: String(rule?.edited?.artist || ''),
+        track: String(rule?.edited?.track || ''),
+        album: String(rule?.edited?.album || ''),
+      },
+      applyMetadataCorrection: Boolean(rule?.applyMetadataCorrection),
+      correctionConfigured: Boolean(rule?.correctionConfigured),
+      deleteFutureScrobbles: Boolean(rule?.deleteFutureScrobbles),
+      deletionConfigured: Boolean(rule?.deletionConfigured),
+      deleteFutureStartedAt: Number(rule?.deleteFutureStartedAt || 0),
+      createdAt: Number(rule?.createdAt || 0),
+      expiresAt: Number(rule?.expiresAt || 0),
+    }));
+}
+
+function broadcastRecentMetadataRules() {
+  window.postMessage({
+    type: 'collager-lastfm-metadata-rules-sync',
+    rules: recentMetadataRulesSnapshot(),
+  }, location.origin);
+}
+
 function saveRecentMetadataRules() {
   try { localStorage.setItem(RECENT_METADATA_RULES_STORAGE, JSON.stringify(Object.fromEntries(recentMetadataRules))); }
   catch (_) { /* a edição continua válida nesta sessão */ }
+  broadcastRecentMetadataRules();
+}
+
+function updateRecentMetadataRuleFromExtension(key, field, enabled) {
+  const rule = recentMetadataRules.get(String(key || ''));
+  if (!rule || !['applyMetadataCorrection', 'deleteFutureScrobbles'].includes(field)) return false;
+  const now = Date.now();
+  rule[field] = Boolean(enabled);
+  rule.expiresAt = now + RECENT_METADATA_RULE_TTL_MS;
+  if (field === 'applyMetadataCorrection') {
+    rule.correctionConfigured = true;
+  } else {
+    rule.deletionConfigured = true;
+    rule.deleteFutureStartedAt = enabled
+      ? Number(rule.deleteFutureStartedAt || now)
+      : 0;
+  }
+  saveRecentMetadataRules();
+  const activeRuleKey = activeClickItem?._recentMetadataRuleKey
+    || (activeClickItem
+      ? recentMetadataRuleKey(getRecentOriginalMetadata(activeClickItem), activeClickItem?._recentUsername)
+      : '');
+  if (activeRuleKey === key) {
+    if (field === 'applyMetadataCorrection') recentMetadataFuture.checked = Boolean(enabled);
+    else recentMetadataDeleteFuture.checked = Boolean(enabled);
+  }
+  allFetchedItems.forEach(item => {
+    const itemRuleKey = item?._recentMetadataRuleKey
+      || recentMetadataRuleKey(getRecentOriginalMetadata(item), item?._recentUsername);
+    if (itemRuleKey !== key) return;
+    if (field !== 'applyMetadataCorrection') return;
+    if (enabled) {
+      applyRecentMetadataRule(item);
+    } else {
+      const original = getRecentOriginalMetadata(item);
+      item.name = original.track;
+      item.albumName = original.album;
+      item.artist = { ...(item.artist || {}), name: original.artist };
+      delete item._recentMetadataRuleApplied;
+    }
+  });
+  runDraw().then(scheduleDownloadRefresh).catch(() => {});
+  if (enabled) {
+    applySavedMetadataRulesToLastfm(allFetchedItems, { redraw: true })
+      .catch(error => console.warn('Automação de metadata:', error.message));
+    if (field === 'applyMetadataCorrection') backfillRecentMetadataRule(key);
+  }
+  return true;
 }
 
 function saveRecentMetadataProcessed() {
@@ -12093,13 +12178,15 @@ function pruneRecentMetadataAutomation(now = Date.now()) {
 function getRecentMetadataRule(item) {
   pruneRecentMetadataAutomation();
   const original = getRecentOriginalMetadata(item);
-  return recentMetadataRules.get(recentMetadataRuleKey(original, item?._recentUsername)) || null;
+  const key = item?._recentMetadataRuleKey
+    || recentMetadataRuleKey(original, item?._recentUsername);
+  return recentMetadataRules.get(key) || null;
 }
 
 function applyRecentMetadataRule(item) {
   const original = getRecentOriginalMetadata(item);
   const rule = getRecentMetadataRule(item);
-  if (!rule) return item;
+  if (!rule?.applyMetadataCorrection) return item;
   const edited = rule.edited || rule;
   item.name = String(edited.track || original.track || '');
   item.albumName = String(edited.album ?? original.album ?? '');
@@ -13083,10 +13170,15 @@ function reconcileRecentItems(freshItems, maximumPoolSize) {
     const key = recentScrobbleStableKey(fresh);
     const existing = oldByKey.get(key);
     if (existing) {
-      const preserved = { deleted: existing._lastfmDeleted, deleting: existing._lastfmDeleting };
+      const preserved = {
+        deleted: existing._lastfmDeleted,
+        deleting: existing._lastfmDeleting,
+        metadataRuleKey: existing._recentMetadataRuleKey,
+      };
       Object.assign(existing, fresh);
       if (preserved.deleted) existing._lastfmDeleted = true;
       if (preserved.deleting) existing._lastfmDeleting = true;
+      if (preserved.metadataRuleKey) existing._recentMetadataRuleKey = preserved.metadataRuleKey;
       next.push(existing);
     } else {
       next.push(fresh);
@@ -13181,9 +13273,9 @@ function startRecentLiveUpdates(user, apikey) {
             const newest = newScrobbles[0];
             appendStatusHistoryEntry(`Novo scrobble: ${newest.artist?.name || ''} — ${newest.name || ''}.`);
             triggerHapticFeedback('short');
-            applySavedMetadataRulesToLastfm(allFetchedItems, { redraw: true })
-              .catch(error => console.warn('Correção automática de metadata:', error.message));
           }
+          applySavedMetadataRulesToLastfm(allFetchedItems, { redraw: true })
+            .catch(error => console.warn('Correção automática de metadata:', error.message));
         }
       } catch (error) {
         if (error.message !== 'cancelled') console.warn('Atualização de Recentes:', error.message);
@@ -16607,19 +16699,39 @@ function hitTestTile(clientX, clientY) {
 }
 
 // Mantém qualquer camada de interação exatamente sobre o canvas principal.
-// A posição precisa partir das caixas efetivamente renderizadas: offsetLeft
-// não acompanha a recentralização do canvas quando o zoom do navegador muda
-// o breakpoint da página sem alterar o tamanho intrínseco da imagem.
+// Quando o zoom nativo troca o breakpoint, o canvas pode ficar estreito e
+// centralizado dentro de um wrapper largo. Nesse caso, offsetLeft/offsetTop
+// são a fonte mais estável porque já pertencem ao sistema de coordenadas do
+// containing block; getBoundingClientRect fica apenas como fallback.
 function positionCanvasOverlay(element) {
   const containingBlock = element.offsetParent || mainCanvas.parentElement;
-  const rect = mainCanvas.getBoundingClientRect();
-  const containingRect = containingBlock.getBoundingClientRect();
-  const left = rect.left - containingRect.left
-    - containingBlock.clientLeft + containingBlock.scrollLeft;
-  const top = rect.top - containingRect.top
-    - containingBlock.clientTop + containingBlock.scrollTop;
-  const width = rect.width;
-  const height = rect.height;
+  const canvasContainingBlock = mainCanvas.offsetParent || mainCanvas.parentElement;
+  let left;
+  let top;
+  let width;
+  let height;
+
+  if (containingBlock === canvasContainingBlock) {
+    left = mainCanvas.offsetLeft;
+    top = mainCanvas.offsetTop;
+    width = mainCanvas.offsetWidth;
+    height = mainCanvas.offsetHeight;
+  } else {
+    const rect = mainCanvas.getBoundingClientRect();
+    const containingRect = containingBlock.getBoundingClientRect();
+    const scaleX = containingBlock.clientWidth > 0
+      ? containingRect.width / containingBlock.clientWidth
+      : 1;
+    const scaleY = containingBlock.clientHeight > 0
+      ? containingRect.height / containingBlock.clientHeight
+      : 1;
+    left = (rect.left - containingRect.left - containingBlock.clientLeft * scaleX) / (scaleX || 1)
+      + containingBlock.scrollLeft;
+    top = (rect.top - containingRect.top - containingBlock.clientTop * scaleY) / (scaleY || 1)
+      + containingBlock.scrollTop;
+    width = rect.width / (scaleX || 1);
+    height = rect.height / (scaleY || 1);
+  }
 
   element.style.position = 'absolute';
   element.style.left = left + 'px';
@@ -16628,6 +16740,16 @@ function positionCanvasOverlay(element) {
   element.style.height = height + 'px';
   element.style.maxWidth = 'none';
   element.style.maxHeight = 'none';
+}
+
+function canvasOverlayIsMisaligned(element, tolerance = 0.75) {
+  if (!element || getComputedStyle(element).display === 'none') return false;
+  const canvasRect = mainCanvas.getBoundingClientRect();
+  const overlayRect = element.getBoundingClientRect();
+  return Math.abs(canvasRect.left - overlayRect.left) > tolerance
+    || Math.abs(canvasRect.top - overlayRect.top) > tolerance
+    || Math.abs(canvasRect.width - overlayRect.width) > tolerance
+    || Math.abs(canvasRect.height - overlayRect.height) > tolerance;
 }
 
 let interactiveHeaderIdleTimer = 0;
@@ -17191,8 +17313,8 @@ document.getElementById('interactive-header-resize')?.addEventListener('pointerd
 
 // Mantém o canvas de overlay com o mesmo tamanho (real + exibido) do canvas principal
 function syncOverlaySize() {
-  overlayCanvas.width  = mainCanvas.width;
-  overlayCanvas.height = mainCanvas.height;
+  if (overlayCanvas.width !== mainCanvas.width) overlayCanvas.width = mainCanvas.width;
+  if (overlayCanvas.height !== mainCanvas.height) overlayCanvas.height = mainCanvas.height;
   positionCanvasOverlay(overlayCanvas);
   syncInteractiveHeaderEditor();
   syncHeaderImageEditor();
@@ -17295,12 +17417,17 @@ function hideDeletingOverlay(index) {
 // ── Hover pulsante ──
 let _hoverAnimId = null;
 let _hoverAnimStart = null;
+let _hoverLayoutCheckAt = 0;
 
 function startHoverAnim() {
   if (_hoverAnimId) return; // já rodando
   _hoverAnimStart = performance.now();
   function frame(now) {
     if (!lastHoveredHit) { _hoverAnimId = null; return; }
+    if (now - _hoverLayoutCheckAt > 80) {
+      _hoverLayoutCheckAt = now;
+      if (canvasOverlayIsMisaligned(overlayCanvas)) positionCanvasOverlay(overlayCanvas);
+    }
     const t = ((now - _hoverAnimStart) / 500); // ciclo de 500ms
     // sin vai de -1 a 1; mapeia para 0.01–0.28
     const alpha = 0.01 + (Math.sin(t * Math.PI) * 0.5 + 0.5) * (0.28 - 0.01);
@@ -17623,10 +17750,6 @@ const recentMetadataStatus = document.getElementById('recent-metadata-status');
 const obsessionActions = document.getElementById('obsession-actions');
 const obsessionDeleteButton = document.getElementById('edit-obsession-delete');
 
-recentMetadataFuture.addEventListener('change', () => {
-  recentMetadataDeleteFuture.disabled = !recentMetadataFuture.checked;
-  if (!recentMetadataFuture.checked) recentMetadataDeleteFuture.checked = false;
-});
 const obsessionLastfmLinkButton = document.getElementById('edit-obsession-lastfm-link');
 const obsessionActionStatus = document.getElementById('obsession-action-status');
 const trackObsessionActions = document.getElementById('track-obsession-actions');
@@ -17731,7 +17854,9 @@ function openTextEditModal(index) {
   trackObsessionStatus.style.display = 'none';
   trackObsessionStatus.textContent = '';
   const savedMetadataRule = getRecentMetadataRule(item);
-  recentMetadataFuture.checked = true;
+  recentMetadataFuture.checked = savedMetadataRule
+    ? Boolean(savedMetadataRule.applyMetadataCorrection)
+    : true;
   recentMetadataDeleteFuture.checked = Boolean(savedMetadataRule?.deleteFutureScrobbles);
   recentMetadataDeleteFuture.disabled = false;
   recentMetadataReplace.checked = true;
@@ -18045,6 +18170,23 @@ function collagerExtensionRequest(action, payload = {}, timeoutMs = 45000) {
 
 window.addEventListener('message', event => {
   if (event.source !== window || event.origin !== location.origin) return;
+  if (event.data?.type === 'collager-lastfm-metadata-rules-request') {
+    broadcastRecentMetadataRules();
+    return;
+  }
+  if (event.data?.type === 'collager-lastfm-metadata-rule-toggle-request') {
+    const ok = updateRecentMetadataRuleFromExtension(
+      event.data.key,
+      event.data.field,
+      event.data.enabled
+    );
+    window.postMessage({
+      type: 'collager-lastfm-metadata-rule-toggle-response',
+      requestId: String(event.data.requestId || ''),
+      ok,
+    }, location.origin);
+    return;
+  }
   if (event.data?.type === 'collager-lastfm-extension-restore-request') {
     restoreDeletedScrobbleFromExtension(event.data);
     return;
@@ -18052,6 +18194,7 @@ window.addEventListener('message', event => {
   if (event.data?.type === 'collager-lastfm-extension-ready') {
     collagerLastfmExtensionAvailable = true;
     updateRecentExtensionStatus();
+    broadcastRecentMetadataRules();
     return;
   }
   if (event.data?.type === 'collager-lastfm-extension-progress') {
@@ -18113,38 +18256,66 @@ function recentExtensionDeletePayload(item, original = getRecentOriginalMetadata
 }
 
 let recentMetadataAutomationBusy = false;
+const recentMetadataBackfillRuns = new Map();
+const recentMetadataAutomationPendingItems = new Set();
+let recentMetadataAutomationPendingRedraw = false;
 
-function recentMetadataProcessedKey(item, original = getRecentOriginalMetadata(item)) {
-  return `${recentMetadataRuleKey(original, item?._recentUsername)}|${Math.floor(Number(original?.timestamp) || 0)}`;
+function recentMetadataProcessedKey(item, original = getRecentOriginalMetadata(item), action = 'metadata') {
+  return `${recentMetadataRuleKey(original, item?._recentUsername)}|${Math.floor(Number(original?.timestamp) || 0)}|${action}`;
 }
 
-function markRecentMetadataProcessed(item, original = getRecentOriginalMetadata(item)) {
-  const key = recentMetadataProcessedKey(item, original);
-  if (!key.endsWith('|0')) {
+function recentMetadataWasProcessed(item, original, action) {
+  const legacyKey = `${recentMetadataRuleKey(original, item?._recentUsername)}|${Math.floor(Number(original?.timestamp) || 0)}`;
+  const olderLegacyKey = [
+    normalizeText(item?._recentUsername || '').toLowerCase(),
+    normalizeText(original?.artist || '').toLowerCase(),
+    normalizeText(original?.track || '').toLowerCase(),
+    Math.floor(Number(original?.timestamp) || 0),
+  ].join('|');
+  return recentMetadataProcessed.has(recentMetadataProcessedKey(item, original, action))
+    || recentMetadataProcessed.has(legacyKey)
+    || recentMetadataProcessed.has(olderLegacyKey);
+}
+
+function markRecentMetadataProcessed(item, original = getRecentOriginalMetadata(item), action = 'metadata') {
+  const key = recentMetadataProcessedKey(item, original, action);
+  if (!key.includes('|0|')) {
     recentMetadataProcessed.set(key, Date.now() + RECENT_METADATA_RULE_TTL_MS);
     saveRecentMetadataProcessed();
   }
 }
 
 async function applySavedMetadataRulesToLastfm(items, options = {}) {
-  if (recentMetadataAutomationBusy || !Array.isArray(items) || !items.length) return;
+  if (!Array.isArray(items) || !items.length) return;
+  if (recentMetadataAutomationBusy) {
+    items.forEach(item => {
+      if (item) recentMetadataAutomationPendingItems.add(item);
+    });
+    recentMetadataAutomationPendingRedraw ||= options.redraw !== false;
+    return;
+  }
   const candidates = items.filter(item => {
     if (!item || item._nowPlaying || item._lastfmDeleted) return false;
     const original = getRecentOriginalMetadata(item);
     const rule = getRecentMetadataRule(item);
-    if (
-      !rule
-      || !rule.deleteFutureScrobbles
-      || Number(rule.deleteFutureStartedAt || 0) <= 0
-      || recentMetadataProcessed.has(recentMetadataProcessedKey(item, original))
-    ) return false;
+    if (!rule) return false;
     const timestamp = Math.floor(Number(original.timestamp));
     const age = Math.floor(Date.now() / 1000) - timestamp;
-    const strictlyAfterActivation = timestamp >= Math.ceil(Number(rule.deleteFutureStartedAt) / 1000);
+    const deleteAfterActivation = rule.deleteFutureScrobbles
+      && Number(rule.deleteFutureStartedAt || 0) > 0
+      && timestamp >= Math.ceil(Number(rule.deleteFutureStartedAt) / 1000)
+      && !recentMetadataWasProcessed(item, original, 'delete');
+    const edited = rule.edited || {};
+    const metadataChanged = normalizeMemoryPart(edited.artist) !== normalizeMemoryPart(original.artist)
+      || normalizeMemoryPart(edited.track) !== normalizeMemoryPart(original.track)
+      || normalizeMemoryPart(edited.album) !== normalizeMemoryPart(original.album);
+    const shouldCorrect = rule.applyMetadataCorrection
+      && metadataChanged
+      && !recentMetadataWasProcessed(item, original, 'metadata');
     return timestamp > 0
-      && strictlyAfterActivation
       && age >= -300
-      && age <= LASTFM_REPLACEMENT_MAX_AGE_SECONDS;
+      && age <= LASTFM_REPLACEMENT_MAX_AGE_SECONDS
+      && (deleteAfterActivation || shouldCorrect);
   });
   if (!candidates.length) return;
 
@@ -18167,16 +18338,32 @@ async function applySavedMetadataRulesToLastfm(items, options = {}) {
       const rule = getRecentMetadataRule(item);
       const edited = rule?.edited || rule;
       if (!edited) continue;
-      const processedKey = recentMetadataProcessedKey(item, original);
-      if (recentMetadataProcessed.has(processedKey)) continue;
+      const timestamp = Math.floor(Number(original.timestamp));
+      const deleteAfterActivation = rule.deleteFutureScrobbles
+        && Number(rule.deleteFutureStartedAt || 0) > 0
+        && timestamp >= Math.ceil(Number(rule.deleteFutureStartedAt) / 1000)
+        && !recentMetadataWasProcessed(item, original, 'delete');
       try {
+        if (deleteAfterActivation) {
+          await collagerExtensionRequest('deleteScrobble', recentExtensionDeletePayload(item, original, {
+            kind: 'automaticDeleteRule',
+            original: { ...original },
+          }));
+          markRecentMetadataProcessed(item, original, 'delete');
+          item._lastfmDeleted = true;
+          item._recentMetadataAutoProcessed = true;
+          appendStatusHistoryEntry(`Regra automática excluiu: ${original.artist} — ${original.track}.`);
+          continue;
+        }
+        if (!rule.applyMetadataCorrection || recentMetadataWasProcessed(item, original, 'metadata')) continue;
         await sendLastfmWrite({ action: 'replace', original, edited, deleteOriginal: false });
         await collagerExtensionRequest('deleteScrobble', recentExtensionDeletePayload(item, original, {
           kind: 'metadataEdit',
           original: { ...original },
           edited: { ...edited },
         }));
-        markRecentMetadataProcessed(item, original);
+        markRecentMetadataProcessed(item, original, 'metadata');
+        item._recentMetadataRuleKey = recentMetadataRuleKey(original, item?._recentUsername);
         item._lastfmOriginal = { ...edited, timestamp: original.timestamp };
         item.name = edited.track;
         item.albumName = edited.album;
@@ -18193,7 +18380,90 @@ async function applySavedMetadataRulesToLastfm(items, options = {}) {
     }
   } finally {
     recentMetadataAutomationBusy = false;
+    if (recentMetadataAutomationPendingItems.size) {
+      const pendingItems = Array.from(recentMetadataAutomationPendingItems);
+      const redraw = recentMetadataAutomationPendingRedraw;
+      recentMetadataAutomationPendingItems.clear();
+      recentMetadataAutomationPendingRedraw = false;
+      setTimeout(() => {
+        applySavedMetadataRulesToLastfm(pendingItems, { redraw })
+          .catch(error => console.warn('Automação pendente de metadata:', error.message));
+      }, 0);
+    }
   }
+}
+
+async function backfillRecentMetadataRule(ruleKey) {
+  const key = String(ruleKey || '');
+  if (!key) return;
+  if (recentMetadataBackfillRuns.has(key)) return recentMetadataBackfillRuns.get(key);
+
+  const task = (async () => {
+    const rule = recentMetadataRules.get(key);
+    if (!rule?.applyMetadataCorrection) return;
+    const original = rule.original || {};
+    const edited = rule.edited || {};
+    const metadataChanged = normalizeMemoryPart(edited.artist) !== normalizeMemoryPart(original.artist)
+      || normalizeMemoryPart(edited.track) !== normalizeMemoryPart(original.track)
+      || normalizeMemoryPart(edited.album) !== normalizeMemoryPart(original.album);
+    if (!metadataChanged) return;
+
+    const user = String(rule.username || getRenderedQueryState()?.username || '').trim();
+    if (!user) return;
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    const fromSeconds = nowSeconds - LASTFM_REPLACEMENT_MAX_AGE_SECONDS;
+    const matches = [];
+    const seen = new Set();
+    let page = 1;
+    let totalPages = 1;
+
+    appendStatusHistoryEntry(`Buscando scrobbles iguais dos últimos 14 dias: ${original.artist} — ${original.track}.`);
+    do {
+      const data = await apiFetch({
+        method: 'user.getRecentTracks',
+        user,
+        api_key: currentApiKey,
+        from: fromSeconds,
+        to: nowSeconds,
+        limit: 200,
+        page,
+        extended: 0,
+      }, { silentQueue: true });
+      const container = data?.recenttracks;
+      const raw = container?.track || [];
+      const tracks = Array.isArray(raw) ? raw : (raw ? [raw] : []);
+      totalPages = Math.max(1, Number.parseInt(container?.['@attr']?.totalPages || '1', 10) || 1);
+      for (const track of tracks) {
+        const item = parseRecentScrobbleTrack(track, user);
+        if (!item || item._nowPlaying) continue;
+        if (recentMetadataRuleKey(getRecentOriginalMetadata(item), item._recentUsername) !== key) continue;
+        const stableKey = recentScrobbleStableKey(item);
+        if (seen.has(stableKey)) continue;
+        seen.add(stableKey);
+        matches.push(item);
+      }
+      page += 1;
+    } while (page <= totalPages);
+
+    if (!matches.length) return;
+    let waitAttempts = 0;
+    while (recentMetadataAutomationBusy && waitAttempts < 100) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      waitAttempts += 1;
+    }
+    if (recentMetadataAutomationBusy) {
+      throw new Error('A automação ainda está ocupada. A correção será conferida no próximo scrobble.');
+    }
+    await applySavedMetadataRulesToLastfm(matches, { redraw: false });
+    appendStatusHistoryEntry(`Correção dos últimos 14 dias conferida: ${original.artist} — ${original.track}.`);
+  })().catch(error => {
+    console.warn('Busca retroativa de metadata:', error.message);
+  }).finally(() => {
+    recentMetadataBackfillRuns.delete(key);
+  });
+
+  recentMetadataBackfillRuns.set(key, task);
+  return task;
 }
 
 setTimeout(() => {
@@ -20004,11 +20274,14 @@ document.getElementById('edit-tile-delete').addEventListener('click', async () =
 });
 
 function applyRecentMetadataLocally(item, targetPoolIdx, original, edited) {
-  const originalRuleKey = recentMetadataRuleKey(original, item._recentUsername);
-  if (recentMetadataFuture.checked) {
-    const now = Date.now();
-    const previousRule = recentMetadataRules.get(originalRuleKey);
-    const deleteFutureScrobbles = Boolean(recentMetadataDeleteFuture.checked);
+  const originalRuleKey = item?._recentMetadataRuleKey
+    || recentMetadataRuleKey(original, item._recentUsername);
+  const applyMetadataCorrection = Boolean(recentMetadataFuture.checked);
+  const deleteFutureScrobbles = Boolean(recentMetadataDeleteFuture.checked);
+  const now = Date.now();
+  const previousRule = recentMetadataRules.get(originalRuleKey);
+  const ruleOriginal = previousRule?.original || original;
+  if (applyMetadataCorrection || deleteFutureScrobbles || previousRule) {
     const deleteFutureStartedAt = deleteFutureScrobbles
       ? (
           previousRule?.deleteFutureScrobbles && Number(previousRule?.deleteFutureStartedAt) > 0
@@ -20018,9 +20291,18 @@ function applyRecentMetadataLocally(item, targetPoolIdx, original, edited) {
       : 0;
     recentMetadataRules.set(originalRuleKey, {
       edited: { ...edited },
+      original: {
+        artist: String(ruleOriginal.artist || ''),
+        track: String(ruleOriginal.track || ''),
+        album: String(ruleOriginal.album || ''),
+      },
+      username: String(item._recentUsername || getRenderedQueryState()?.username || ''),
       createdAt: Number(previousRule?.createdAt || now),
       expiresAt: now + RECENT_METADATA_RULE_TTL_MS,
+      applyMetadataCorrection,
+      correctionConfigured: Boolean(previousRule?.correctionConfigured || applyMetadataCorrection),
       deleteFutureScrobbles,
+      deletionConfigured: Boolean(previousRule?.deletionConfigured || deleteFutureScrobbles),
       deleteFutureStartedAt,
     });
   }
@@ -20028,10 +20310,11 @@ function applyRecentMetadataLocally(item, targetPoolIdx, original, edited) {
   saveRecentMetadataRules();
 
   customTexts[targetPoolIdx] = { main: edited.track, album: edited.album, sub: edited.artist };
+  item._recentMetadataRuleKey = originalRuleKey;
   item.name = edited.track;
   item.albumName = edited.album;
   item.artist = { ...(item.artist || {}), name: edited.artist };
-  if (recentMetadataFuture.checked) {
+  if (applyMetadataCorrection) {
     allFetchedItems.forEach(candidate => {
       if (recentMetadataRuleKey(getRecentOriginalMetadata(candidate), candidate._recentUsername) === originalRuleKey) {
         applyRecentMetadataRule(candidate);
@@ -20060,7 +20343,18 @@ recentMetadataSave.addEventListener('click', async () => {
     || edited.artist !== original.artist
     || edited.album !== original.album;
   if (recentMetadataReplace.checked && !metadataChanged && !item._lastfmReplacementPendingDelete) {
-    setRecentMetadataStatus('Nenhum metadado foi alterado.', true);
+    applyRecentMetadataLocally(item, targetPoolIdx, original, edited);
+    setRecentMetadataStatus(
+      recentMetadataFuture.checked || recentMetadataDeleteFuture.checked
+        ? 'Regras de metadata atualizadas para esta faixa.'
+        : 'As regras automáticas desta faixa foram desativadas.'
+    );
+    await runDraw();
+    scheduleDownloadRefresh();
+    applySavedMetadataRulesToLastfm(
+      allFetchedItems.filter(candidate => candidate !== item),
+      { redraw: true }
+    ).catch(error => console.warn('Automação de metadata:', error.message));
     return;
   }
 
@@ -20102,22 +20396,32 @@ recentMetadataSave.addEventListener('click', async () => {
       markRecentMetadataProcessed(item, original);
       item._lastfmOriginal = { ...replacementEdited, timestamp: original.timestamp };
       applyRecentMetadataLocally(item, targetPoolIdx, original, replacementEdited);
+      if (recentMetadataFuture.checked) {
+        backfillRecentMetadataRule(recentMetadataRuleKey(original, item._recentUsername));
+      }
       setRecentMetadataStatus('Scrobble substituído com sucesso no Last.fm.');
       appendStatusHistoryEntry(`Scrobble substituído: ${replacementEdited.artist} — ${replacementEdited.track}.`);
     } else {
       applyRecentMetadataLocally(item, targetPoolIdx, original, edited);
+      if (recentMetadataFuture.checked && metadataChanged) {
+        backfillRecentMetadataRule(recentMetadataRuleKey(original, item._recentUsername));
+      }
       setRecentMetadataStatus(recentMetadataFuture.checked
         ? (
             recentMetadataDeleteFuture.checked
-              ? 'Edição salva. Somente novos scrobbles, posteriores à ativação desta opção, poderão substituir e apagar o original.'
-              : 'Edição salva no collager.fm. Nenhum scrobble será apagado automaticamente.'
+              ? 'Edição salva. As regras de correção e exclusão foram atualizadas.'
+              : 'Edição salva. A correção automática foi atualizada.'
           )
-        : 'Edição aplicada somente a este quadro.');
+        : (
+            recentMetadataDeleteFuture.checked
+              ? 'Regra de exclusão automática atualizada.'
+              : 'Edição aplicada somente a este quadro.'
+          ));
       appendStatusHistoryEntry(`Edição local salva: ${edited.artist} — ${edited.track}.`);
     }
     await runDraw();
     scheduleDownloadRefresh();
-    if (recentMetadataFuture.checked && recentMetadataDeleteFuture.checked) {
+    if (recentMetadataFuture.checked || recentMetadataDeleteFuture.checked) {
       applySavedMetadataRulesToLastfm(
         allFetchedItems.filter(candidate => candidate !== item),
         { redraw: true }
@@ -20144,6 +20448,15 @@ recentScrobbleDelete.addEventListener('click', async () => {
     setRecentMetadataStatus('Excluindo scrobble do Last.fm...');
     const original = getRecentOriginalMetadata(item);
     await collagerExtensionRequest('deleteScrobble', recentExtensionDeletePayload(item, original));
+    if (recentMetadataDeleteFuture.checked) {
+      const targetPoolIdx = allFetchedItems.indexOf(item);
+      const edited = {
+        track: editTextMain.value.trim() || original.track,
+        album: editTextAlbum.value.trim(),
+        artist: editTextSub.value.trim() || original.artist,
+      };
+      if (targetPoolIdx >= 0) applyRecentMetadataLocally(item, targetPoolIdx, original, edited);
+    }
     item._lastfmDeleted = true;
     recentScrobbleDelete.textContent = 'SCROBBLE EXCLUÍDO';
     setRecentMetadataStatus('Scrobble excluído do Last.fm.');
@@ -20976,13 +21289,31 @@ updateAutoFontUI();
 populateUsernameDatalist();
 
 let overlayLayoutSyncFrame = 0;
+let overlayLayoutFollowupFrame = 0;
+let overlayLayoutFollowupTimer = 0;
+function syncCanvasOverlayLayoutNow() {
+  if (!mainCanvas.width || !mainCanvas.height) return;
+  syncOverlaySize();
+  if (deletingCanvas.classList.contains('active')) redrawDeletingOverlay();
+  const pulseCanvas = document.getElementById('drag-pulse-overlay');
+  if (pulseCanvas?.classList.contains('active')) positionCanvasOverlay(pulseCanvas);
+}
 function scheduleCanvasOverlayLayoutSync() {
   if (overlayLayoutSyncFrame) return;
   overlayLayoutSyncFrame = requestAnimationFrame(() => {
     overlayLayoutSyncFrame = 0;
-    if (!mainCanvas.width || !mainCanvas.height) return;
-    syncOverlaySize();
-    if (typeof syncDeletingOverlay === 'function') syncDeletingOverlay();
+    syncCanvasOverlayLayoutNow();
+
+    // O zoom nativo pode aplicar o novo breakpoint depois do primeiro frame.
+    // Uma segunda passagem acompanha a centralização final do canvas.
+    cancelAnimationFrame(overlayLayoutFollowupFrame);
+    overlayLayoutFollowupFrame = requestAnimationFrame(() => {
+      overlayLayoutFollowupFrame = 0;
+      syncCanvasOverlayLayoutNow();
+    });
+
+    clearTimeout(overlayLayoutFollowupTimer);
+    overlayLayoutFollowupTimer = window.setTimeout(syncCanvasOverlayLayoutNow, 90);
   });
 }
 
@@ -20998,6 +21329,7 @@ const overlayLayoutObserver = new ResizeObserver(() => {
 });
 overlayLayoutObserver.observe(mainCanvas);
 overlayLayoutObserver.observe(document.getElementById('collage-wrap'));
+overlayLayoutObserver.observe(document.querySelector('.collage-center'));
 
 // ─────────────────────────────────────────────────────────────
 // DRAG-AND-DROP sobre tile + tecla R para restaurar

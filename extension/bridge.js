@@ -6,7 +6,12 @@ const PAGE_READY = 'collager-lastfm-extension-ready';
 const PAGE_PROGRESS = 'collager-lastfm-extension-progress';
 const PAGE_RESTORE_REQUEST = 'collager-lastfm-extension-restore-request';
 const PAGE_RESTORE_RESPONSE = 'collager-lastfm-extension-restore-response';
+const PAGE_RULES_REQUEST = 'collager-lastfm-metadata-rules-request';
+const PAGE_RULES_SYNC = 'collager-lastfm-metadata-rules-sync';
+const PAGE_RULE_TOGGLE_REQUEST = 'collager-lastfm-metadata-rule-toggle-request';
+const PAGE_RULE_TOGGLE_RESPONSE = 'collager-lastfm-metadata-rule-toggle-response';
 const HISTORY_STORAGE_KEY = 'collager.fm.extension-history.v2';
+const RULES_STORAGE_KEY = 'collager.fm.metadata-rules.v1';
 const HISTORY_LIMIT = 60;
 const ALLOWED_ORIGINS = new Set([
   'https://collagerfm.vercel.app',
@@ -25,6 +30,11 @@ const pendingRestores = new Map();
 let historyEntries = [];
 let historyIndex = 0;
 let historyUi = null;
+let metadataRules = [];
+let metadataRulesLoaded = false;
+let pendingMetadataRulesSync = null;
+let historyView = 'history';
+const pendingRuleToggles = new Map();
 
 function isAllowedPage() {
   return ALLOWED_ORIGINS.has(location.origin);
@@ -58,16 +68,41 @@ async function loadHistory() {
   renderHistory();
 }
 
+async function loadMetadataRules() {
+  const saved = await storageGet(RULES_STORAGE_KEY).catch(() => []);
+  metadataRules = Array.isArray(pendingMetadataRulesSync)
+    ? pendingMetadataRulesSync
+    : (Array.isArray(saved) ? saved : []);
+  pendingMetadataRulesSync = null;
+  metadataRulesLoaded = true;
+  await persistMetadataRules();
+  renderRuleSettings();
+}
+
 async function persistHistory() {
   await storageSet({ [HISTORY_STORAGE_KEY]: historyEntries.slice(0, HISTORY_LIMIT) }).catch(() => {});
 }
 
+async function persistMetadataRules() {
+  await storageSet({ [RULES_STORAGE_KEY]: metadataRules }).catch(() => {});
+}
+
 function operationTarget(payload = {}) {
   const context = payload.historyContext || {};
-  const edited = context.edited || {};
-  const artist = clean(edited.artist || payload.artist);
-  const track = clean(edited.track || payload.track);
-  return artist && track ? `${artist} — ${track}` : track || clean(payload.username);
+  const original = context.original || payload.original || {};
+  const edited = context.edited || payload.edited || {};
+  const originalArtist = clean(original.artist || payload.artist);
+  const originalTrack = clean(original.track || payload.track);
+  const editedArtist = clean(edited.artist);
+  const editedTrack = clean(edited.track);
+  const before = originalArtist && originalTrack
+    ? `${originalArtist} — ${originalTrack}`
+    : originalTrack || originalArtist;
+  const after = editedArtist && editedTrack
+    ? `${editedArtist} — ${editedTrack}`
+    : editedTrack || editedArtist;
+  if (before && after && before !== after) return `${before} → ${after}`;
+  return after || before || clean(payload.username);
 }
 
 function buildHistoryEntry(operation, ok, result = {}, error = '') {
@@ -144,15 +179,18 @@ function renderHistory() {
   const entry = total ? historyEntries[historyIndex] : null;
   historyUi.empty.hidden = Boolean(entry);
   historyUi.content.hidden = !entry;
-  historyUi.title.textContent = entry?.title || 'Nenhuma ação registrada';
+  if (historyView === 'history') {
+    historyUi.title.textContent = entry?.title || 'Nenhuma ação registrada';
+  }
   historyUi.position.textContent = total ? `${historyIndex + 1} de ${total}` : '0 de 0';
   historyUi.older.disabled = !entry || historyIndex >= total - 1;
   historyUi.newer.disabled = !entry || historyIndex <= 0;
   historyUi.clear.disabled = !total;
   if (!entry) return;
   historyUi.time.textContent = formatDate(entry.timestamp);
-  historyUi.target.textContent = entry.target || '';
-  historyUi.target.hidden = !entry.target;
+  const currentTarget = operationTarget(entry.payload) || entry.target || '';
+  historyUi.target.textContent = currentTarget;
+  historyUi.target.hidden = !currentTarget;
   historyUi.message.textContent = entry.restoredAt
     ? 'Este scrobble foi recolocado no Last.fm.'
     : entry.message;
@@ -168,6 +206,142 @@ function renderHistory() {
   historyUi.restore.textContent = pendingRestores.has(entry.id)
     ? 'RECOLOCANDO...'
     : 'RECOLOCAR SCROBBLE';
+}
+
+function metadataRuleLabel(rule) {
+  const source = rule?.original || rule?.edited || {};
+  const artist = clean(source.artist);
+  const track = clean(source.track);
+  return artist && track ? `${artist} — ${track}` : track || artist || 'Metadata sem nome';
+}
+
+function metadataRuleAlbum(rule) {
+  return clean(rule?.original?.album || rule?.edited?.album);
+}
+
+function metadataRuleEditDescription(rule) {
+  const original = rule?.original || {};
+  const edited = rule?.edited || {};
+  const before = [original.artist, original.track, original.album].map(value => clean(value)).join(' · ');
+  const after = [edited.artist, edited.track, edited.album].map(value => clean(value)).join(' · ');
+  return before && after && before !== after ? `${before} → ${after}` : after || before;
+}
+
+function metadataRuleHasCorrection(rule) {
+  const original = rule?.original || {};
+  const edited = rule?.edited || {};
+  return ['artist', 'track', 'album'].some(field =>
+    clean(original[field]).toLocaleLowerCase() !== clean(edited[field]).toLocaleLowerCase()
+  );
+}
+
+function metadataRuleExpiry(rule) {
+  const expiresAt = Number(rule?.expiresAt || 0);
+  if (!expiresAt) return '';
+  try {
+    return `Ativa até ${new Intl.DateTimeFormat('pt-BR', {
+      dateStyle: 'short',
+      timeStyle: 'short',
+    }).format(new Date(expiresAt))}`;
+  } catch (_) {
+    return '';
+  }
+}
+
+function buildRuleRow(rule, field, description) {
+  const row = document.createElement('label');
+  row.className = 'rule-row';
+  const copy = document.createElement('span');
+  copy.className = 'rule-copy';
+  const title = document.createElement('strong');
+  title.textContent = metadataRuleLabel(rule);
+  const detail = document.createElement('span');
+  detail.textContent = description(rule);
+  const album = metadataRuleAlbum(rule);
+  const expiry = metadataRuleExpiry(rule);
+  const meta = document.createElement('small');
+  meta.textContent = [album ? `Álbum: ${album}` : '', expiry].filter(Boolean).join(' · ');
+  copy.append(title, detail);
+  if (meta.textContent) copy.append(meta);
+  const toggle = document.createElement('input');
+  toggle.type = 'checkbox';
+  toggle.checked = Boolean(rule?.[field]);
+  toggle.disabled = pendingRuleToggles.has(`${rule.key}|${field}`);
+  toggle.dataset.key = rule.key;
+  toggle.dataset.field = field;
+  row.append(copy, toggle);
+  return row;
+}
+
+function renderRuleSection(container, rules, field, emptyMessage, description) {
+  container.innerHTML = '';
+  if (!rules.length) {
+    const empty = document.createElement('div');
+    empty.className = 'rules-empty';
+    empty.textContent = emptyMessage;
+    container.appendChild(empty);
+    return;
+  }
+  rules.forEach(rule => container.appendChild(buildRuleRow(rule, field, description)));
+}
+
+function renderRuleSettings() {
+  if (!historyUi?.changedRules || !historyUi?.deletedRules) return;
+  const now = Date.now();
+  metadataRules = metadataRules.filter(rule => !Number(rule?.expiresAt) || Number(rule.expiresAt) > now);
+  const changed = metadataRules.filter(rule => rule?.correctionConfigured && metadataRuleHasCorrection(rule));
+  const deleted = metadataRules.filter(rule => rule?.deletionConfigured);
+  renderRuleSection(
+    historyUi.changedRules,
+    changed,
+    'applyMetadataCorrection',
+    'Nenhuma correção automática foi configurada.',
+    metadataRuleEditDescription
+  );
+  renderRuleSection(
+    historyUi.deletedRules,
+    deleted,
+    'deleteFutureScrobbles',
+    'Nenhuma exclusão automática foi configurada.',
+    rule => `Mesmo metadata de ${metadataRuleLabel(rule)}`
+  );
+}
+
+function setHistoryView(view) {
+  if (!historyUi) return;
+  historyView = view === 'rules' ? 'rules' : 'history';
+  const rulesOpen = historyView === 'rules';
+  historyUi.historyView.hidden = rulesOpen;
+  historyUi.rulesView.hidden = !rulesOpen;
+  historyUi.nav.hidden = rulesOpen;
+  historyUi.clear.hidden = rulesOpen;
+  historyUi.settings.classList.toggle('active', rulesOpen);
+  if (rulesOpen) {
+    historyUi.kicker.textContent = 'Configurações da extensão';
+    historyUi.title.textContent = 'Regras automáticas';
+    renderRuleSettings();
+    window.postMessage({ type: PAGE_RULES_REQUEST }, location.origin);
+  } else {
+    historyUi.kicker.textContent = 'Histórico da extensão';
+    renderHistory();
+  }
+}
+
+function requestRuleToggle(key, field, enabled) {
+  const pendingKey = `${key}|${field}`;
+  if (!key || pendingRuleToggles.has(pendingKey)) return;
+  const requestId = randomId();
+  pendingRuleToggles.set(pendingKey, requestId);
+  const rule = metadataRules.find(candidate => candidate.key === key);
+  if (rule) rule[field] = Boolean(enabled);
+  renderRuleSettings();
+  window.postMessage({
+    type: PAGE_RULE_TOGGLE_REQUEST,
+    requestId,
+    key,
+    field,
+    enabled: Boolean(enabled),
+  }, location.origin);
 }
 
 function mountHistoryUi() {
@@ -213,7 +387,9 @@ function mountHistoryUi() {
         background: #ffffff08; color: #aaa; cursor: pointer;
       }
       .icon:disabled { opacity: .3; cursor: default; }
+      .icon.active { border-color: #ef444488; background: #ef444420; color: #fff; }
       .icon svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .icon[hidden], .history-view[hidden], .rules-view[hidden], .nav[hidden] { display: none !important; }
       .body { padding: .8rem; }
       .empty { padding: 1.2rem .5rem; color: #888; text-align: center; }
       .time { color: #777; font-size: .58rem; }
@@ -229,6 +405,30 @@ function mountHistoryUi() {
       .nav { justify-content: space-between; padding: .65rem .8rem; border-top: 1px solid #ffffff12; }
       .position { min-width: 4rem; color: #888; font-size: .62rem; text-align: center; }
       .clear { color: #ff8f98; }
+      .rules-view { max-height: min(67vh, 34rem); overflow: auto; padding: .8rem; }
+      .rules-section + .rules-section { margin-top: 1rem; }
+      .rules-section h3 {
+        margin: 0 0 .5rem; color: #fff; font-size: .65rem;
+        letter-spacing: .04em; text-transform: uppercase;
+      }
+      .rules-list { display: flex; flex-direction: column; gap: .45rem; }
+      .rule-row {
+        display: flex; align-items: center; justify-content: space-between; gap: .7rem;
+        padding: .65rem; border: 1px solid #ffffff14; border-radius: 6px;
+        background: #ffffff05; cursor: pointer;
+      }
+      .rule-copy { min-width: 0; display: flex; flex-direction: column; gap: .12rem; }
+      .rule-copy strong { overflow-wrap: anywhere; color: #fff; font-size: .68rem; }
+      .rule-copy > span { overflow-wrap: anywhere; color: #aaa; font-size: .61rem; }
+      .rule-copy small { color: #777; font-size: .55rem; }
+      .rule-row input {
+        width: 1rem; height: 1rem; flex: 0 0 1rem; margin: 0;
+        accent-color: #22c55e;
+      }
+      .rules-empty {
+        padding: .75rem; border: 1px dashed #ffffff16; border-radius: 6px;
+        color: #777; font-size: .62rem; text-align: center;
+      }
       @media (max-width: 47.999rem) {
         .launcher { top: auto; right: .75rem; bottom: calc(5.2rem + env(safe-area-inset-bottom, 0px)); }
         .panel {
@@ -243,20 +443,35 @@ function mountHistoryUi() {
     <section class="panel" role="dialog" aria-modal="false" aria-hidden="true">
       <div class="head">
         <span class="badge" aria-hidden="true"><svg viewBox="0 0 294 294"><path d="${EXTENSION_ICON_PATH}"/></svg></span>
-        <div class="heading"><small>Histórico da extensão</small><strong class="title">Nenhuma ação registrada</strong></div>
+        <div class="heading"><small class="kicker">Histórico da extensão</small><strong class="title">Nenhuma ação registrada</strong></div>
         <button class="icon clear" type="button" aria-label="Excluir histórico" title="Excluir histórico">
           <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 10v6M14 10v6"/></svg>
+        </button>
+        <button class="icon settings" type="button" aria-label="Gerenciar regras automáticas" title="Gerenciar regras automáticas">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21h-4v-.09A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3v-4h.09A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.09A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.13.38.35.72.66 1 .3.27.68.4 1.08.4H21v4h-.09c-.4 0-.78.13-1.08.4-.3.28-.52.62-.65 1Z"/></svg>
         </button>
         <button class="icon close" type="button" aria-label="Fechar" title="Fechar">
           <svg viewBox="0 0 24 24"><path d="m18 6-12 12M6 6l12 12"/></svg>
         </button>
       </div>
-      <div class="body">
-        <div class="empty">A extensão ainda não registrou nenhuma ação.</div>
-        <div class="content" hidden>
-          <div class="time"></div><div class="target"></div><div class="message"></div><div class="events"></div>
-          <button class="restore" type="button" hidden>RECOLOCAR SCROBBLE</button>
+      <div class="history-view">
+        <div class="body">
+          <div class="empty">A extensão ainda não registrou nenhuma ação.</div>
+          <div class="content" hidden>
+            <div class="time"></div><div class="target"></div><div class="message"></div><div class="events"></div>
+            <button class="restore" type="button" hidden>RECOLOCAR SCROBBLE</button>
+          </div>
         </div>
+      </div>
+      <div class="rules-view" hidden>
+        <section class="rules-section">
+          <h3>Alterados</h3>
+          <div class="rules-list changed-rules"></div>
+        </section>
+        <section class="rules-section">
+          <h3>Apagados</h3>
+          <div class="rules-list deleted-rules"></div>
+        </section>
       </div>
       <div class="nav">
         <button class="icon older" type="button" aria-label="Ação anterior"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
@@ -270,9 +485,15 @@ function mountHistoryUi() {
     host,
     launcher: find('.launcher'),
     panel: find('.panel'),
+    kicker: find('.kicker'),
     title: find('.title'),
+    settings: find('.settings'),
     clear: find('.clear'),
     close: find('.close'),
+    historyView: find('.history-view'),
+    rulesView: find('.rules-view'),
+    changedRules: find('.changed-rules'),
+    deletedRules: find('.deleted-rules'),
     empty: find('.empty'),
     content: find('.content'),
     time: find('.time'),
@@ -283,6 +504,7 @@ function mountHistoryUi() {
     older: find('.older'),
     newer: find('.newer'),
     position: find('.position'),
+    nav: find('.nav'),
   };
   historyUi.launcher.addEventListener('click', () => {
     const open = !historyUi.panel.classList.contains('open');
@@ -291,6 +513,7 @@ function mountHistoryUi() {
     historyUi.launcher.setAttribute('aria-expanded', String(open));
     if (open) {
       historyIndex = 0;
+      setHistoryView('history');
       renderHistory();
     }
   });
@@ -306,6 +529,14 @@ function mountHistoryUi() {
   historyUi.newer.addEventListener('click', () => {
     if (historyIndex > 0) historyIndex -= 1;
     renderHistory();
+  });
+  historyUi.settings.addEventListener('click', () => {
+    setHistoryView(historyView === 'rules' ? 'history' : 'rules');
+  });
+  historyUi.rulesView.addEventListener('change', event => {
+    const toggle = event.target.closest('input[data-key][data-field]');
+    if (!toggle) return;
+    requestRuleToggle(toggle.dataset.key, toggle.dataset.field, toggle.checked);
   });
   historyUi.clear.addEventListener('click', async () => {
     if (!historyEntries.length || !window.confirm('Deseja excluir todo o histórico da extensão?')) return;
@@ -329,6 +560,9 @@ function mountHistoryUi() {
     }, location.origin);
   });
   loadHistory();
+  loadMetadataRules().finally(() => {
+    window.postMessage({ type: PAGE_RULES_REQUEST }, location.origin);
+  });
 }
 
 function notifyReady() {
@@ -338,6 +572,27 @@ function notifyReady() {
 
 window.addEventListener('message', event => {
   if (!isAllowedPage() || event.source !== window || event.origin !== location.origin) return;
+
+  if (event.data?.type === PAGE_RULES_SYNC) {
+    const incomingRules = Array.isArray(event.data.rules) ? event.data.rules : [];
+    if (!metadataRulesLoaded) {
+      pendingMetadataRulesSync = incomingRules;
+      return;
+    }
+    metadataRules = incomingRules;
+    persistMetadataRules();
+    renderRuleSettings();
+    return;
+  }
+
+  if (event.data?.type === PAGE_RULE_TOGGLE_RESPONSE) {
+    const pendingEntry = Array.from(pendingRuleToggles.entries())
+      .find(([, requestId]) => requestId === event.data.requestId);
+    if (pendingEntry) pendingRuleToggles.delete(pendingEntry[0]);
+    if (!event.data.ok) window.postMessage({ type: PAGE_RULES_REQUEST }, location.origin);
+    renderRuleSettings();
+    return;
+  }
 
   if (event.data?.type === PAGE_RESTORE_RESPONSE) {
     const entry = historyEntries.find(candidate => candidate.id === event.data.entryId);
