@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>collager.fm - an interactive collage generator</title>
+<link rel="icon" type="image/png" sizes="32x32" href="./extension/icons/icon32.png">
+<link rel="icon" type="image/svg+xml" href="./extension/icons/icon.svg">
+<link rel="apple-touch-icon" sizes="128x128" href="./extension/icons/icon128.png">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Montserrat:wght@400;500;600;700;900&family=Bebas+Neue&family=Anton&family=Archivo+Black&family=Righteous&family=Pacifico&family=Permanent+Marker&display=swap');
 
@@ -3065,11 +3068,7 @@
   .extension-activity-mark svg {
     width: 1rem;
     height: 1rem;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    fill: currentColor;
   }
   #extension-activity-panel.running .extension-activity-mark::after {
     content: "";
@@ -3216,14 +3215,207 @@
       width: auto;
     }
   }
+
+  #extension-history-launcher {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 3850;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid #ef4444;
+    border-radius: 50%;
+    background: #ef444426;
+    color: #fff;
+    box-shadow: 0 .5rem 1.5rem #0008;
+    cursor: pointer;
+  }
+  #extension-history-launcher:hover,
+  #extension-history-launcher:focus-visible,
+  #extension-history-launcher.active {
+    border-color: #ef4444;
+    background: #ef444426;
+    outline: none;
+  }
+  #extension-history-launcher svg {
+    width: 1.35rem;
+    height: 1.35rem;
+    fill: currentColor;
+  }
+  #extension-history-dialog {
+    position: fixed;
+    top: 4rem;
+    right: 1rem;
+    z-index: 3860;
+    width: min(23rem, calc(100vw - 2rem));
+    display: none;
+    overflow: hidden;
+    border: 1px solid #ffffff24;
+    border-radius: 8px;
+    background: #171717f8;
+    color: var(--text);
+    box-shadow: 0 1rem 3rem #000c;
+  }
+  #extension-history-dialog.visible { display: block; }
+  .extension-history-head,
+  .extension-history-nav {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+  }
+  .extension-history-head {
+    padding: .75rem;
+    border-bottom: 1px solid #ffffff12;
+  }
+  .extension-history-head .extension-history-icon {
+    width: 1.9rem;
+    height: 1.9rem;
+    flex: 0 0 1.9rem;
+    display: grid;
+    place-items: center;
+    border: 1px solid #ef4444;
+    border-radius: 50%;
+    background: #ef444426;
+    color: #fff;
+  }
+  .extension-history-head .extension-history-icon svg {
+    width: 1rem;
+    height: 1rem;
+    fill: currentColor;
+  }
+  .extension-history-heading { min-width: 0; flex: 1; }
+  .extension-history-heading small {
+    display: block;
+    color: #888;
+    font-size: .56rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+  #extension-history-title {
+    display: block;
+    overflow: hidden;
+    color: #fff;
+    font-size: .78rem;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .extension-history-icon-button {
+    width: 2rem;
+    height: 2rem;
+    flex: 0 0 2rem;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid #ffffff18;
+    border-radius: 6px;
+    background: #ffffff08;
+    color: #aaa;
+    cursor: pointer;
+  }
+  .extension-history-icon-button:hover,
+  .extension-history-icon-button:focus-visible {
+    border-color: #ffffff36;
+    color: #fff;
+    outline: none;
+  }
+  .extension-history-icon-button:disabled { opacity: .3; cursor: default; }
+  .extension-history-icon-button svg {
+    width: 1rem;
+    height: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .extension-history-body { padding: .8rem; }
+  #extension-history-time {
+    color: #777;
+    font-size: .58rem;
+  }
+  #extension-history-target {
+    margin-top: .45rem;
+    color: #ddd;
+    font-size: .68rem;
+    font-weight: 700;
+  }
+  #extension-history-message {
+    margin-top: .55rem;
+    color: #fff;
+    font-size: .7rem;
+    line-height: 1.45;
+  }
+  #extension-history-events {
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+    margin-top: .65rem;
+  }
+  #extension-history-events .extension-activity-event:last-child {
+    color: #d6d6d6;
+  }
+  #extension-history-events .extension-activity-event:last-child::before {
+    background: #ef4444;
+    box-shadow: 0 0 0 3px #ef444420;
+  }
+  .extension-history-empty {
+    padding: 1.2rem .5rem;
+    color: #888;
+    font-size: .7rem;
+    text-align: center;
+  }
+  .extension-history-nav {
+    justify-content: space-between;
+    padding: .65rem .8rem;
+    border-top: 1px solid #ffffff12;
+  }
+  #extension-history-position {
+    min-width: 4rem;
+    color: #888;
+    font-size: .62rem;
+    text-align: center;
+  }
+  #extension-history-clear {
+    color: #ff8f98;
+  }
+  #mobile-extension-history-slot {
+    display: inline-flex;
+    margin-left: auto;
+  }
+
+  @media (max-width: 47.999rem) {
+    #mobile-extension-history-slot #extension-history-launcher {
+      position: static;
+      width: 2.25rem;
+      height: 2.25rem;
+      box-shadow: none;
+    }
+    #extension-history-dialog {
+      top: 50%;
+      right: 1rem;
+      left: 1rem;
+      width: auto;
+      max-height: min(32rem, calc(100dvh - 8rem));
+      transform: translateY(-50%);
+    }
+  }
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute;overflow:hidden" aria-hidden="true">
+  <symbol id="collager-extension-icon" viewBox="0 0 294 294">
+    <path d="M254.5 43.33C262.33 45.83 270.17 48.33 278 50.83C277.5 58.31 271.24 65.77 265.11 69.61C262.89 71.01 256.04 72.92 255 74.5C258.03 82.25 259.68 86.47 260.99 94.84C261.84 100.29 260.13 105.74 259.06 110.9C254.8 131.45 231.91 140.16 213.82 142.99C207 144.06 199 144.06 192.18 142.99C189.7 142.6 186.71 141.29 184.22 141.41C180.52 141.57 176.57 146.82 175.4 149.9C174.59 152 174.65 154.36 174.99 156.51C176.22 164.34 183.5 165.06 190.17 165.67C217.06 168.11 265.87 156.75 273.06 194.1C274.06 199.29 273.85 204.02 273.01 209.18C271.83 216.42 267.93 222.55 262.77 227.6C252.05 238.11 235.3 241.13 221.18 243.34C193.85 247.62 152.57 246.74 134.51 221.99C125.33 209.41 118.38 190.06 114.06 175.1C111.45 166.06 106.62 153.99 98.66 148.18C91.08 142.65 83.15 140.67 73.83 140.67C68.5 140.67 63.38 141.71 58.56 144.06C33.54 156.28 33.07 204.99 55.89 219.61C67.63 227.15 85.86 225.22 97.45 217.95C101.6 215.35 105.39 212.25 109.5 209.67C112.44 217.06 115.39 224.44 118.33 231.83C108.61 241.56 92.81 243.03 80.18 245.01C62.17 247.83 35.42 242.71 23.33 227.5C6.98 206.91 5.3 172.56 17.18 149.34C30.93 122.47 63.08 116.69 90.51 120.99C102.85 122.92 117.31 126.87 125.67 137.17C132.52 145.61 138.88 155.32 141.94 165.9C143.22 170.35 146.95 183.06 149.5 186.33C155.67 184.39 161.83 182.44 168 180.5C152.56 177.18 147.18 159.34 156.18 147.01C160.62 140.93 167.81 141.02 171 137.83C170.18 136.26 163.26 132.92 161.34 131.82C155.22 128.31 148.75 119.61 147.06 112.77C145.53 106.55 143.98 99.75 145.01 93.18C149.11 67 167.11 56.81 191.49 52.99C198.57 51.88 206.67 51.56 213.82 52.68C221.13 53.82 228.13 55.4 235.1 58.06C237.33 58.91 241.48 62.62 243.77 62.27C251.69 61.07 251.43 47.28 254.5 43.33ZM196.56 71.06C190.98 72.14 185.42 73.69 180.83 77.33C168.82 86.88 169.74 110.53 182.01 119.49C188.49 124.22 196.03 125.33 203.83 125.33C208.56 125.33 214.14 124.7 218.44 122.6C235.01 114.51 237.7 93.05 226.67 79.17C220.91 71.93 205.1 69.42 196.56 71.06ZM186.23 188.4C179.69 189.65 173 190.05 167.34 194.18C159.65 199.79 158.11 213.48 166.34 219.49C181 230.18 209.75 227.76 226.56 224.4C234.1 222.89 242.91 219.7 245.94 211.77C246.8 209.52 247 207.58 247 205.17C247 183.41 215.61 188.33 201.17 188.33C196.45 188.33 190.86 187.5 186.23 188.4Z"/>
+  </symbol>
+</svg>
 <section id="extension-activity-panel" role="status" aria-live="polite" aria-atomic="false" aria-hidden="true">
   <span class="extension-activity-tail" aria-hidden="true"></span>
   <div class="extension-activity-head">
     <div class="extension-activity-mark" aria-hidden="true">
-      <svg viewBox="0 0 24 24"><path d="M8 3v3M16 3v3M7 6h10a2 2 0 0 1 2 2v3a7 7 0 0 1-14 0V8a2 2 0 0 1 2-2Z"/><path d="M12 18v3M9 21h6"/></svg>
+      <svg viewBox="0 0 294 294"><use href="#collager-extension-icon"/></svg>
     </div>
     <div class="extension-activity-heading">
       <span class="extension-activity-eyebrow">Extensão em ação</span>
@@ -3240,6 +3432,44 @@
     <div id="extension-activity-actions" class="extension-activity-actions">
       <button type="button" id="extension-activity-open-lastfm">ABRIR LAST.FM</button>
     </div>
+  </div>
+</section>
+<button type="button" id="extension-history-launcher" hidden aria-label="Abrir histórico da extensão" title="Histórico da extensão" aria-expanded="false">
+  <svg viewBox="0 0 294 294" aria-hidden="true"><use href="#collager-extension-icon"/></svg>
+</button>
+<section id="extension-history-dialog" role="dialog" aria-modal="false" aria-labelledby="extension-history-title" aria-hidden="true">
+  <div class="extension-history-head">
+    <span class="extension-history-icon" aria-hidden="true">
+      <svg viewBox="0 0 294 294"><use href="#collager-extension-icon"/></svg>
+    </span>
+    <div class="extension-history-heading">
+      <small>Histórico da extensão</small>
+      <strong id="extension-history-title">Nenhuma ação registrada</strong>
+    </div>
+    <button type="button" class="extension-history-icon-button" id="extension-history-clear" aria-label="Excluir histórico da extensão" title="Excluir histórico">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 10v6M14 10v6"/></svg>
+    </button>
+    <button type="button" class="extension-history-icon-button" id="extension-history-close" aria-label="Fechar histórico da extensão" title="Fechar">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="extension-history-body">
+    <div id="extension-history-empty" class="extension-history-empty">A extensão ainda não registrou nenhuma ação.</div>
+    <div id="extension-history-content" hidden>
+      <div id="extension-history-time"></div>
+      <div id="extension-history-target"></div>
+      <div id="extension-history-message"></div>
+      <div id="extension-history-events"></div>
+    </div>
+  </div>
+  <div class="extension-history-nav">
+    <button type="button" class="extension-history-icon-button" id="extension-history-older" aria-label="Ver ação anterior" title="Ação anterior">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <span id="extension-history-position">0 de 0</span>
+    <button type="button" class="extension-history-icon-button" id="extension-history-newer" aria-label="Ver ação seguinte" title="Ação seguinte">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+    </button>
   </div>
 </section>
 <div id="specific-artists-floating-list"></div>
@@ -5282,6 +5512,7 @@
 <section id="mobile-history-sheet" aria-label="Excluídos, mesclados e histórico" aria-hidden="true">
   <div class="mobile-history-head">
     <strong>Histórico da collage</strong>
+    <span id="mobile-extension-history-slot"></span>
     <button type="button" class="mobile-icon-btn" id="mobile-history-close" aria-label="Fechar histórico" title="Fechar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"/></svg>
     </button>
@@ -16455,6 +16686,7 @@ async function generate() {
     generatedQueryState = cloneTimelinePlain(requestedQueryState, requestedQueryState);
 
     document.getElementById('collage-wrap').classList.add('visible');
+    syncExtensionHistoryLauncher();
     updateTemporalPaginationControls();
     document.getElementById('status').style.display = 'none';
 
@@ -17819,9 +18051,8 @@ const LASTFM_REPLACEMENT_MAX_AGE_SECONDS = 14 * 24 * 60 * 60;
 
 function syncTemporalProfileAccessVisibility(temporalMode = isTemporalCollageRendered()) {
   if (!temporalProfileAccess) return;
-  const extensionVisible = recentExtensionStatus?.style.display !== 'none'
-    && Boolean(recentExtensionStatus.textContent.trim());
-  temporalProfileAccess.style.display = temporalMode && extensionVisible
+  const activeHost = recentLastfmAuthorize?.parentElement;
+  temporalProfileAccess.style.display = temporalMode && activeHost === temporalProfileAccess
     ? 'flex'
     : 'none';
 }
@@ -17834,9 +18065,15 @@ function syncTemporalAuthorizePlacement() {
       : isObsessionsCollageRendered()
         ? obsessionActions
         : temporalProfileAccess;
-  if (!host || !recentLastfmAuthorize || recentLastfmAuthorize.parentElement === host) return;
+  if (!host || !recentLastfmAuthorize) return;
   const statusElement = host.querySelector('[aria-live="polite"]');
-  host.insertBefore(recentLastfmAuthorize, statusElement || null);
+  if (recentLastfmAuthorize.parentElement !== host) {
+    host.insertBefore(recentLastfmAuthorize, statusElement || null);
+  }
+  if (recentExtensionStatus && recentExtensionStatus.parentElement !== host) {
+    host.insertBefore(recentExtensionStatus, statusElement || null);
+  }
+  syncTemporalProfileAccessVisibility();
 }
 
 function syncRecentExtensionDependentControls() {
@@ -17855,6 +18092,7 @@ function syncRecentExtensionDependentControls() {
 
 function updateRecentExtensionStatus() {
   if (!recentExtensionStatus) return;
+  syncTemporalAuthorizePlacement();
   recentExtensionStatus.style.display = collagerLastfmExtensionAvailable ? 'none' : '';
   recentExtensionStatus.style.color = '#ffb86b';
   recentExtensionStatus.innerHTML = collagerLastfmExtensionAvailable
@@ -17862,6 +18100,7 @@ function updateRecentExtensionStatus() {
     : 'Extensão não detectada, instale-a <a href="https://github.com/katiaukg/collagerfm/tree/main/extension" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">clicando aqui</a>.';
   syncRecentExtensionDependentControls();
   syncTemporalProfileAccessVisibility();
+  syncExtensionHistoryLauncher();
 }
 
 const extensionActivityPanel = document.getElementById('extension-activity-panel');
@@ -17872,6 +18111,24 @@ const extensionActivityEvents = document.getElementById('extension-activity-even
 const extensionActivityClose = document.getElementById('extension-activity-close');
 const extensionActivityActions = document.getElementById('extension-activity-actions');
 const extensionActivityOpenLastfm = document.getElementById('extension-activity-open-lastfm');
+const extensionHistoryLauncher = document.getElementById('extension-history-launcher');
+const extensionHistoryDialog = document.getElementById('extension-history-dialog');
+const extensionHistoryTitle = document.getElementById('extension-history-title');
+const extensionHistoryTime = document.getElementById('extension-history-time');
+const extensionHistoryTarget = document.getElementById('extension-history-target');
+const extensionHistoryMessage = document.getElementById('extension-history-message');
+const extensionHistoryEvents = document.getElementById('extension-history-events');
+const extensionHistoryEmpty = document.getElementById('extension-history-empty');
+const extensionHistoryContent = document.getElementById('extension-history-content');
+const extensionHistoryPosition = document.getElementById('extension-history-position');
+const extensionHistoryOlder = document.getElementById('extension-history-older');
+const extensionHistoryNewer = document.getElementById('extension-history-newer');
+const extensionHistoryClear = document.getElementById('extension-history-clear');
+const extensionHistoryClose = document.getElementById('extension-history-close');
+const extensionHistoryHome = document.createComment('extension-history-launcher-home');
+extensionHistoryLauncher?.parentNode?.insertBefore(extensionHistoryHome, extensionHistoryLauncher);
+const EXTENSION_HISTORY_STORAGE_KEY = 'collager.fm.extension-history.v1';
+const EXTENSION_HISTORY_LIMIT = 60;
 const EXTENSION_ACTION_LABELS = {
   deleteScrobble: 'Excluindo scrobble',
   deleteObsession: 'Excluindo obsessão',
@@ -17886,6 +18143,100 @@ let extensionActivityRequestId = '';
 let extensionActivityDismissedRequestId = '';
 let extensionActivityHideTimer = null;
 let extensionActivityLog = [];
+let extensionActivityTargetValue = '';
+let extensionHistoryIndex = 0;
+let extensionHistory = (() => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(EXTENSION_HISTORY_STORAGE_KEY) || '[]');
+    return Array.isArray(parsed) ? parsed.slice(0, EXTENSION_HISTORY_LIMIT) : [];
+  } catch (_) {
+    return [];
+  }
+})();
+
+function persistExtensionHistory() {
+  try {
+    localStorage.setItem(EXTENSION_HISTORY_STORAGE_KEY, JSON.stringify(extensionHistory));
+  } catch (_) {}
+}
+
+function renderExtensionHistory() {
+  const total = extensionHistory.length;
+  extensionHistoryIndex = total ? Math.max(0, Math.min(extensionHistoryIndex, total - 1)) : 0;
+  const entry = total ? extensionHistory[extensionHistoryIndex] : null;
+  extensionHistoryEmpty.hidden = Boolean(entry);
+  extensionHistoryContent.hidden = !entry;
+  extensionHistoryTitle.textContent = entry?.title || 'Nenhuma ação registrada';
+  extensionHistoryPosition.textContent = total ? `${extensionHistoryIndex + 1} de ${total}` : '0 de 0';
+  extensionHistoryOlder.disabled = !entry || extensionHistoryIndex >= total - 1;
+  extensionHistoryNewer.disabled = !entry || extensionHistoryIndex <= 0;
+  extensionHistoryClear.disabled = !total;
+  if (!entry) return;
+  extensionHistoryTime.textContent = new Intl.DateTimeFormat('pt-BR', {
+    dateStyle: 'short',
+    timeStyle: 'medium',
+  }).format(new Date(entry.timestamp));
+  extensionHistoryTarget.textContent = entry.target || '';
+  extensionHistoryTarget.hidden = !entry.target;
+  extensionHistoryMessage.textContent = entry.message || '';
+  extensionHistoryEvents.innerHTML = '';
+  (entry.events || []).forEach(text => {
+    const row = document.createElement('div');
+    row.className = 'extension-activity-event';
+    row.textContent = text;
+    extensionHistoryEvents.appendChild(row);
+  });
+}
+
+function addExtensionHistoryEntry(entry) {
+  extensionHistory.unshift({
+    timestamp: Date.now(),
+    title: 'Ação da extensão',
+    target: '',
+    message: '',
+    events: [],
+    ok: false,
+    ...entry,
+  });
+  extensionHistory = extensionHistory.slice(0, EXTENSION_HISTORY_LIMIT);
+  extensionHistoryIndex = 0;
+  persistExtensionHistory();
+  renderExtensionHistory();
+  syncExtensionHistoryLauncher();
+}
+
+function syncExtensionHistoryLauncher() {
+  if (!extensionHistoryLauncher) return;
+  const collageVisible = document.getElementById('collage-wrap')?.classList.contains('visible');
+  const relevant = Boolean(collageVisible && isTemporalCollageRendered()
+    && (collagerLastfmExtensionAvailable || extensionHistory.length));
+  extensionHistoryLauncher.hidden = !relevant;
+  if (!relevant) {
+    extensionHistoryDialog?.classList.remove('visible');
+    extensionHistoryDialog?.setAttribute('aria-hidden', 'true');
+    extensionHistoryLauncher.setAttribute('aria-expanded', 'false');
+    return;
+  }
+  const mobile = window.matchMedia('(max-width: 47.999rem)').matches;
+  const mobileSlot = document.getElementById('mobile-extension-history-slot');
+  if (mobile && mobileSlot) {
+    if (extensionHistoryLauncher.parentElement !== mobileSlot) mobileSlot.appendChild(extensionHistoryLauncher);
+  } else if (extensionHistoryHome.parentNode) {
+    extensionHistoryHome.parentNode.insertBefore(extensionHistoryLauncher, extensionHistoryHome.nextSibling);
+  }
+}
+
+function setExtensionHistoryDialog(open) {
+  if (!extensionHistoryDialog || !extensionHistoryLauncher) return;
+  extensionHistoryDialog.classList.toggle('visible', open);
+  extensionHistoryDialog.setAttribute('aria-hidden', String(!open));
+  extensionHistoryLauncher.classList.toggle('active', open);
+  extensionHistoryLauncher.setAttribute('aria-expanded', String(open));
+  if (open) {
+    extensionHistoryIndex = 0;
+    renderExtensionHistory();
+  }
+}
 
 function extensionActivityTargetText(payload = {}) {
   const artist = String(payload.artist || '').trim();
@@ -17918,6 +18269,7 @@ function showExtensionActivity(requestId, action, payload = {}) {
   extensionActivityPanel.style.setProperty('--extension-progress', '5%');
   extensionActivityTitle.textContent = EXTENSION_ACTION_LABELS[action] || 'Executando ação';
   const target = extensionActivityTargetText(payload);
+  extensionActivityTargetValue = target;
   extensionActivityTarget.textContent = target;
   extensionActivityTarget.classList.toggle('visible', Boolean(target));
   extensionActivityMessage.textContent = 'Enviando comando à extensão...';
@@ -17955,12 +18307,19 @@ function updateExtensionActivity(requestId, detail = {}) {
 }
 
 function finishExtensionActivity(requestId, action, ok, message = '', openUrl = '') {
-  if (!extensionActivityPanel || action === 'ping' || requestId !== extensionActivityRequestId
-      || requestId === extensionActivityDismissedRequestId) return;
-  clearTimeout(extensionActivityHideTimer);
+  if (action === 'ping' || requestId !== extensionActivityRequestId) return;
   const finalMessage = String(message || (ok
     ? EXTENSION_SUCCESS_MESSAGES[action] || 'Ação concluída com sucesso.'
     : 'A extensão não concluiu a ação.')).trim();
+  addExtensionHistoryEntry({
+    title: EXTENSION_ACTION_LABELS[action] || 'Ação da extensão',
+    target: extensionActivityTargetValue,
+    message: finalMessage,
+    events: [...extensionActivityLog],
+    ok,
+  });
+  if (!extensionActivityPanel || requestId === extensionActivityDismissedRequestId) return;
+  clearTimeout(extensionActivityHideTimer);
   extensionActivityPanel.classList.remove('running', 'success', 'error');
   extensionActivityPanel.classList.add('visible', ok ? 'success' : 'error');
   extensionActivityPanel.setAttribute('aria-hidden', 'false');
@@ -18002,6 +18361,29 @@ extensionActivityOpenLastfm?.addEventListener('click', () => {
   if (!url) return;
   window.open(url, '_blank', 'noopener');
 });
+
+extensionHistoryLauncher?.addEventListener('click', () => {
+  setExtensionHistoryDialog(!extensionHistoryDialog?.classList.contains('visible'));
+});
+extensionHistoryClose?.addEventListener('click', () => setExtensionHistoryDialog(false));
+extensionHistoryOlder?.addEventListener('click', () => {
+  if (extensionHistoryIndex < extensionHistory.length - 1) extensionHistoryIndex += 1;
+  renderExtensionHistory();
+});
+extensionHistoryNewer?.addEventListener('click', () => {
+  if (extensionHistoryIndex > 0) extensionHistoryIndex -= 1;
+  renderExtensionHistory();
+});
+extensionHistoryClear?.addEventListener('click', () => {
+  if (!extensionHistory.length || !window.confirm('Deseja excluir todo o histórico da extensão?')) return;
+  extensionHistory = [];
+  extensionHistoryIndex = 0;
+  persistExtensionHistory();
+  renderExtensionHistory();
+  syncExtensionHistoryLauncher();
+});
+window.matchMedia('(max-width: 47.999rem)').addEventListener('change', syncExtensionHistoryLauncher);
+renderExtensionHistory();
 
 function collagerExtensionRequest(action, payload = {}, timeoutMs = 45000) {
   return new Promise((resolve, reject) => {
@@ -18226,15 +18608,17 @@ async function refreshRecentMetadataAuthUi() {
   try {
     const status = await getLastfmWriteAuthStatus();
     applyRecentMetadataAuthState(status);
-    if (status.connected && !activeClickItem?._nowPlaying) {
+    if (collagerLastfmExtensionAvailable && status.connected && !activeClickItem?._nowPlaying) {
       setActiveTemporalStatus(`Conta ${status.username} autorizada para edição.`);
-    } else if (!status.connected && !activeClickItem?._nowPlaying) {
+    } else if (collagerLastfmExtensionAvailable && !status.connected && !activeClickItem?._nowPlaying) {
       setActiveTemporalStatus(lastfmAuthorizationRequiredMessage(status), true);
+    } else if (!collagerLastfmExtensionAvailable && !activeClickItem?._nowPlaying) {
+      setActiveTemporalStatus('');
     }
   } catch (error) {
     applyRecentMetadataAuthState({ configured: false, connected: false });
     recentLastfmAuthorize.style.display = '';
-    setActiveTemporalStatus(error.message, true);
+    setActiveTemporalStatus(collagerLastfmExtensionAvailable ? error.message : '', true);
   }
 }
 

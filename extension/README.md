@@ -16,6 +16,9 @@ O mesmo codigo atende Chromium e Firefox, com manifestos separados:
 Ao excluir um scrobble, excluir uma obsessao ou definir uma obsessao, a extensao
 envia ao collager.fm somente o andamento da operacao. O site mostra um balao
 compacto com a acao atual, a faixa envolvida, as etapas recentes e o resultado.
+As acoes concluidas tambem ficam em um historico local do navegador, acessivel
+pelo botao circular da extensao nas collages Recentes, Curtidas e Obsessoes.
+Esse historico pode ser percorrido ou apagado pelo proprio usuario.
 
 O balao nao incorpora nem reproduz a pagina do Last.fm. Cookies, controles
 internos, HTML da conta e credenciais continuam restritos a extensao.
