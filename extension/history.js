@@ -5,6 +5,12 @@ const RULES_STORAGE_KEY = 'collager.fm.metadata-rules.v1';
 
 let historyEntries = [];
 let metadataRules = [];
+const pendingControls = new Set();
+const COLLAGER_TAB_PATTERNS = [
+  'https://collagerfm.vercel.app/*',
+  'http://127.0.0.1/*',
+  'http://localhost/*',
+];
 
 function clean(value, maximum = 500) {
   return String(value || '').trim().slice(0, maximum);
@@ -65,6 +71,66 @@ function element(tag, className, text) {
   return node;
 }
 
+function storageSet(values) {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.set(values, () => {
+      if (chrome.runtime.lastError) reject(new Error(chrome.runtime.lastError.message));
+      else resolve();
+    });
+  });
+}
+
+function queryCollagerTabs() {
+  return new Promise(resolve => {
+    chrome.tabs.query({ url: COLLAGER_TAB_PATTERNS }, tabs => {
+      void chrome.runtime.lastError;
+      resolve(Array.isArray(tabs) ? tabs : []);
+    });
+  });
+}
+
+function sendTabControl(tabId, message) {
+  return new Promise(resolve => {
+    chrome.tabs.sendMessage(tabId, message, response => {
+      const failed = Boolean(chrome.runtime.lastError);
+      resolve(!failed && Boolean(response?.accepted));
+    });
+  });
+}
+
+async function sendRuleControl(action, key, field, enabled) {
+  const tabs = await queryCollagerTabs();
+  if (!tabs.length) return false;
+  const responses = await Promise.all(tabs.map(tab => sendTabControl(tab.id, {
+    channel: 'collager-lastfm-history-control',
+    action,
+    key,
+    field,
+    enabled: Boolean(enabled),
+  })));
+  return responses.some(Boolean);
+}
+
+async function persistRuleControl(key, field, enabled, removeOperation = false) {
+  const index = metadataRules.findIndex(rule => rule?.key === key);
+  if (index < 0) return;
+  const rule = { ...metadataRules[index] };
+  if (field === 'applyMetadataCorrection') {
+    rule.applyMetadataCorrection = removeOperation ? false : Boolean(enabled);
+    if (removeOperation) rule.correctionConfigured = false;
+  } else {
+    rule.deleteFutureScrobbles = removeOperation ? false : Boolean(enabled);
+    if (removeOperation) {
+      rule.deletionConfigured = false;
+      rule.deleteFutureStartedAt = 0;
+    }
+  }
+  if (!rule.correctionConfigured && !rule.deletionConfigured) metadataRules.splice(index, 1);
+  else metadataRules[index] = rule;
+  await storageSet({ [RULES_STORAGE_KEY]: metadataRules });
+  render();
+}
+
 function emptyCard(message) {
   return element('div', 'empty', message);
 }
@@ -92,8 +158,26 @@ function renderRuleCard(rule, field, description) {
   const head = element('div', 'card-head');
   const title = element('h3', '', ruleLabel(rule));
   const active = Boolean(rule?.[field]);
-  const state = element('span', `state${active ? '' : ' off'}`, active ? 'Ativada' : 'Desativada');
-  head.append(title, state);
+  const pendingKey = `${rule.key}|${field}`;
+  const actions = element('div', 'rule-actions');
+  const toggleLabel = element('label', `rule-toggle${active ? '' : ' off'}`);
+  const toggle = element('input');
+  toggle.type = 'checkbox';
+  toggle.checked = active;
+  toggle.disabled = pendingControls.has(pendingKey);
+  toggle.dataset.key = rule.key;
+  toggle.dataset.field = field;
+  toggle.setAttribute('aria-label', `Ativar ou desativar ${ruleLabel(rule)}`);
+  toggleLabel.append(toggle, element('span', '', active ? 'Ativada' : 'Desativada'));
+  const remove = element('button', 'remove-operation', '×');
+  remove.type = 'button';
+  remove.disabled = pendingControls.has(pendingKey);
+  remove.dataset.key = rule.key;
+  remove.dataset.field = field;
+  remove.setAttribute('aria-label', `Excluir operação de ${ruleLabel(rule)}`);
+  remove.title = 'Excluir operação';
+  actions.append(toggleLabel, remove);
+  head.append(title, actions);
   card.append(head);
   const detail = element('div', 'detail', description(rule));
   if (detail.textContent) card.append(detail);
@@ -147,6 +231,47 @@ document.querySelector('.tabs').addEventListener('click', event => {
   document.querySelectorAll('.view').forEach(panel => {
     panel.classList.toggle('active', panel.dataset.panel === tab.dataset.view);
   });
+});
+
+document.querySelector('main').addEventListener('change', async event => {
+  const toggle = event.target.closest('input[data-key][data-field]');
+  if (!toggle) return;
+  const key = toggle.dataset.key;
+  const field = toggle.dataset.field;
+  const pendingKey = `${key}|${field}`;
+  const enabled = toggle.checked;
+  pendingControls.add(pendingKey);
+  render();
+  const accepted = await sendRuleControl('toggleRule', key, field, enabled);
+  if (accepted) {
+    await persistRuleControl(key, field, enabled);
+  } else {
+    window.alert('Abra o collager.fm em outra aba para alterar esta regra.');
+  }
+  pendingControls.delete(pendingKey);
+  render();
+});
+
+document.querySelector('main').addEventListener('click', async event => {
+  const remove = event.target.closest('.remove-operation[data-key][data-field]');
+  if (!remove) return;
+  const key = remove.dataset.key;
+  const field = remove.dataset.field;
+  const rule = metadataRules.find(candidate => candidate?.key === key);
+  if (!rule) return;
+  const kind = field === 'applyMetadataCorrection' ? 'alteração automática' : 'exclusão automática';
+  if (!window.confirm(`Deseja excluir a operação de ${kind} para ${ruleLabel(rule)}?`)) return;
+  const pendingKey = `${key}|${field}`;
+  pendingControls.add(pendingKey);
+  render();
+  const accepted = await sendRuleControl('deleteRule', key, field, false);
+  if (accepted) {
+    await persistRuleControl(key, field, false, true);
+  } else {
+    window.alert('Abra o collager.fm em outra aba para excluir esta regra.');
+  }
+  pendingControls.delete(pendingKey);
+  render();
 });
 
 chrome.storage.onChanged.addListener((changes, area) => {

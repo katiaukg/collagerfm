@@ -1056,6 +1056,15 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   #collage-wrap { display: none; flex-direction: column; align-items: center; width: fit-content; max-width: 100%; min-width: 0; }
   #collage-wrap.visible { display: flex; }
+  #collage-canvas-stack {
+    position: relative;
+    display: block;
+    flex: 0 0 auto;
+    width: fit-content;
+    max-width: 100%;
+    min-width: 0;
+    line-height: 0;
+  }
   #collage-canvas {
     border-radius: 4px; box-shadow: 0 20px 60px #00000080;
     display: block; width: auto; height: auto;
@@ -1549,6 +1558,7 @@
       max-width: 100%;
       min-width: 0;
     }
+    #collage-canvas-stack { max-width: calc(100vw - 32px); }
     #collage-canvas,
     #collage-overlay-canvas,
     #drag-pulse-overlay,
@@ -5202,6 +5212,7 @@
       Informar conta Last.fm
     </button>
     <div id="collage-wrap" style="position:relative;">
+      <div id="collage-canvas-stack">
       <canvas id="collage-canvas"></canvas>
       <canvas id="collage-overlay-canvas" style="position:absolute;top:0;left:0;pointer-events:none;"></canvas>
       <canvas id="drag-pulse-overlay"></canvas>
@@ -5226,6 +5237,7 @@
       </div>
       <div id="header-image-editor-layer" aria-hidden="true">
         <div id="header-image-editor-hit" aria-label="Área para posicionar a imagem do cabeçalho"></div>
+      </div>
       </div>
       <div id="header-image-editor-actions">
         <span class="header-image-editor-hint header-image-editor-hint-desktop">Mouse1: arrastar · Mouse2 ou Mouse3: arrastar para aplicar zoom</span>
@@ -12173,7 +12185,7 @@ function updateRecentMetadataRuleFromExtension(key, field, enabled) {
   if (enabled) {
     applySavedMetadataRulesToLastfm(allFetchedItems, { redraw: true })
       .catch(error => console.warn('Automação de metadata:', error.message));
-    if (field === 'applyMetadataCorrection') backfillRecentMetadataRule(key);
+    backfillRecentMetadataRule(key);
   }
   return true;
 }
@@ -16770,31 +16782,15 @@ function hitTestTile(clientX, clientY) {
 }
 
 // Mantém qualquer camada de interação exatamente sobre o canvas principal.
-// O zoom nativo e os breakpoints de tablet podem mudar o tamanho visual do
-// canvas sem mudar seus offsets de layout na mesma batida; por isso usamos o
-// retângulo visual como fonte única e o convertemos para o bloco pai.
+// Todas as camadas vivem no #collage-canvas-stack, cujo tamanho é definido
+// somente pelo canvas. Usar a própria caixa da pilha evita converter medidas
+// de getBoundingClientRect de volta para CSS durante o zoom nativo.
 function positionCanvasOverlay(element) {
-  const containingBlock = element.offsetParent || mainCanvas.parentElement;
-  const rect = mainCanvas.getBoundingClientRect();
-  const containingRect = containingBlock.getBoundingClientRect();
-  const scaleX = containingBlock.clientWidth > 0
-    ? containingRect.width / containingBlock.clientWidth
-    : 1;
-  const scaleY = containingBlock.clientHeight > 0
-    ? containingRect.height / containingBlock.clientHeight
-    : 1;
-  const left = (rect.left - containingRect.left - containingBlock.clientLeft * scaleX) / (scaleX || 1)
-    + containingBlock.scrollLeft;
-  const top = (rect.top - containingRect.top - containingBlock.clientTop * scaleY) / (scaleY || 1)
-    + containingBlock.scrollTop;
-  const width = rect.width / (scaleX || 1);
-  const height = rect.height / (scaleY || 1);
-
   element.style.position = 'absolute';
-  element.style.left = left + 'px';
-  element.style.top = top + 'px';
-  element.style.width = width + 'px';
-  element.style.height = height + 'px';
+  element.style.left = '0';
+  element.style.top = '0';
+  element.style.width = '100%';
+  element.style.height = '100%';
   element.style.maxWidth = 'none';
   element.style.maxHeight = 'none';
 }
@@ -18351,6 +18347,20 @@ function markRecentMetadataProcessed(item, original = getRecentOriginalMetadata(
   }
 }
 
+function recentMetadataDeleteStartedAtSeconds(rule) {
+  const startedAt = Number(rule?.deleteFutureStartedAt || 0);
+  return startedAt > 0 ? Math.floor(startedAt / 1000) : 0;
+}
+
+function shouldDeleteRecentMetadataItem(rule, item, original = getRecentOriginalMetadata(item)) {
+  if (!rule?.deleteFutureScrobbles) return false;
+  const startedAt = recentMetadataDeleteStartedAtSeconds(rule);
+  const timestamp = Math.floor(Number(original?.timestamp) || 0);
+  return startedAt > 0
+    && timestamp > startedAt
+    && !recentMetadataWasProcessed(item, original, 'delete');
+}
+
 async function applySavedMetadataRulesToLastfm(items, options = {}) {
   if (!Array.isArray(items) || !items.length) return;
   if (recentMetadataAutomationBusy) {
@@ -18367,10 +18377,7 @@ async function applySavedMetadataRulesToLastfm(items, options = {}) {
     if (!rule) return false;
     const timestamp = Math.floor(Number(original.timestamp));
     const age = Math.floor(Date.now() / 1000) - timestamp;
-    const deleteAfterActivation = rule.deleteFutureScrobbles
-      && Number(rule.deleteFutureStartedAt || 0) > 0
-      && timestamp >= Math.ceil(Number(rule.deleteFutureStartedAt) / 1000)
-      && !recentMetadataWasProcessed(item, original, 'delete');
+    const deleteAfterActivation = shouldDeleteRecentMetadataItem(rule, item, original);
     const edited = rule.edited || {};
     const metadataChanged = normalizeMemoryPart(edited.artist) !== normalizeMemoryPart(original.artist)
       || normalizeMemoryPart(edited.track) !== normalizeMemoryPart(original.track)
@@ -18396,19 +18403,22 @@ async function applySavedMetadataRulesToLastfm(items, options = {}) {
       }
     }
     if (!collagerLastfmExtensionAvailable) return;
-    const auth = await getLastfmWriteAuthStatus().catch(() => ({ connected: false }));
-    if (!auth.connected) return;
+    const needsMetadataWrite = candidates.some(item => {
+      const original = getRecentOriginalMetadata(item);
+      const rule = getRecentMetadataRule(item);
+      return rule?.applyMetadataCorrection
+        && !shouldDeleteRecentMetadataItem(rule, item, original);
+    });
+    const auth = needsMetadataWrite
+      ? await getLastfmWriteAuthStatus().catch(() => ({ connected: false }))
+      : { connected: false };
 
     for (const item of candidates) {
       const original = { ...getRecentOriginalMetadata(item) };
       const rule = getRecentMetadataRule(item);
       const edited = rule?.edited || rule;
       if (!edited) continue;
-      const timestamp = Math.floor(Number(original.timestamp));
-      const deleteAfterActivation = rule.deleteFutureScrobbles
-        && Number(rule.deleteFutureStartedAt || 0) > 0
-        && timestamp >= Math.ceil(Number(rule.deleteFutureStartedAt) / 1000)
-        && !recentMetadataWasProcessed(item, original, 'delete');
+      const deleteAfterActivation = shouldDeleteRecentMetadataItem(rule, item, original);
       try {
         if (deleteAfterActivation) {
           await collagerExtensionRequest('deleteScrobble', recentExtensionDeletePayload(item, original, {
@@ -18421,6 +18431,7 @@ async function applySavedMetadataRulesToLastfm(items, options = {}) {
           appendStatusHistoryEntry(`Regra automática excluiu: ${original.artist} — ${original.track}.`);
           continue;
         }
+        if (!auth.connected) continue;
         if (!rule.applyMetadataCorrection || recentMetadataWasProcessed(item, original, 'metadata')) continue;
         await sendLastfmWrite({ action: 'replace', original, edited, deleteOriginal: false });
         await collagerExtensionRequest('deleteScrobble', recentExtensionDeletePayload(item, original, {
@@ -18466,24 +18477,28 @@ async function backfillRecentMetadataRule(ruleKey) {
 
   const task = (async () => {
     const rule = recentMetadataRules.get(key);
-    if (!rule?.applyMetadataCorrection) return;
+    if (!rule?.applyMetadataCorrection && !rule?.deleteFutureScrobbles) return;
     const original = rule.original || {};
     const edited = rule.edited || {};
     const metadataChanged = normalizeMemoryPart(edited.artist) !== normalizeMemoryPart(original.artist)
       || normalizeMemoryPart(edited.track) !== normalizeMemoryPart(original.track)
       || normalizeMemoryPart(edited.album) !== normalizeMemoryPart(original.album);
-    if (!metadataChanged) return;
+    if (!metadataChanged && !rule.deleteFutureScrobbles) return;
 
     const user = String(rule.username || getRenderedQueryState()?.username || '').trim();
     if (!user) return;
     const nowSeconds = Math.floor(Date.now() / 1000);
-    const fromSeconds = nowSeconds - LASTFM_REPLACEMENT_MAX_AGE_SECONDS;
+    const deleteStartedAt = recentMetadataDeleteStartedAtSeconds(rule);
+    const fromSeconds = Math.max(
+      nowSeconds - LASTFM_REPLACEMENT_MAX_AGE_SECONDS,
+      rule.deleteFutureScrobbles && deleteStartedAt > 0 ? deleteStartedAt : 0,
+    );
     const matches = [];
     const seen = new Set();
     let page = 1;
     let totalPages = 1;
 
-    appendStatusHistoryEntry(`Buscando scrobbles iguais dos últimos 14 dias: ${original.artist} — ${original.track}.`);
+    appendStatusHistoryEntry(`Conferindo regras nos scrobbles dos últimos 14 dias: ${original.artist} — ${original.track}.`);
     do {
       const data = await apiFetch({
         method: 'user.getRecentTracks',
@@ -18521,7 +18536,7 @@ async function backfillRecentMetadataRule(ruleKey) {
       throw new Error('A automação ainda está ocupada. A correção será conferida no próximo scrobble.');
     }
     await applySavedMetadataRulesToLastfm(matches, { redraw: false });
-    appendStatusHistoryEntry(`Correção dos últimos 14 dias conferida: ${original.artist} — ${original.track}.`);
+    appendStatusHistoryEntry(`Regras dos últimos 14 dias conferidas: ${original.artist} — ${original.track}.`);
   })().catch(error => {
     console.warn('Busca retroativa de metadata:', error.message);
   }).finally(() => {
@@ -20345,14 +20360,16 @@ function applyRecentMetadataLocally(item, targetPoolIdx, original, edited) {
   const applyMetadataCorrection = Boolean(recentMetadataFuture.checked);
   const deleteFutureScrobbles = Boolean(recentMetadataDeleteFuture.checked);
   const now = Date.now();
+  const sourceTimestamp = Math.floor(Number(original?.timestamp) || 0);
+  const sourceTimestampMs = sourceTimestamp > 0 ? sourceTimestamp * 1000 : now;
   const previousRule = recentMetadataRules.get(originalRuleKey);
   const ruleOriginal = previousRule?.original || original;
   if (applyMetadataCorrection || deleteFutureScrobbles || previousRule) {
     const deleteFutureStartedAt = deleteFutureScrobbles
       ? (
           previousRule?.deleteFutureScrobbles && Number(previousRule?.deleteFutureStartedAt) > 0
-            ? Number(previousRule.deleteFutureStartedAt)
-            : now
+            ? Math.min(Number(previousRule.deleteFutureStartedAt), sourceTimestampMs)
+            : sourceTimestampMs
         )
       : 0;
     recentMetadataRules.set(originalRuleKey, {
@@ -20421,6 +20438,9 @@ recentMetadataSave.addEventListener('click', async () => {
       allFetchedItems.filter(candidate => candidate !== item),
       { redraw: true }
     ).catch(error => console.warn('Automação de metadata:', error.message));
+    if (recentMetadataFuture.checked || recentMetadataDeleteFuture.checked) {
+      backfillRecentMetadataRule(recentMetadataRuleKey(original, item._recentUsername));
+    }
     return;
   }
 
@@ -20462,14 +20482,14 @@ recentMetadataSave.addEventListener('click', async () => {
       markRecentMetadataProcessed(item, original);
       item._lastfmOriginal = { ...replacementEdited, timestamp: original.timestamp };
       applyRecentMetadataLocally(item, targetPoolIdx, original, replacementEdited);
-      if (recentMetadataFuture.checked) {
+      if (recentMetadataFuture.checked || recentMetadataDeleteFuture.checked) {
         backfillRecentMetadataRule(recentMetadataRuleKey(original, item._recentUsername));
       }
       setRecentMetadataStatus('Scrobble substituído com sucesso no Last.fm.');
       appendStatusHistoryEntry(`Scrobble substituído: ${replacementEdited.artist} — ${replacementEdited.track}.`);
     } else {
       applyRecentMetadataLocally(item, targetPoolIdx, original, edited);
-      if (recentMetadataFuture.checked && metadataChanged) {
+      if ((recentMetadataFuture.checked && metadataChanged) || recentMetadataDeleteFuture.checked) {
         backfillRecentMetadataRule(recentMetadataRuleKey(original, item._recentUsername));
       }
       setRecentMetadataStatus(recentMetadataFuture.checked
@@ -20529,6 +20549,14 @@ recentScrobbleDelete.addEventListener('click', async () => {
     appendStatusHistoryEntry(`Scrobble excluído do Last.fm: ${original.artist} — ${original.track}.`);
     await runDraw();
     scheduleDownloadRefresh();
+    if (recentMetadataDeleteFuture.checked) {
+      const ruleKey = recentMetadataRuleKey(original, item._recentUsername);
+      applySavedMetadataRulesToLastfm(
+        allFetchedItems.filter(candidate => candidate !== item),
+        { redraw: true }
+      ).catch(error => console.warn('Exclusão automática de metadata:', error.message));
+      backfillRecentMetadataRule(ruleKey);
+    }
     triggerHapticFeedback('short');
   } catch (error) {
     setRecentMetadataStatus(error.message, true);
@@ -23673,16 +23701,19 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
 
   (() => {
     const desktopQuery = window.matchMedia('(any-hover: hover) and (any-pointer: fine)');
+    const mobileLayoutQuery = window.matchMedia('(max-width: 47.999rem)');
     const center = document.querySelector('.collage-center');
     const wrap = document.getElementById('collage-wrap');
+    const stack = document.getElementById('collage-canvas-stack');
     const canvas = document.getElementById('collage-canvas');
+    const headerImageActions = document.getElementById('header-image-editor-actions');
     const toolbar = document.getElementById('desktop-preview-zoom');
     const value = document.getElementById('desktop-preview-zoom-value');
     const zoomOut = document.getElementById('desktop-preview-zoom-out');
     const zoomIn = document.getElementById('desktop-preview-zoom-in');
     const zoomFit = document.getElementById('desktop-preview-zoom-fit');
     const historyPanels = document.getElementById('history-panels');
-    if (!center || !wrap || !canvas || !toolbar || !value || !zoomOut || !zoomIn || !zoomFit) return;
+    if (!center || !wrap || !stack || !canvas || !toolbar || !value || !zoomOut || !zoomIn || !zoomFit) return;
 
     const MIN_ZOOM = 0.5;
     const MAX_ZOOM = 4;
@@ -23703,6 +23734,10 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       wrap.style.removeProperty('margin-right');
       wrap.style.removeProperty('margin-top');
       wrap.style.removeProperty('margin-bottom');
+      stack.style.removeProperty('width');
+      stack.style.removeProperty('height');
+      stack.style.removeProperty('max-width');
+      stack.style.removeProperty('max-height');
       canvas.style.removeProperty('width');
       canvas.style.removeProperty('height');
       canvas.style.removeProperty('max-width');
@@ -23710,10 +23745,68 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       canvas.style.removeProperty('min-width');
     };
 
+    const isMobileEditPreview = () =>
+      mobileLayoutQuery.matches && document.body.dataset.mobileView === 'edit';
+
+    const getHeaderImageActionsHeight = () => {
+      if (!headerImageActions || getComputedStyle(headerImageActions).display === 'none') return 0;
+      const style = getComputedStyle(headerImageActions);
+      return headerImageActions.offsetHeight
+        + (parseFloat(style.marginTop) || 0)
+        + (parseFloat(style.marginBottom) || 0);
+    };
+
+    const setPreviewSize = size => {
+      if (!size) return;
+      const width = Math.max(1, size.width);
+      const height = Math.max(1, size.height);
+      const actionsHeight = getHeaderImageActionsHeight();
+
+      wrap.style.width = `${width}px`;
+      wrap.style.height = `${height + actionsHeight}px`;
+      wrap.style.maxWidth = 'none';
+      wrap.style.maxHeight = 'none';
+      stack.style.width = `${width}px`;
+      stack.style.height = `${height}px`;
+      stack.style.maxWidth = 'none';
+      stack.style.maxHeight = 'none';
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      canvas.style.maxWidth = 'none';
+      canvas.style.maxHeight = 'none';
+      canvas.style.minWidth = '0';
+    };
+
     const captureFitSize = () => {
       clearPreviewSizing();
-      const rect = canvas.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0) fitSize = { width: rect.width, height: rect.height };
+      if (isMobileEditPreview()) {
+        const rect = canvas.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) fitSize = { width: rect.width, height: rect.height };
+        return fitSize;
+      }
+
+      const naturalWidth = canvas.width || 1;
+      const naturalHeight = canvas.height || 1;
+      const centerRect = center.getBoundingClientRect();
+      const visualViewport = window.visualViewport;
+      const viewportLeft = visualViewport?.offsetLeft || 0;
+      const viewportTop = visualViewport?.offsetTop || 0;
+      const viewportRight = viewportLeft + (visualViewport?.width || innerWidth);
+      const viewportBottom = viewportTop + (visualViewport?.height || innerHeight);
+      const widthInsideViewport = Math.max(1, viewportRight - Math.max(centerRect.left, viewportLeft) - 8);
+      const heightInsideViewport = Math.max(1, viewportBottom - Math.max(centerRect.top, viewportTop) - 8);
+      const availableWidth = Math.max(1, Math.min(center.clientWidth || widthInsideViewport, widthInsideViewport));
+      const availableHeight = Math.max(
+        1,
+        Math.min(center.clientHeight || heightInsideViewport, heightInsideViewport) - getHeaderImageActionsHeight(),
+      );
+      const scale = Math.min(availableWidth / naturalWidth, availableHeight / naturalHeight);
+
+      fitSize = {
+        width: Math.max(1, naturalWidth * scale),
+        height: Math.max(1, naturalHeight * scale),
+      };
+      setPreviewSize(fitSize);
       return fitSize;
     };
 
@@ -23736,15 +23829,7 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
 
       const width = Math.max(1, base.width * zoom);
       const height = Math.max(1, base.height * zoom);
-      wrap.style.width = `${width}px`;
-      wrap.style.height = `${height}px`;
-      wrap.style.maxWidth = 'none';
-      wrap.style.maxHeight = 'none';
-      canvas.style.width = `${width}px`;
-      canvas.style.height = `${height}px`;
-      canvas.style.maxWidth = 'none';
-      canvas.style.maxHeight = 'none';
-      canvas.style.minWidth = '0';
+      setPreviewSize({ width, height });
       updateToolbar();
 
       requestAnimationFrame(() => {
@@ -23780,6 +23865,12 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       fitSize = null;
       center.classList.remove('desktop-preview-zoomed');
       clearPreviewSizing();
+      if (isMobileEditPreview()) {
+        center.scrollTo({ left: 0, top: 0 });
+        updateToolbar();
+        if (typeof syncOverlaySize === 'function') syncOverlaySize();
+        return;
+      }
       requestAnimationFrame(() => {
         captureFitSize();
         center.scrollTo({ left: 0, top: 0 });
@@ -23792,17 +23883,18 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       const dimensionsChanged = canvas.width !== lastCanvasWidth || canvas.height !== lastCanvasHeight;
       lastCanvasWidth = canvas.width;
       lastCanvasHeight = canvas.height;
-      if (!dimensionsChanged || !desktopQuery.matches || !wrap.classList.contains('visible')) return;
+      if (!dimensionsChanged || !wrap.classList.contains('visible')) return;
 
       cancelAnimationFrame(redrawFitFrame);
       redrawFitFrame = requestAnimationFrame(() => {
-        const previousZoom = zoom;
+        const previousZoom = desktopQuery.matches ? zoom : 1;
         fitSize = null;
         center.classList.remove('desktop-preview-zoomed');
         clearPreviewSizing();
         requestAnimationFrame(() => {
           captureFitSize();
-          applyZoom(previousZoom);
+          if (desktopQuery.matches) applyZoom(previousZoom);
+          else updateToolbar();
           if (typeof syncOverlaySize === 'function') syncOverlaySize();
           if (typeof syncDeletingOverlay === 'function') syncDeletingOverlay();
         });
@@ -23835,14 +23927,15 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
 
     if (historyPanels) {
       new MutationObserver(() => {
-        if (!desktopQuery.matches || !wrap.classList.contains('visible')) return;
-        const previousZoom = zoom;
+        if (!wrap.classList.contains('visible')) return;
+        const previousZoom = desktopQuery.matches ? zoom : 1;
         fitSize = null;
         center.classList.remove('desktop-preview-zoomed');
         clearPreviewSizing();
         requestAnimationFrame(() => {
           captureFitSize();
-          applyZoom(previousZoom);
+          if (desktopQuery.matches) applyZoom(previousZoom);
+          else updateToolbar();
         });
       }).observe(historyPanels, { attributes: true, attributeFilter: ['class'] });
     }
@@ -23850,10 +23943,19 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimer);
       resizeTimer = window.setTimeout(() => {
-        if (desktopQuery.matches && wrap.classList.contains('visible')) fitPreview();
+        if (wrap.classList.contains('visible')) fitPreview();
         else updateToolbar();
       }, 120);
     }, { passive: true });
+    window.visualViewport?.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        if (wrap.classList.contains('visible')) fitPreview();
+      }, 80);
+    }, { passive: true });
+    new MutationObserver(() => {
+      if (wrap.classList.contains('visible')) fitPreview();
+    }).observe(document.body, { attributes: true, attributeFilter: ['data-mobile-view'] });
     if (typeof desktopQuery.addEventListener === 'function') desktopQuery.addEventListener('change', fitPreview);
     else desktopQuery.addListener(fitPreview);
     updateToolbar();

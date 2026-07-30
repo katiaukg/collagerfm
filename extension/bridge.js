@@ -40,6 +40,7 @@ let historyView = 'history';
 const pendingRuleToggles = new Map();
 const pendingRuleDeletes = new Map();
 const ruleSectionPages = { changed: 0, deleted: 0 };
+let historyPanelPositionFrame = 0;
 
 function isAllowedPage() {
   return ALLOWED_ORIGINS.has(location.origin);
@@ -191,7 +192,10 @@ function renderHistory() {
   historyUi.older.disabled = !entry || historyIndex >= total - 1;
   historyUi.newer.disabled = !entry || historyIndex <= 0;
   historyUi.clear.disabled = !total;
-  if (!entry) return;
+  if (!entry) {
+    scheduleHistoryPanelPosition();
+    return;
+  }
   historyUi.time.textContent = formatDate(entry.timestamp);
   const currentTarget = operationTarget(entry.payload) || entry.target || '';
   historyUi.target.textContent = currentTarget;
@@ -211,6 +215,7 @@ function renderHistory() {
   historyUi.restore.textContent = pendingRestores.has(entry.id)
     ? 'RECOLOCANDO...'
     : 'RECOLOCAR SCROBBLE';
+  scheduleHistoryPanelPosition();
 }
 
 function metadataRuleLabel(rule) {
@@ -340,6 +345,7 @@ function renderRuleSettings() {
     rule => `Mesmo metadata de ${metadataRuleLabel(rule)}`,
     'deleted'
   );
+  scheduleHistoryPanelPosition();
 }
 
 function setHistoryView(view) {
@@ -360,14 +366,19 @@ function setHistoryView(view) {
     historyUi.kicker.textContent = 'Histórico da extensão';
     renderHistory();
   }
+  scheduleHistoryPanelPosition();
 }
 
 function requestRuleToggle(key, field, enabled) {
   const pendingKey = `${key}|${field}`;
-  if (!key || pendingRuleToggles.has(pendingKey)) return;
+  if (!key || pendingRuleToggles.has(pendingKey)) return false;
   const requestId = randomId();
   pendingRuleToggles.set(pendingKey, requestId);
   const rule = metadataRules.find(candidate => candidate.key === key);
+  if (!rule) {
+    pendingRuleToggles.delete(pendingKey);
+    return false;
+  }
   if (rule) rule[field] = Boolean(enabled);
   renderRuleSettings();
   window.postMessage({
@@ -377,15 +388,18 @@ function requestRuleToggle(key, field, enabled) {
     field,
     enabled: Boolean(enabled),
   }, location.origin);
+  return true;
 }
 
-function requestRuleDelete(key, field) {
+function requestRuleDelete(key, field, confirmUser = true) {
   const pendingKey = `${key}|${field}`;
-  if (!key || pendingRuleDeletes.has(pendingKey)) return;
+  if (!key || pendingRuleDeletes.has(pendingKey)) return false;
   const rule = metadataRules.find(candidate => candidate.key === key);
-  if (!rule) return;
+  if (!rule) return false;
   const operation = field === 'applyMetadataCorrection' ? 'alteração automática' : 'exclusão automática';
-  if (!window.confirm(`Deseja excluir a operação de ${operation} para ${metadataRuleLabel(rule)}?`)) return;
+  if (confirmUser && !window.confirm(`Deseja excluir a operação de ${operation} para ${metadataRuleLabel(rule)}?`)) {
+    return false;
+  }
   const requestId = randomId();
   pendingRuleDeletes.set(pendingKey, requestId);
   renderRuleSettings();
@@ -395,6 +409,116 @@ function requestRuleDelete(key, field) {
     key,
     field,
   }, location.origin);
+  return true;
+}
+
+function historyVisibleViewport() {
+  const viewport = window.visualViewport;
+  const left = Number(viewport?.offsetLeft || 0);
+  const top = Number(viewport?.offsetTop || 0);
+  const width = Math.max(1, Number(viewport?.width || innerWidth || 1));
+  const height = Math.max(1, Number(viewport?.height || innerHeight || 1));
+  return {
+    left,
+    top,
+    right: left + width,
+    bottom: top + height,
+    width,
+    height,
+  };
+}
+
+function clampHistoryLauncher(ui = historyUi) {
+  if (!ui?.launcher) return;
+  const launcher = ui.launcher;
+  const viewport = historyVisibleViewport();
+  const rect = launcher.getBoundingClientRect();
+  const margin = 8;
+  const width = Math.min(rect.width || launcher.offsetWidth || 44, Math.max(1, viewport.width - margin * 2));
+  const height = Math.min(rect.height || launcher.offsetHeight || 44, Math.max(1, viewport.height - margin * 2));
+  const left = Math.max(
+    viewport.left + margin,
+    Math.min(viewport.right - width - margin, rect.left),
+  );
+  const top = Math.max(
+    viewport.top + margin,
+    Math.min(viewport.bottom - height - margin, rect.top),
+  );
+
+  launcher.style.left = `${left}px`;
+  launcher.style.top = `${top}px`;
+  launcher.style.right = 'auto';
+  launcher.style.bottom = 'auto';
+}
+
+function positionHistoryPanel(ui = historyUi) {
+  if (!ui?.launcher) return;
+  clampHistoryLauncher(ui);
+  if (!ui.panel?.classList.contains('open')) return;
+  const panel = ui.panel;
+  const viewport = historyVisibleViewport();
+  const launcherRect = ui.launcher.getBoundingClientRect();
+  const panelRect = panel.getBoundingClientRect();
+  const margin = 8;
+  const gap = 10;
+  const panelWidth = Math.min(panelRect.width, Math.max(0, viewport.width - margin * 2));
+  const panelHeight = Math.min(panelRect.height, Math.max(0, viewport.height - margin * 2));
+  panel.style.maxWidth = `${Math.max(0, viewport.width - margin * 2)}px`;
+  panel.style.maxHeight = `${Math.max(0, viewport.height - margin * 2)}px`;
+  const candidates = [
+    {
+      placement: 'bottom-left',
+      left: launcherRect.right - panelWidth,
+      top: launcherRect.bottom + gap,
+    },
+    {
+      placement: 'top-left',
+      left: launcherRect.right - panelWidth,
+      top: launcherRect.top - gap - panelHeight,
+    },
+    {
+      placement: 'top-right',
+      left: launcherRect.left,
+      top: launcherRect.top - gap - panelHeight,
+    },
+    {
+      placement: 'bottom-right',
+      left: launcherRect.left,
+      top: launcherRect.bottom + gap,
+    },
+  ];
+  const fits = candidate =>
+    candidate.left >= viewport.left + margin
+    && candidate.top >= viewport.top + margin
+    && candidate.left + panelWidth <= viewport.right - margin
+    && candidate.top + panelHeight <= viewport.bottom - margin;
+  const overflow = candidate =>
+    Math.max(0, viewport.left + margin - candidate.left)
+    + Math.max(0, viewport.top + margin - candidate.top)
+    + Math.max(0, candidate.left + panelWidth - (viewport.right - margin))
+    + Math.max(0, candidate.top + panelHeight - (viewport.bottom - margin));
+  const selected = candidates.find(fits)
+    || candidates.reduce((best, candidate) => overflow(candidate) < overflow(best) ? candidate : best);
+  const minLeft = viewport.left + margin;
+  const minTop = viewport.top + margin;
+  const maxLeft = Math.max(minLeft, viewport.right - panelWidth - margin);
+  const maxTop = Math.max(minTop, viewport.bottom - panelHeight - margin);
+
+  panel.style.left = `${Math.max(minLeft, Math.min(maxLeft, selected.left))}px`;
+  panel.style.top = `${Math.max(minTop, Math.min(maxTop, selected.top))}px`;
+  panel.style.right = 'auto';
+  panel.style.bottom = 'auto';
+  panel.style.transform = 'none';
+  panel.dataset.placement = selected.placement;
+}
+
+function scheduleHistoryPanelPosition(ui = historyUi) {
+  if (!ui?.launcher) return;
+  cancelAnimationFrame(historyPanelPositionFrame);
+  historyPanelPositionFrame = requestAnimationFrame(() => {
+    historyPanelPositionFrame = 0;
+    positionHistoryPanel(ui);
+  });
 }
 
 function installLauncherDrag(ui) {
@@ -423,16 +547,22 @@ function installLauncherDrag(ui) {
     if (!drag.moved && Math.hypot(deltaX, deltaY) < 5) return;
     drag.moved = true;
     launcher.classList.add('dragging');
-    ui.panel.classList.remove('open');
-    ui.panel.setAttribute('aria-hidden', 'true');
     const width = launcher.offsetWidth || 44;
     const height = launcher.offsetHeight || 44;
-    const left = Math.max(8, Math.min(innerWidth - width - 8, drag.left + deltaX));
-    const top = Math.max(8, Math.min(innerHeight - height - 8, drag.top + deltaY));
+    const viewport = historyVisibleViewport();
+    const left = Math.max(
+      viewport.left + 8,
+      Math.min(viewport.right - width - 8, drag.left + deltaX),
+    );
+    const top = Math.max(
+      viewport.top + 8,
+      Math.min(viewport.bottom - height - 8, drag.top + deltaY),
+    );
     launcher.style.left = `${left}px`;
     launcher.style.top = `${top}px`;
     launcher.style.right = 'auto';
     launcher.style.bottom = 'auto';
+    scheduleHistoryPanelPosition(ui);
     event.preventDefault();
   });
 
@@ -442,6 +572,7 @@ function installLauncherDrag(ui) {
     launcher.classList.remove('dragging');
     if (launcher.hasPointerCapture(event.pointerId)) launcher.releasePointerCapture(event.pointerId);
     drag = null;
+    scheduleHistoryPanelPosition(ui);
     setTimeout(() => { suppressClick = false; }, 0);
   };
   launcher.addEventListener('pointerup', finish);
@@ -469,8 +600,9 @@ function mountHistoryUi() {
       .launcher.dragging { cursor: grabbing; }
       .launcher svg { width: 1.45rem; height: 1.45rem; fill: currentColor; }
       .panel {
-        position: fixed; top: 4.25rem; right: 1rem; z-index: 2147483646;
+        position: fixed; top: 0; left: 0; z-index: 2147483646;
         width: min(23rem, calc(100vw - 2rem)); display: none; overflow: hidden;
+        max-height: calc(100dvh - 1rem);
         border: 1px solid #ffffff24; border-radius: 8px; background: #171717fa;
         color: #e8e8e8; box-shadow: 0 1rem 3rem #000d;
         font: 500 .75rem/1.45 Inter, system-ui, sans-serif;
@@ -567,8 +699,8 @@ function mountHistoryUi() {
           bottom: calc(5.2rem + env(safe-area-inset-bottom, 0px));
         }
         .panel {
-          top: 50%; right: .75rem; left: .75rem; width: auto;
-          max-height: calc(100dvh - 8rem); transform: translateY(-50%);
+          width: min(23rem, calc(100vw - 1.5rem));
+          max-height: calc(100dvh - 1rem);
         }
       }
     </style>
@@ -668,6 +800,7 @@ function mountHistoryUi() {
       historyIndex = 0;
       setHistoryView('history');
       renderHistory();
+      scheduleHistoryPanelPosition(historyUi);
     }
   });
   historyUi.close.addEventListener('click', () => {
@@ -691,7 +824,10 @@ function mountHistoryUi() {
       channel: 'collager-lastfm',
       action: 'openHistory',
       requestId: randomId(),
-    }).catch(() => {});
+    }, response => {
+      if (!chrome.runtime.lastError && response?.opened) return;
+      window.open(chrome.runtime.getURL('history.html'), '_blank', 'noopener');
+    });
   });
   historyUi.rulesView.addEventListener('change', event => {
     const toggle = event.target.closest('input[data-key][data-field]');
@@ -735,6 +871,10 @@ function mountHistoryUi() {
       scrobble: entry.payload,
     }, location.origin);
   });
+  window.addEventListener('resize', () => scheduleHistoryPanelPosition(historyUi), { passive: true });
+  window.visualViewport?.addEventListener('resize', () => scheduleHistoryPanelPosition(historyUi), { passive: true });
+  window.visualViewport?.addEventListener('scroll', () => scheduleHistoryPanelPosition(historyUi), { passive: true });
+  scheduleHistoryPanelPosition(historyUi);
   loadHistory();
   loadMetadataRules().finally(() => {
     window.postMessage({ type: PAGE_RULES_REQUEST }, location.origin);
@@ -845,8 +985,23 @@ window.addEventListener('message', event => {
     });
 });
 
-chrome.runtime.onMessage.addListener(message => {
-  if (!isAllowedPage() || message?.channel !== 'collager-lastfm-progress'
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (!isAllowedPage()) return undefined;
+  if (message?.channel === 'collager-lastfm-history-control') {
+    const key = clean(message.key, 1000);
+    const field = clean(message.field, 100);
+    const validField = field === 'applyMetadataCorrection' || field === 'deleteFutureScrobbles';
+    const accepted = validField && (
+      message.action === 'toggleRule'
+        ? requestRuleToggle(key, field, Boolean(message.enabled))
+        : message.action === 'deleteRule'
+          ? requestRuleDelete(key, field, false)
+          : false
+    );
+    sendResponse?.({ accepted: Boolean(accepted) });
+    return false;
+  }
+  if (message?.channel !== 'collager-lastfm-progress'
       || typeof message.requestId !== 'string') return undefined;
   const operation = activeOperations.get(message.requestId);
   const progressMessage = clean(message.message);

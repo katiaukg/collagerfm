@@ -223,7 +223,17 @@ function enqueue(operation, report = () => {}) {
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  const senderUrl = sender.tab?.url || '';
+  if (message?.channel === 'collager-lastfm' && message.action === 'openHistory') {
+    chrome.tabs.create({
+      url: chrome.runtime.getURL('history.html'),
+      active: true,
+    }).then(() => sendResponse({ opened: true })).catch(error => {
+      sendResponse({ __error: error?.message || 'Não foi possível abrir a visão completa.' });
+    });
+    return true;
+  }
+
+  const senderUrl = sender.url || sender.tab?.url || '';
   if (message?.channel !== 'collager-lastfm' || !ALLOWED_PAGE_PREFIXES.some(prefix => senderUrl.startsWith(prefix))) {
     sendResponse({ __error: 'Origem nao autorizada.' });
     return false;
@@ -242,8 +252,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   };
   const operation = message.action === 'ping'
     ? Promise.resolve({ available: true, version: chrome.runtime.getManifest().version })
-    : message.action === 'openHistory'
-      ? chrome.tabs.create({ url: chrome.runtime.getURL('history.html') }).then(() => ({ opened: true }))
     : message.action === 'deleteScrobble'
       ? enqueue(() => deleteScrobble(message.payload, report), report)
     : message.action === 'deleteObsession'

@@ -114,6 +114,68 @@ main { padding-block: 1rem 3rem; }
   gap: .75rem;
 }
 
+.rule-actions {
+  flex: 0 0 auto;
+  display: grid;
+  justify-items: end;
+  gap: .45rem;
+}
+
+.rule-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .28rem .5rem;
+  border: 1px solid #22c55e55;
+  background: #22c55e14;
+  color: #69dc8d;
+  font-size: .62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.rule-toggle.off {
+  border-color: #ffffff18;
+  background: #ffffff08;
+  color: #777;
+}
+
+.rule-toggle input {
+  width: .9rem;
+  height: .9rem;
+  margin: 0;
+  accent-color: #22c55e;
+}
+
+.remove-operation {
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #ef444477;
+  background: #ef444414;
+  color: #ff8f98;
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.remove-operation:hover,
+.remove-operation:focus-visible {
+  border-color: #ef4444;
+  background: #ef444426;
+  outline: 0;
+}
+
+.remove-operation:disabled,
+.rule-toggle:has(input:disabled) {
+  opacity: .45;
+  cursor: wait;
+}
+
 .card h3 {
   margin: 0;
   overflow-wrap: anywhere;
@@ -188,4 +250,7 @@ main { padding-block: 1rem 3rem; }
   .brand h1 { font-size: 1rem; }
   .tab { min-height: 2.6rem; padding-inline: .35rem; font-size: .76rem; }
   .list { grid-template-columns: 1fr; }
+  .card { padding: .75rem; }
+  .card-head { gap: .5rem; }
+  .rule-actions { gap: .35rem; }
 }
