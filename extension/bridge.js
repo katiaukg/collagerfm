@@ -968,6 +968,10 @@ window.addEventListener('message', event => {
           ok: false,
           error: result.__error,
           openUrl: result.__openUrl || '',
+          code: result.__code || '',
+          retryable: Boolean(result.__retryable),
+          retryAfterMs: Number(result.__retryAfterMs) || 0,
+          temporaryUnavailable: Boolean(result.__temporaryUnavailable),
         }, location.origin);
         return;
       }

@@ -13,9 +13,17 @@ function clean(value, maximum = 500) {
   return String(value || '').trim().slice(0, maximum);
 }
 
-function actionError(message, openUrl = '') {
+function actionError(message, options = {}) {
   const error = new Error(message);
-  error.openUrl = clean(openUrl, 1000);
+  if (typeof options === 'string') {
+    error.openUrl = clean(options, 1000);
+    return error;
+  }
+  error.openUrl = clean(options.openUrl, 1000);
+  error.code = clean(options.code, 100);
+  error.retryable = Boolean(options.retryable);
+  error.retryAfterMs = Math.max(0, Number(options.retryAfterMs) || 0);
+  error.temporaryUnavailable = Boolean(options.temporaryUnavailable);
   return error;
 }
 
@@ -59,7 +67,10 @@ function waitForTab(tabId, timeoutMs = 20000) {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       chrome.tabs.onUpdated.removeListener(onUpdated);
-      reject(new Error('O Last.fm demorou demais para abrir.'));
+      reject(actionError('O Last.fm demorou demais para abrir.', {
+        code: 'LASTFM_OPEN_TIMEOUT',
+        retryable: true,
+      }));
     }, timeoutMs);
     function finish() {
       clearTimeout(timeout);
@@ -81,6 +92,7 @@ async function sendToLastfmTab(tabId, action, payload) {
     const timeout = setTimeout(() => {
       const error = new Error('O Last.fm demorou demais para concluir esta ação.');
       error.code = 'COLLAGER_ACTION_TIMEOUT';
+      error.retryable = true;
       reject(error);
     }, 30000);
     chrome.tabs.sendMessage(tabId, { channel: 'collager-lastfm-page', action, payload })
@@ -117,14 +129,20 @@ async function deleteScrobble(payload, report = () => {}) {
     report('working', 'Localizando e excluindo o registro...', 68);
     const result = await sendToLastfmTab(tab.id, 'deleteScrobble', safe);
     if (!result?.ok) {
-      throw actionError(result?.error || 'O Last.fm nao confirmou a exclusao.', userUrl);
+      throw actionError(result?.error || 'O Last.fm nao confirmou a exclusao.', {
+        openUrl: result?.retryable ? '' : userUrl,
+        code: result?.code,
+        retryable: result?.retryable,
+        retryAfterMs: result?.retryAfterMs,
+        temporaryUnavailable: result?.temporaryUnavailable,
+      });
     }
     report('confirming', 'Exclusão confirmada pelo Last.fm.', 90);
     if (created) await chrome.tabs.remove(tab.id).catch(() => {});
     report('done', 'Scrobble excluído com sucesso.', 100);
     return { deleted: true, username: safe.username, timestamp: safe.timestamp };
   } catch (error) {
-    if (!error.openUrl) error.openUrl = userUrl;
+    if (!error.openUrl && !error.retryable) error.openUrl = userUrl;
     if (created) await chrome.tabs.remove(tab.id).catch(() => {});
     throw error;
   }
@@ -264,6 +282,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     sendResponse({
       __error: error?.message || 'A extensao nao concluiu a operacao.',
       __openUrl: error?.openUrl || '',
+      __code: error?.code || '',
+      __retryable: Boolean(error?.retryable),
+      __retryAfterMs: Number(error?.retryAfterMs) || 0,
+      __temporaryUnavailable: Boolean(error?.temporaryUnavailable),
     });
   });
   return true;

@@ -5490,28 +5490,24 @@
       <div id="merge-search-hotkey-hint" class="icon-text" style="font-size:10px;color:var(--muted);line-height:1.4;align-items:flex-start;"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.69.66-1.24 1.16-1.75A6 6 0 1 0 7.75 12.25c.48.48.97 1.05 1.16 1.75"/></svg><span>Você pode arrastar um quadro sobre outro para mesclar. Com o mouse sobre o quadro: pressione <strong>F</strong> para mesclar pesquisando.</span></div>
     </div>
     <div id="recent-metadata-actions" style="display:none;flex-direction:column;gap:10px;padding:11px;border:1px solid #22c55e44;border-radius:8px;background:#22c55e09;">
-      <div id="recent-extension-metadata-options" style="display:none;flex-direction:column;gap:10px;">
-        <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--text);font-size:11px;line-height:1.35;cursor:pointer;">
-          <span>Aplicar correção de metadata sobre esse scrobble</span>
-          <input type="checkbox" id="recent-metadata-future" checked style="width:16px;height:16px;accent-color:#22c55e;">
-        </label>
-        <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--text);font-size:11px;line-height:1.35;cursor:pointer;">
-          <span>Apagar todos os scrobbles que conter o mesmo metadata</span>
-          <input type="checkbox" id="recent-metadata-delete-future" style="width:16px;height:16px;flex:0 0 16px;accent-color:#ef4444;">
-        </label>
-        <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--text);font-size:11px;line-height:1.35;cursor:pointer;">
-          <span>Apagar scrobble antigo e manter o atual</span>
-          <input type="checkbox" id="recent-metadata-replace" checked style="width:16px;height:16px;accent-color:#22c55e;">
-        </label>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <button type="button" id="recent-metadata-save" class="extension-dependent-action" style="flex:1;padding:10px;border:1px solid #22c55e88;border-radius:8px;background:#123d24;color:#8af0ad;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">SALVAR</button>
-        <button type="button" id="edit-scrobble-delete" class="extension-dependent-action" style="flex:1;padding:10px;border:1px solid #ef444488;border-radius:8px;background:#3f1518;color:#ff9b9b;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">EXCLUIR SCROBBLE</button>
-      </div>
       <div style="display:flex;align-items:center;gap:8px;">
         <button type="button" id="recent-track-love" class="extension-dependent-action" style="flex:1;padding:10px;border:1px solid #f89bad88;border-radius:8px;background:#f89bad16;color:#ffc1ce;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">CURTIR FAIXA</button>
         <button type="button" id="recent-track-obsession" class="extension-dependent-action" style="flex:1;padding:10px;border:1px solid #c281ee88;border-radius:8px;background:#c281ee18;color:#deb8fa;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">TORNAR OBSESSÃO</button>
       </div>
+      <button type="button" id="recent-metadata-save" class="extension-dependent-action" style="width:100%;padding:10px;border:1px solid #22c55e88;border-radius:8px;background:#123d24;color:#8af0ad;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">SALVAR</button>
+      <label class="recent-extension-metadata-option" style="display:none;align-items:center;justify-content:space-between;gap:10px;color:var(--text);font-size:11px;line-height:1.35;cursor:pointer;">
+        <span>Aplicar correção de metadata sobre esse scrobble</span>
+        <input type="checkbox" id="recent-metadata-future" checked style="width:16px;height:16px;accent-color:#22c55e;">
+      </label>
+      <label class="recent-extension-metadata-option" style="display:none;align-items:center;justify-content:space-between;gap:10px;color:var(--text);font-size:11px;line-height:1.35;cursor:pointer;">
+        <span>Apagar scrobble com metadata antigo</span>
+        <input type="checkbox" id="recent-metadata-replace" checked style="width:16px;height:16px;accent-color:#22c55e;">
+      </label>
+      <button type="button" id="edit-scrobble-delete" class="extension-dependent-action" style="width:100%;padding:10px;border:1px solid #ef444488;border-radius:8px;background:#3f1518;color:#ff9b9b;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">EXCLUIR SCROBBLE</button>
+      <label class="recent-extension-metadata-option" style="display:none;align-items:center;justify-content:space-between;gap:10px;color:var(--text);font-size:11px;line-height:1.35;cursor:pointer;">
+        <span>Apagar scrobbles contendo mesmo metadata</span>
+        <input type="checkbox" id="recent-metadata-delete-future" style="width:16px;height:16px;flex:0 0 16px;accent-color:#ef4444;">
+      </label>
       <div id="recent-metadata-status" aria-live="polite" style="display:none;color:var(--muted);font-size:10.5px;line-height:1.4;"></div>
     </div>
     <div id="loved-metadata-actions" style="display:none;flex-direction:column;gap:9px;padding:11px;border:1px solid #f89bad66;border-radius:8px;background:#f89bad0d;">
@@ -5532,6 +5528,7 @@
     </div>
     <div id="temporal-profile-access" style="display:none;flex-direction:column;gap:7px;padding:11px;border:1px solid #d5100744;border-radius:8px;background:#d5100708;">
       <button type="button" id="recent-lastfm-authorize" class="extension-dependent-action" style="display:none;width:100%;padding:9px;border:1px solid #d5100788;border-radius:8px;background:#d5100718;color:#ff8a84;font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;">AUTORIZAR LAST.FM</button>
+      <a id="recent-extension-download" href="https://github.com/katiaukg/collagerfm/tree/main/extension" target="_blank" rel="noopener" style="display:none;width:100%;box-sizing:border-box;padding:9px;border:1px solid #ffb86b88;border-radius:8px;background:#ffb86b12;color:#ffb86b;font-family:inherit;font-size:11px;font-weight:800;text-align:center;text-decoration:none;">BAIXAR EXTENSÃO</a>
       <div id="recent-extension-status" aria-live="polite" style="color:#ffb86b;font-size:10.5px;line-height:1.4;">Verificando extensão...</div>
     </div>
     <div id="tile-restore-actions" style="display:flex;flex-direction:column;gap:8px;">
@@ -17814,7 +17811,7 @@ const editTextSubWrap = document.getElementById('edit-text-sub-wrap');
 const tileImageSection = document.getElementById('tile-image-section');
 const tileMergeActions = document.getElementById('tile-merge-actions');
 const recentMetadataActions = document.getElementById('recent-metadata-actions');
-const recentExtensionMetadataOptions = document.getElementById('recent-extension-metadata-options');
+const recentExtensionMetadataOptions = Array.from(document.querySelectorAll('.recent-extension-metadata-option'));
 const recentMetadataFuture = document.getElementById('recent-metadata-future');
 const recentMetadataDeleteFuture = document.getElementById('recent-metadata-delete-future');
 const recentMetadataReplace = document.getElementById('recent-metadata-replace');
@@ -17829,6 +17826,7 @@ const lovedTrackRemove = document.getElementById('loved-track-remove');
 const lovedMetadataStatus = document.getElementById('loved-metadata-status');
 const temporalProfileAccess = document.getElementById('temporal-profile-access');
 const recentLastfmAuthorize = document.getElementById('recent-lastfm-authorize');
+const recentExtensionDownload = document.getElementById('recent-extension-download');
 const recentExtensionStatus = document.getElementById('recent-extension-status');
 const recentMetadataStatus = document.getElementById('recent-metadata-status');
 const obsessionActions = document.getElementById('obsession-actions');
@@ -18066,14 +18064,17 @@ function syncTemporalAuthorizePlacement() {
   if (recentExtensionStatus && recentExtensionStatus.parentElement !== host) {
     host.insertBefore(recentExtensionStatus, statusElement || null);
   }
+  if (recentExtensionDownload && recentExtensionDownload.parentElement !== host) {
+    host.insertBefore(recentExtensionDownload, recentExtensionStatus || statusElement || null);
+  }
   syncTemporalProfileAccessVisibility();
 }
 
 function syncRecentExtensionDependentControls() {
   const extensionReady = collagerLastfmExtensionAvailable;
-  if (recentExtensionMetadataOptions) {
-    recentExtensionMetadataOptions.style.display = extensionReady ? 'flex' : 'none';
-  }
+  recentExtensionMetadataOptions.forEach(option => {
+    option.style.display = extensionReady ? 'flex' : 'none';
+  });
 
   const itemUnavailable = Boolean(activeClickItem?._nowPlaying || activeClickItem?._lastfmDeleted);
   recentMetadataSave.disabled = !extensionReady || itemUnavailable;
@@ -18087,10 +18088,13 @@ function updateRecentExtensionStatus() {
   if (!recentExtensionStatus) return;
   syncTemporalAuthorizePlacement();
   recentExtensionStatus.style.display = collagerLastfmExtensionAvailable ? 'none' : '';
+  if (recentExtensionDownload) {
+    recentExtensionDownload.style.display = collagerLastfmExtensionAvailable ? 'none' : 'block';
+  }
   recentExtensionStatus.style.color = '#ffb86b';
   recentExtensionStatus.innerHTML = collagerLastfmExtensionAvailable
     ? ''
-    : 'Extensão não detectada, instale-a <a href="https://github.com/katiaukg/collagerfm/tree/main/extension" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">clicando aqui</a>.';
+    : 'Extensão não detectada.';
   syncRecentExtensionDependentControls();
   syncTemporalProfileAccessVisibility();
 }
@@ -18117,6 +18121,7 @@ let extensionActivityRequestId = '';
 let extensionActivityDismissedRequestId = '';
 let extensionActivityHideTimer = null;
 let extensionActivityLog = [];
+let extensionActivityRetryHandler = null;
 
 function extensionActivityTargetText(payload = {}) {
   const artist = String(payload.artist || '').trim();
@@ -18127,14 +18132,24 @@ function extensionActivityTargetText(payload = {}) {
   return username ? `Conta ${username}` : '';
 }
 
-function setExtensionActivityLastfmUrl(rawUrl = '') {
+function setExtensionActivityAction(rawUrl = '', retryHandler = null) {
   let safeUrl = '';
   try {
     const parsed = new URL(String(rawUrl || ''));
     if (parsed.origin === 'https://www.last.fm') safeUrl = parsed.href;
   } catch (_) {}
-  if (extensionActivityOpenLastfm) extensionActivityOpenLastfm.dataset.url = safeUrl;
-  extensionActivityActions?.classList.toggle('visible', Boolean(safeUrl));
+  extensionActivityRetryHandler = typeof retryHandler === 'function' ? retryHandler : null;
+  if (extensionActivityOpenLastfm) {
+    extensionActivityOpenLastfm.dataset.url = safeUrl;
+    extensionActivityOpenLastfm.dataset.mode = extensionActivityRetryHandler ? 'retry' : 'open';
+    extensionActivityOpenLastfm.textContent = extensionActivityRetryHandler
+      ? 'TENTE NOVAMENTE'
+      : 'ABRIR LAST.FM';
+  }
+  extensionActivityActions?.classList.toggle(
+    'visible',
+    Boolean(safeUrl || extensionActivityRetryHandler)
+  );
 }
 
 function showExtensionActivity(requestId, action, payload = {}) {
@@ -18152,7 +18167,7 @@ function showExtensionActivity(requestId, action, payload = {}) {
   extensionActivityTarget.textContent = target;
   extensionActivityTarget.classList.toggle('visible', Boolean(target));
   extensionActivityMessage.textContent = 'Enviando comando à extensão...';
-  setExtensionActivityLastfmUrl();
+  setExtensionActivityAction();
   addExtensionActivityEvent('Solicitação recebida pelo collager.fm.');
 }
 
@@ -18185,7 +18200,7 @@ function updateExtensionActivity(requestId, detail = {}) {
   addExtensionActivityEvent(message);
 }
 
-function finishExtensionActivity(requestId, action, ok, message = '', openUrl = '') {
+function finishExtensionActivity(requestId, action, ok, message = '', openUrl = '', retryHandler = null) {
   if (action === 'ping' || requestId !== extensionActivityRequestId) return;
   const finalMessage = String(message || (ok
     ? EXTENSION_SUCCESS_MESSAGES[action] || 'Ação concluída com sucesso.'
@@ -18197,7 +18212,7 @@ function finishExtensionActivity(requestId, action, ok, message = '', openUrl = 
   extensionActivityPanel.setAttribute('aria-hidden', 'false');
   extensionActivityPanel.style.setProperty('--extension-progress', '100%');
   extensionActivityMessage.textContent = finalMessage;
-  setExtensionActivityLastfmUrl(ok ? '' : openUrl);
+  setExtensionActivityAction(ok ? '' : openUrl, ok ? null : retryHandler);
   addExtensionActivityEvent(finalMessage);
   extensionActivityHideTimer = setTimeout(() => {
     extensionActivityPanel.classList.remove('visible');
@@ -18210,7 +18225,16 @@ function expireCollagerExtensionRequest(requestId) {
   if (!pending) return;
   collagerExtensionRequests.delete(requestId);
   const error = new Error('A extensão companheira não respondeu. Recarregue a extensão e tente novamente.');
-  finishExtensionActivity(requestId, pending.action, false, error.message);
+  error.code = 'COLLAGER_EXTENSION_TIMEOUT';
+  error.retryable = true;
+  finishExtensionActivity(
+    requestId,
+    pending.action,
+    false,
+    error.message,
+    '',
+    pending.retryHandler
+  );
   pending.reject(error);
 }
 
@@ -18229,12 +18253,20 @@ extensionActivityClose?.addEventListener('click', () => {
 });
 
 extensionActivityOpenLastfm?.addEventListener('click', () => {
+  if (extensionActivityOpenLastfm.dataset.mode === 'retry' && extensionActivityRetryHandler) {
+    const retry = extensionActivityRetryHandler;
+    setExtensionActivityAction();
+    Promise.resolve().then(retry).catch(error => {
+      extensionActivityMessage.textContent = error?.message || 'Não foi possível tentar novamente.';
+    });
+    return;
+  }
   const url = extensionActivityOpenLastfm.dataset.url || '';
   if (!url) return;
   window.open(url, '_blank', 'noopener');
 });
 
-function collagerExtensionRequest(action, payload = {}, timeoutMs = 45000) {
+function collagerExtensionRequest(action, payload = {}, timeoutMs = 45000, retryHandler = null) {
   return new Promise((resolve, reject) => {
     const requestId = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
     showExtensionActivity(requestId, action, payload);
@@ -18244,6 +18276,8 @@ function collagerExtensionRequest(action, payload = {}, timeoutMs = 45000) {
       timeout: null,
       timeoutMs,
       action,
+      payload,
+      retryHandler,
     });
     refreshCollagerExtensionTimeout(requestId);
     window.postMessage({
@@ -18308,7 +18342,25 @@ window.addEventListener('message', event => {
   } else {
     const error = new Error(event.data.error || 'A extensão não concluiu a operação.');
     error.openUrl = event.data.openUrl || '';
-    finishExtensionActivity(event.data.requestId, pending.action, false, error.message, error.openUrl);
+    error.code = event.data.code || '';
+    error.retryable = Boolean(event.data.retryable);
+    error.retryAfterMs = Number(event.data.retryAfterMs) || 0;
+    error.temporaryUnavailable = Boolean(event.data.temporaryUnavailable);
+    const automatic = String(pending.payload?.historyContext?.kind || '').startsWith('automatic');
+    if (error.temporaryUnavailable) {
+      error.message = automatic
+        ? 'Site está temporariamente inacessível, a automatização tentará novamente em 1 minuto.'
+        : 'Site está temporariamente inacessível, tente novamente mais tarde.';
+      error.openUrl = '';
+    }
+    finishExtensionActivity(
+      event.data.requestId,
+      pending.action,
+      false,
+      error.message,
+      error.retryable ? '' : error.openUrl,
+      error.retryable && !automatic ? pending.retryHandler : null
+    );
     pending.reject(error);
   }
 });
@@ -18374,6 +18426,12 @@ try {
       || age < -300
       || age > LASTFM_REPLACEMENT_MAX_AGE_SECONDS
     ) return;
+    const savedStage = String(value.stage || '');
+    const stage = savedStage === 'deleteOriginalFirst' || savedStage === 'addCorrectedAfterDelete'
+      ? savedStage
+      : savedStage === 'deleteOriginal'
+        ? 'legacyDeleteOriginalAfterAdd'
+        : 'deleteOriginalFirst';
     recentMetadataAutomaticCorrectionQueue.set(key, {
       key,
       action: 'metadata',
@@ -18381,7 +18439,7 @@ try {
       username: String(value.username || ''),
       original: { ...original, timestamp },
       edited: { ...(value.edited || {}) },
-      stage: value.stage === 'deleteOriginal' ? 'deleteOriginal' : 'addCorrected',
+      stage,
       attempts: Number(value.attempts || 0),
       nextAttemptAt: 0,
       item: null,
@@ -18402,9 +18460,9 @@ function recentMetadataWasProcessed(item, original, action) {
   if (action === 'delete') return false;
   const legacyKey = `${recentMetadataRuleKey(original, item?._recentUsername)}|${Math.floor(Number(original?.timestamp) || 0)}`;
   const olderLegacyKey = [
-    normalizeText(item?._recentUsername || '').toLowerCase(),
-    normalizeText(original?.artist || '').toLowerCase(),
-    normalizeText(original?.track || '').toLowerCase(),
+    normalizeMemoryPart(item?._recentUsername || ''),
+    normalizeMemoryPart(original?.artist || ''),
+    normalizeMemoryPart(original?.track || ''),
     Math.floor(Number(original?.timestamp) || 0),
   ].join('|');
   return recentMetadataProcessed.has(legacyKey)
@@ -18520,10 +18578,9 @@ function queueRecentMetadataAutomaticCorrection(item) {
     existing.item = item;
     existing.username = String(item._recentUsername || existing.username || '');
     existing.ruleKey = ruleMatch.key;
-    // Depois que o scrobble corrigido foi enviado, preserve exatamente os
-    // metadados daquela etapa para que uma retomada não exclua o original e
-    // registre visualmente outra edição.
-    if (existing.stage === 'addCorrected') {
+    // Antes de excluir o original, a regra ainda pode receber uma edição nova.
+    // Depois disso, preserve o alvo exato até concluir o reenvio.
+    if (existing.stage === 'deleteOriginalFirst') {
       existing.edited = { ...rule.edited };
     }
     return true;
@@ -18536,7 +18593,7 @@ function queueRecentMetadataAutomaticCorrection(item) {
     username: String(item._recentUsername || ''),
     original,
     edited: { ...rule.edited },
-    stage: 'addCorrected',
+    stage: 'deleteOriginalFirst',
     attempts: 0,
     nextAttemptAt: 0,
     item,
@@ -18636,7 +18693,42 @@ async function processRecentMetadataAutomaticCorrectionQueue() {
       }
 
       try {
-        if (entry.stage === 'addCorrected') {
+        const legacyDeleteAfterAdd = entry.stage === 'legacyDeleteOriginalAfterAdd';
+        if (entry.stage === 'deleteOriginalFirst') {
+          const auth = await getLastfmWriteAuthStatus();
+          if (!auth.connected) throw new Error('Autorize o Last.fm para aplicar correções automáticas.');
+          if (!collagerLastfmExtensionAvailable) {
+            const ping = await collagerExtensionRequest('ping', {}, 1800);
+            collagerLastfmExtensionAvailable = Boolean(ping?.available);
+          }
+          if (!collagerLastfmExtensionAvailable) throw new Error('Extensão não detectada.');
+          await collagerExtensionRequest('deleteScrobble', recentExtensionDeletePayload(item, entry.original, {
+            kind: 'automaticMetadataEdit',
+            original: { ...entry.original },
+            edited: { ...entry.edited },
+            ruleKey: entry.ruleKey,
+          }), 120000);
+          // A exclusão é persistida antes do reenvio. Assim, uma retomada
+          // nunca tenta excluir o scrobble corrigido que usa o mesmo horário.
+          entry.stage = 'addCorrectedAfterDelete';
+          entry.attempts = 0;
+          entry.nextAttemptAt = 0;
+          saveRecentMetadataPendingOperations();
+        }
+
+        if (legacyDeleteAfterAdd) {
+          if (!collagerLastfmExtensionAvailable) {
+            const ping = await collagerExtensionRequest('ping', {}, 1800);
+            collagerLastfmExtensionAvailable = Boolean(ping?.available);
+          }
+          if (!collagerLastfmExtensionAvailable) throw new Error('Extensão não detectada.');
+          await collagerExtensionRequest('deleteScrobble', recentExtensionDeletePayload(item, entry.original, {
+            kind: 'automaticMetadataEdit',
+            original: { ...entry.original },
+            edited: { ...entry.edited },
+            ruleKey: entry.ruleKey,
+          }), 120000);
+        } else if (entry.stage === 'addCorrectedAfterDelete') {
           const auth = await getLastfmWriteAuthStatus();
           if (!auth.connected) throw new Error('Autorize o Last.fm para aplicar correções automáticas.');
           await sendLastfmWrite({
@@ -18645,25 +18737,7 @@ async function processRecentMetadataAutomaticCorrectionQueue() {
             edited: entry.edited,
             deleteOriginal: false,
           });
-          // Esta etapa é salva antes de chamar a extensão. Se a exclusão
-          // falhar ou a página recarregar, o scrobble corrigido não é reenviado.
-          entry.stage = 'deleteOriginal';
-          entry.attempts = 0;
-          entry.nextAttemptAt = 0;
-          saveRecentMetadataPendingOperations();
         }
-
-        if (!collagerLastfmExtensionAvailable) {
-          const ping = await collagerExtensionRequest('ping', {}, 1800);
-          collagerLastfmExtensionAvailable = Boolean(ping?.available);
-        }
-        if (!collagerLastfmExtensionAvailable) throw new Error('Extensão não detectada.');
-        await collagerExtensionRequest('deleteScrobble', recentExtensionDeletePayload(item, entry.original, {
-          kind: 'automaticMetadataEdit',
-          original: { ...entry.original },
-          edited: { ...entry.edited },
-          ruleKey: entry.ruleKey,
-        }), 120000);
 
         markRecentMetadataProcessed(item, entry.original, 'metadata');
         applyConfirmedRecentMetadataCorrection(entry);
@@ -18676,10 +18750,12 @@ async function processRecentMetadataAutomaticCorrectionQueue() {
         );
       } catch (error) {
         entry.attempts += 1;
-        entry.nextAttemptAt = Date.now() + Math.min(30000, 3000 * (2 ** Math.min(entry.attempts - 1, 3)));
+        const retryDelay = recentMetadataAutomaticRetryDelay(error, entry.attempts);
+        entry.nextAttemptAt = Date.now() + retryDelay;
         saveRecentMetadataPendingOperations();
+        reportRecentMetadataAutomaticFailure(error);
         console.warn('Correção automática de metadata:', error.message);
-        scheduleRecentMetadataAutomaticCorrectionRetry(entry.nextAttemptAt - Date.now());
+        scheduleRecentMetadataAutomaticCorrectionRetry(retryDelay);
         break;
       }
     }
@@ -18699,6 +18775,18 @@ function scheduleRecentMetadataAutomaticDeleteRetry(delayMs = 5000) {
     processRecentMetadataAutomaticDeleteQueue()
       .catch(error => console.warn('Exclusão automática pendente:', error.message));
   }, Math.max(1000, delayMs));
+}
+
+function recentMetadataAutomaticRetryDelay(error, attempts) {
+  if (error?.temporaryUnavailable) return 60000;
+  return Math.min(30000, 3000 * (2 ** Math.min(Math.max(0, attempts - 1), 3)));
+}
+
+function reportRecentMetadataAutomaticFailure(error) {
+  if (!error?.temporaryUnavailable) return;
+  const message = 'Site está temporariamente inacessível, a automatização tentará novamente em 1 minuto.';
+  setRecentMetadataStatus(message, true);
+  appendStatusHistoryEntry(message);
 }
 
 async function processRecentMetadataAutomaticDeleteQueue() {
@@ -18753,9 +18841,11 @@ async function processRecentMetadataAutomaticDeleteQueue() {
         appendStatusHistoryEntry(`Regra automática excluiu: ${original.artist} — ${original.track}.`);
       } catch (error) {
         entry.attempts += 1;
-        entry.nextAttemptAt = Date.now() + Math.min(30000, 3000 * (2 ** Math.min(entry.attempts - 1, 3)));
+        const retryDelay = recentMetadataAutomaticRetryDelay(error, entry.attempts);
+        entry.nextAttemptAt = Date.now() + retryDelay;
+        reportRecentMetadataAutomaticFailure(error);
         console.warn('Exclusão automática de metadata:', error.message);
-        scheduleRecentMetadataAutomaticDeleteRetry(entry.nextAttemptAt - Date.now());
+        scheduleRecentMetadataAutomaticDeleteRetry(retryDelay);
         break;
       }
     }
@@ -20732,7 +20822,12 @@ recentMetadataSave.addEventListener('click', async () => {
   const metadataChanged = edited.track !== original.track
     || edited.artist !== original.artist
     || edited.album !== original.album;
-  if (recentMetadataReplace.checked && !metadataChanged && !item._lastfmReplacementPendingDelete) {
+  if (
+    recentMetadataReplace.checked
+    && !metadataChanged
+    && !item._lastfmReplacementPendingDelete
+    && !item._lastfmReplacementPendingAdd
+  ) {
     applyRecentMetadataLocally(item, targetPoolIdx, original, edited);
     setRecentMetadataStatus(
       recentMetadataFuture.checked || recentMetadataDeleteFuture.checked
@@ -20760,32 +20855,51 @@ recentMetadataSave.addEventListener('click', async () => {
       await requireCollagerLastfmExtension();
       if (!await requireLastfmWriteAuthorization()) throw new Error(lastfmAuthorizationRequiredMessage());
 
-      const pending = item._lastfmReplacementPendingDelete;
-      const replacementEdited = pending?.edited || edited;
-      if (!pending) {
+      const legacyPendingDelete = item._lastfmReplacementPendingDelete;
+      const pendingAdd = item._lastfmReplacementPendingAdd;
+      const replacementEdited = legacyPendingDelete?.edited || pendingAdd?.edited || edited;
+      if (!legacyPendingDelete && !pendingAdd) {
         const confirmed = window.confirm(
-          'Este processo substitui o scrobble: um novo registro corrigido será enviado e o registro original será excluído. Deseja continuar?'
+          'Este processo substitui o scrobble: o registro com metadata antigo será excluído e um novo registro corrigido será enviado. Deseja continuar?'
         );
         if (!confirmed) {
           setRecentMetadataStatus('Substituição cancelada.');
           return;
         }
-        setRecentMetadataStatus('Enviando o scrobble corrigido ao Last.fm...');
-        await sendLastfmWrite({ action: 'replace', original, edited: replacementEdited, deleteOriginal: false });
-        item._lastfmReplacementPendingDelete = { original: { ...original }, edited: { ...replacementEdited } };
-      }
-
-      setRecentMetadataStatus('Scrobble corrigido enviado. Excluindo o registro original...');
-      try {
+        setRecentMetadataStatus('Excluindo o scrobble com metadata antigo...');
         await collagerExtensionRequest('deleteScrobble', recentExtensionDeletePayload(item, original, {
           kind: 'metadataEdit',
           original: { ...original },
           edited: { ...replacementEdited },
-        }));
-      } catch (error) {
-        throw new Error(`O scrobble corrigido foi enviado, mas o original não foi excluído. Não salve novamente: tente concluir a exclusão neste mesmo botão. ${error.message}`);
+        }), 45000, () => recentMetadataSave.click());
+        item._lastfmReplacementPendingAdd = { original: { ...original }, edited: { ...replacementEdited } };
       }
-      delete item._lastfmReplacementPendingDelete;
+
+      if (legacyPendingDelete) {
+        setRecentMetadataStatus('Scrobble corrigido enviado. Excluindo o registro com metadata antigo...');
+        await collagerExtensionRequest('deleteScrobble', recentExtensionDeletePayload(item, original, {
+          kind: 'metadataEdit',
+          original: { ...original },
+          edited: { ...replacementEdited },
+        }), 45000, () => recentMetadataSave.click());
+        delete item._lastfmReplacementPendingDelete;
+      } else {
+        setRecentMetadataStatus('Metadata antiga removida. Enviando o scrobble corrigido...');
+        try {
+          await sendLastfmWrite({
+            action: 'replace',
+            original,
+            edited: replacementEdited,
+            deleteOriginal: false,
+          });
+        } catch (error) {
+          throw new Error(
+            `O scrobble com metadata antigo foi excluído, mas o corrigido ainda não foi enviado. `
+            + `Não altere os campos: clique em Salvar novamente para concluir. ${error.message}`
+          );
+        }
+        delete item._lastfmReplacementPendingAdd;
+      }
       markRecentMetadataProcessed(item, original);
       item._lastfmOriginal = { ...replacementEdited, timestamp: original.timestamp };
       applyRecentMetadataLocally(item, targetPoolIdx, original, replacementEdited);
@@ -20840,7 +20954,12 @@ recentScrobbleDelete.addEventListener('click', async () => {
     }
     setRecentMetadataStatus('Excluindo scrobble do Last.fm...');
     const original = getRecentOriginalMetadata(item);
-    await collagerExtensionRequest('deleteScrobble', recentExtensionDeletePayload(item, original));
+    await collagerExtensionRequest(
+      'deleteScrobble',
+      recentExtensionDeletePayload(item, original),
+      45000,
+      () => recentScrobbleDelete.click()
+    );
     if (recentMetadataDeleteFuture.checked) {
       const targetPoolIdx = allFetchedItems.indexOf(item);
       const edited = {

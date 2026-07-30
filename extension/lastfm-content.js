@@ -3,6 +3,26 @@
 if (!globalThis.__collagerLastfmContentInstalled) {
   globalThis.__collagerLastfmContentInstalled = true;
 
+  const TEMPORARY_UNAVAILABLE_MESSAGE = 'Site está temporariamente inacessível.';
+
+  function temporaryUnavailableError(message = TEMPORARY_UNAVAILABLE_MESSAGE) {
+    const error = new Error(message);
+    error.code = 'LASTFM_TEMPORARILY_UNAVAILABLE';
+    error.retryable = true;
+    error.retryAfterMs = 60000;
+    error.temporaryUnavailable = true;
+    return error;
+  }
+
+  function isTemporarilyUnavailable(status, body = '') {
+    const text = String(body || '').toLocaleLowerCase();
+    return status === 502
+      || status === 503
+      || status === 504
+      || text.includes('temporarily unavailable')
+      || text.includes('please enjoy a cup of tea');
+  }
+
   async function timedFetch(input, init = {}, timeoutMs = 20000) {
     const controller = new AbortController();
     const sourceSignal = init.signal;
@@ -14,7 +34,10 @@ if (!globalThis.__collagerLastfmContentInstalled) {
       return await fetch(input, { ...init, signal: controller.signal });
     } catch (error) {
       if (controller.signal.aborted && !sourceSignal?.aborted) {
-        throw new Error('O Last.fm demorou demais para responder.');
+        const timeoutError = new Error('O Last.fm demorou demais para responder.');
+        timeoutError.code = 'LASTFM_REQUEST_TIMEOUT';
+        timeoutError.retryable = true;
+        throw timeoutError;
       }
       throw error;
     } finally {
@@ -34,6 +57,7 @@ if (!globalThis.__collagerLastfmContentInstalled) {
     if (fromCookie) return fromCookie;
     const response = await timedFetch(`/user/${encodeURIComponent(username)}/library`, { credentials: 'include' });
     const html = await response.text();
+    if (isTemporarilyUnavailable(response.status, html)) throw temporaryUnavailableError();
     const documentCopy = new DOMParser().parseFromString(html, 'text/html');
     return documentCopy.querySelector('input[name="csrfmiddlewaretoken"]')?.value || '';
   }
@@ -82,10 +106,22 @@ if (!globalThis.__collagerLastfmContentInstalled) {
     if (response.status === 406 || response.status === 429) {
       return { ok: false, error: 'O Last.fm limitou as exclusoes temporariamente. Aguarde alguns segundos e tente novamente.' };
     }
+    const responseText = await response.text();
+    if (isTemporarilyUnavailable(response.status, responseText)) {
+      return {
+        ok: false,
+        code: 'LASTFM_TEMPORARILY_UNAVAILABLE',
+        retryable: true,
+        retryAfterMs: 60000,
+        temporaryUnavailable: true,
+        error: TEMPORARY_UNAVAILABLE_MESSAGE,
+      };
+    }
     if (!response.ok) {
       return { ok: false, error: `O Last.fm respondeu ${response.status} ao excluir o scrobble.` };
     }
-    const result = await response.json().catch(() => null);
+    let result = null;
+    try { result = JSON.parse(responseText); } catch (_) {}
     if (result?.result !== true) return { ok: false, error: 'O Last.fm nao confirmou a exclusao do scrobble.' };
     return { ok: true, deleted: true };
   }
@@ -221,7 +257,14 @@ if (!globalThis.__collagerLastfmContentInstalled) {
     }
     operation
       .then(sendResponse)
-      .catch(error => sendResponse({ ok: false, error: error?.message || fallbackError }));
+      .catch(error => sendResponse({
+        ok: false,
+        error: error?.message || fallbackError,
+        code: error?.code || '',
+        retryable: Boolean(error?.retryable),
+        retryAfterMs: Number(error?.retryAfterMs) || 0,
+        temporaryUnavailable: Boolean(error?.temporaryUnavailable),
+      }));
     return true;
   });
 }
