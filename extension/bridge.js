@@ -114,9 +114,15 @@ function operationTarget(payload = {}) {
 function buildHistoryEntry(operation, ok, result = {}, error = '') {
   const payload = operation.payload || {};
   const context = payload.historyContext || {};
-  const metadataEdit = context.kind === 'metadataEdit';
+  const metadataEdit = context.kind === 'metadataEdit'
+    || context.kind === 'automaticMetadataEdit';
+  const automaticMetadataEdit = context.kind === 'automaticMetadataEdit';
   const title = metadataEdit
-    ? (ok ? 'Edição salva' : 'Edição incompleta')
+    ? (
+        automaticMetadataEdit
+          ? (ok ? 'Correção automática aplicada' : 'Correção automática incompleta')
+          : (ok ? 'Edição salva' : 'Edição incompleta')
+      )
     : (ACTION_TITLES[operation.action] || 'Ação da extensão');
   const message = ok
     ? (
