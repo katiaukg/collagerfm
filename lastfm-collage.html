@@ -82,7 +82,7 @@
 
   .logo { display: flex; align-items: center; gap: 10px; justify-content: space-between; }
   .logo-left { display: flex; flex: 1; align-items: center; gap: 10px; min-width: 0; }
-  .site-brand-logo { display:block;width:30px;height:30px;object-fit:contain;object-position:center; }
+  .site-brand-logo { display:block;width:min(175px,100%);height:30px;object-fit:contain;object-position:left center; }
   .logo-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
   .logo-action-btn {
     width: 28px; height: 28px; flex-shrink: 0;
@@ -1908,7 +1908,10 @@
   }
   .logo { min-width: 0; flex-wrap: wrap; gap: .5rem; }
   .logo-left { min-width: 0; }
-  .site-brand-logo { width: 1.875rem; height: 1.875rem; }
+  .site-brand-logo {
+    width: clamp(7rem, 38vw, 10.5rem);
+    height: 1.875rem;
+  }
   .logo-actions { min-width: 0; gap: .25rem; }
   .settings-transfer-btn { padding-inline: .35rem; }
   #sidebar-search-bar {
@@ -2364,10 +2367,10 @@
     }
     .mobile-brand-logo {
       display: block;
-      width: 2.125rem;
+      width: clamp(9.5rem, 43vw, 12rem);
       height: 2.125rem;
       object-fit: contain;
-      object-position: center;
+      object-position: left center;
     }
     .mobile-header-actions { display: flex; align-items: center; gap: .25rem; }
     .mobile-icon-btn {
@@ -2994,7 +2997,7 @@
     }
 
     @media (max-width: 22rem) {
-      .mobile-brand-logo { width: 2.125rem; }
+      .mobile-brand-logo { width: 7.7rem; }
       .mobile-icon-btn { width: 2.5rem; height: 2.5rem; flex-basis: 2.5rem; }
       #mobile-bottom-bar { grid-template-columns: 2.875rem minmax(0, 1fr) 2.875rem; gap: .4rem; padding-inline: .5rem; }
       .mobile-bottom-side { width: 2.875rem; height: 2.875rem; }
@@ -13728,16 +13731,32 @@ const COLLAGER_LOGO_PATHS = [
   'M432.58 31C434.54 32.66 433.55 38.13 433.55 40.75C433.55 49.92 433.55 59.08 433.55 68.25C433.55 95.92 433.53 123.58 433.53 151.25C433.53 159.58 433.53 167.92 433.53 176.25C433.53 179.91 434.27 184.63 433.08 188.03C431.41 185.75 432.47 179.72 432.47 176.75C432.47 166.92 432.46 157.08 432.46 147.25C432.46 121.58 432.45 95.92 432.45 70.25C432.45 57.34 431.32 43.84 432.58 31ZM1183.42 92C1183.42 135 1183.42 178 1183.43 221C1181.72 219.58 1182.45 216 1182.45 213.75C1182.45 206.92 1182.45 200.08 1182.45 193.25C1182.45 167.92 1182.45 142.58 1182.45 117.25C1182.45 111.08 1182.45 104.92 1182.45 98.75C1182.45 96.58 1181.78 93.38 1183.42 92ZM263.9 143.94C264.11 144.05 264.32 144.15 264.53 144.25C264.49 146.17 264.45 148.08 264.42 150C264.11 149.92 263.8 149.83 263.5 149.75C263.63 147.81 263.77 145.88 263.9 143.94ZM768.42 145C768.46 146.92 768.49 148.83 768.53 150.75C768.32 150.85 768.11 150.96 767.9 151.06C767.76 149.12 767.62 147.19 767.48 145.25C767.79 145.17 768.11 145.08 768.42 145ZM767.9 156.94C768.11 157.04 768.32 157.15 768.53 157.25C768.49 159.17 768.46 161.08 768.42 163C768.11 162.92 767.79 162.83 767.48 162.75C767.62 160.81 767.76 158.88 767.9 156.94Z'
 ];
 let collagerLogoPaths = null;
-const COLLAGER_MARK_VIEWBOX = { w: 294, h: 294 };
-const COLLAGER_MARK_PATH = document.querySelector('#collager-extension-icon path')?.getAttribute('d') || '';
+let COLLAGER_MARK_VIEWBOX = { ...COLLAGER_LOGO_VIEWBOX };
+let COLLAGER_MARK_PATHS = [...COLLAGER_LOGO_PATHS];
 function getCollagerLogoSvg(color = '#ffffff') {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${COLLAGER_MARK_VIEWBOX.w} ${COLLAGER_MARK_VIEWBOX.h}"><path fill="${color}" fill-rule="evenodd" d="${COLLAGER_MARK_PATH}"/></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${COLLAGER_MARK_VIEWBOX.w} ${COLLAGER_MARK_VIEWBOX.h}">${COLLAGER_MARK_PATHS.map(path => `<path fill="${color}" fill-rule="evenodd" d="${path}"/>`).join('')}</svg>`;
 }
 const collagerLogoDataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(getCollagerLogoSvg())}`;
 document.querySelectorAll('.collager-header-logo-preview').forEach(image => {
   image.src = collagerLogoDataUrl;
 });
 window.__collagerLogoAssetsReady = true;
+fetch('./collagerfm.svg')
+  .then(response => response.ok ? response.text() : Promise.reject(new Error(`Logo HTTP ${response.status}`)))
+  .then(svgText => {
+    const logoDocument = new DOMParser().parseFromString(svgText, 'image/svg+xml');
+    const logoRoot = logoDocument.documentElement;
+    const viewBox = (logoRoot.getAttribute('viewBox') || '').trim().split(/\s+/).map(Number);
+    const paths = [...logoDocument.querySelectorAll('path')].map(path => path.getAttribute('d')).filter(Boolean);
+    if (viewBox.length === 4 && viewBox.every(Number.isFinite) && paths.length) {
+      COLLAGER_MARK_VIEWBOX = { w: viewBox[2], h: viewBox[3] };
+      COLLAGER_MARK_PATHS = paths;
+      collagerLogoPaths = null;
+      syncHeaderLogoColorUi();
+      redrawIfReady();
+    }
+  })
+  .catch(error => console.warn('Não foi possível carregar a logo do collager.fm.', error));
 function syncHeaderLogoPreviewColor(color) {
   document.querySelectorAll('.collager-header-logo-preview').forEach(image => {
     image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(getCollagerLogoSvg(color))}`;
@@ -13825,7 +13844,7 @@ function drawHeaderLogo(ctx, x, centerY, logoH, color, logoType = headerDefaultL
     return;
   }
   if (typeof Path2D !== 'undefined') {
-    if (!collagerLogoPaths) collagerLogoPaths = [new Path2D(COLLAGER_MARK_PATH)];
+    if (!collagerLogoPaths) collagerLogoPaths = COLLAGER_MARK_PATHS.map(path => new Path2D(path));
     const scale = logoH / COLLAGER_MARK_VIEWBOX.h;
     ctx.save();
     ctx.translate(x, centerY - logoH / 2);
