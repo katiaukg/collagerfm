@@ -826,14 +826,15 @@ function mountHistoryUi() {
     setHistoryView(historyView === 'rules' ? 'history' : 'rules');
   });
   historyUi.openFull.addEventListener('click', () => {
-    chrome.runtime.sendMessage({
-      channel: 'collager-lastfm',
-      action: 'openHistory',
-      requestId: randomId(),
-    }, response => {
-      if (!chrome.runtime.lastError && response?.opened) return;
-      window.open(chrome.runtime.getURL('history.html'), '_blank', 'noopener');
-    });
+    // Abre durante o gesto do usuário para não ser bloqueado como pop-up.
+    const link = document.createElement('a');
+    link.href = chrome.runtime.getURL('history.html');
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.style.display = 'none';
+    document.documentElement.appendChild(link);
+    link.click();
+    link.remove();
   });
   historyUi.rulesView.addEventListener('change', event => {
     const toggle = event.target.closest('input[data-key][data-field]');

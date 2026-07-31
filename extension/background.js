@@ -242,12 +242,21 @@ function enqueue(operation, report = () => {}) {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.channel === 'collager-lastfm' && message.action === 'openHistory') {
-    chrome.tabs.create({
-      url: chrome.runtime.getURL('history.html'),
-      active: true,
-    }).then(() => sendResponse({ opened: true })).catch(error => {
+    try {
+      chrome.tabs.create({
+        url: chrome.runtime.getURL('history.html'),
+        active: true,
+      }, tab => {
+        const runtimeError = chrome.runtime.lastError;
+        if (runtimeError) {
+          sendResponse({ __error: runtimeError.message || 'Não foi possível abrir a visão completa.' });
+          return;
+        }
+        sendResponse({ opened: true, tabId: tab?.id });
+      });
+    } catch (error) {
       sendResponse({ __error: error?.message || 'Não foi possível abrir a visão completa.' });
-    });
+    }
     return true;
   }
 
