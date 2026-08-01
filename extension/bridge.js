@@ -14,6 +14,7 @@ const PAGE_RULE_DELETE_REQUEST = 'collager-lastfm-metadata-rule-delete-request';
 const PAGE_RULE_DELETE_RESPONSE = 'collager-lastfm-metadata-rule-delete-response';
 const HISTORY_STORAGE_KEY = 'collager.fm.extension-history.v2';
 const RULES_STORAGE_KEY = 'collager.fm.metadata-rules.v1';
+const PANEL_PLACEMENT_STORAGE_KEY = 'collager.fm.extension-panel-placement.v1';
 const HISTORY_LIMIT = 60;
 const COMPACT_RULES_PER_PAGE = 2;
 const ALLOWED_ORIGINS = new Set([
@@ -41,6 +42,7 @@ const pendingRuleToggles = new Map();
 const pendingRuleDeletes = new Map();
 const ruleSectionPages = { changed: 0, deleted: 0 };
 let historyPanelPositionFrame = 0;
+let historyPanelPlacement = 'bottom-left';
 
 function isAllowedPage() {
   return ALLOWED_ORIGINS.has(location.origin);
@@ -69,8 +71,14 @@ function storageSet(values) {
 }
 
 async function loadHistory() {
-  const saved = await storageGet(HISTORY_STORAGE_KEY).catch(() => []);
+  const [saved, savedPlacement] = await Promise.all([
+    storageGet(HISTORY_STORAGE_KEY).catch(() => []),
+    storageGet(PANEL_PLACEMENT_STORAGE_KEY).catch(() => ''),
+  ]);
   historyEntries = Array.isArray(saved) ? saved.slice(0, HISTORY_LIMIT) : [];
+  historyPanelPlacement = ['bottom-left', 'bottom-right', 'top-left', 'top-right'].includes(savedPlacement)
+    ? savedPlacement
+    : 'bottom-left';
   renderHistory();
 }
 
@@ -117,6 +125,7 @@ function buildHistoryEntry(operation, ok, result = {}, error = '') {
   const metadataEdit = context.kind === 'metadataEdit'
     || context.kind === 'automaticMetadataEdit';
   const automaticMetadataEdit = context.kind === 'automaticMetadataEdit';
+  const automatic = String(context.kind || '').startsWith('automatic');
   const title = metadataEdit
     ? (
         automaticMetadataEdit
@@ -139,6 +148,8 @@ function buildHistoryEntry(operation, ok, result = {}, error = '') {
     target: operationTarget(payload),
     message,
     ok: Boolean(ok),
+    mode: automatic ? 'automatic' : 'manual',
+    coverUrl: clean(payload.coverUrl || context.coverUrl, 2000),
     events: operation.events.slice(-8),
     payload: metadataEdit
       ? {
@@ -198,6 +209,11 @@ function renderHistory() {
   historyUi.older.disabled = !entry || historyIndex >= total - 1;
   historyUi.newer.disabled = !entry || historyIndex <= 0;
   historyUi.clear.disabled = !total;
+  historyUi.badge.classList.toggle('has-cover', Boolean(entry?.coverUrl));
+  historyUi.badgeImage.hidden = !entry?.coverUrl;
+  historyUi.badgeIcon.hidden = Boolean(entry?.coverUrl);
+  if (entry?.coverUrl) historyUi.badgeImage.src = entry.coverUrl;
+  else historyUi.badgeImage.removeAttribute('src');
   if (!entry) {
     scheduleHistoryPanelPosition();
     return;
@@ -269,6 +285,17 @@ function metadataRuleActivation(rule, field) {
 function buildRuleRow(rule, field, description) {
   const row = document.createElement('div');
   row.className = 'rule-row';
+  const cover = document.createElement('span');
+  cover.className = 'rule-cover';
+  const coverUrl = clean(rule?.coverUrl, 2000);
+  if (coverUrl) {
+    const image = document.createElement('img');
+    image.src = coverUrl;
+    image.alt = '';
+    cover.appendChild(image);
+  } else {
+    cover.textContent = '♪';
+  }
   const copy = document.createElement('span');
   copy.className = 'rule-copy';
   const title = document.createElement('strong');
@@ -300,7 +327,7 @@ function buildRuleRow(rule, field, description) {
   const controls = document.createElement('span');
   controls.className = 'rule-controls';
   controls.append(toggle, remove);
-  row.append(copy, controls);
+  row.append(cover, copy, controls);
   return row;
 }
 
@@ -471,28 +498,35 @@ function positionHistoryPanel(ui = historyUi) {
   const panelHeight = Math.min(panelRect.height, Math.max(0, viewport.height - margin * 2));
   panel.style.maxWidth = `${Math.max(0, viewport.width - margin * 2)}px`;
   panel.style.maxHeight = `${Math.max(0, viewport.height - margin * 2)}px`;
-  const candidates = [
-    {
+  const candidatesByPlacement = {
+    'bottom-left': {
       placement: 'bottom-left',
       left: launcherRect.right - panelWidth,
       top: launcherRect.bottom + gap,
     },
-    {
-      placement: 'top-left',
-      left: launcherRect.right - panelWidth,
-      top: launcherRect.top - gap - panelHeight,
-    },
-    {
-      placement: 'top-right',
-      left: launcherRect.left,
-      top: launcherRect.top - gap - panelHeight,
-    },
-    {
+    'bottom-right': {
       placement: 'bottom-right',
       left: launcherRect.left,
       top: launcherRect.bottom + gap,
     },
-  ];
+    'top-left': {
+      placement: 'top-left',
+      left: launcherRect.right - panelWidth,
+      top: launcherRect.top - gap - panelHeight,
+    },
+    'top-right': {
+      placement: 'top-right',
+      left: launcherRect.left,
+      top: launcherRect.top - gap - panelHeight,
+    },
+  };
+  const preferredOrder = {
+    'bottom-left': ['bottom-left', 'top-left', 'top-right', 'bottom-right'],
+    'bottom-right': ['bottom-right', 'top-right', 'top-left', 'bottom-left'],
+    'top-left': ['top-left', 'bottom-left', 'bottom-right', 'top-right'],
+    'top-right': ['top-right', 'bottom-right', 'bottom-left', 'top-left'],
+  }[historyPanelPlacement] || ['bottom-left', 'top-left', 'top-right', 'bottom-right'];
+  const candidates = preferredOrder.map(placement => candidatesByPlacement[placement]);
   const fits = candidate =>
     candidate.left >= viewport.left + margin
     && candidate.top >= viewport.top + margin
@@ -622,6 +656,8 @@ function mountHistoryUi() {
         background: #ef444426; color: #fff;
       }
       .badge svg { width: 1rem; height: 1rem; fill: currentColor; }
+      .badge img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+      .badge.has-cover { overflow: hidden; border-color: #ffffff28; background: #222; }
       .heading { min-width: 0; flex: 1; }
       .heading small { display: block; color: #888; font-size: .56rem; font-weight: 800; text-transform: uppercase; }
       .title { display: block; overflow: hidden; color: #fff; font-size: .78rem; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
@@ -633,6 +669,9 @@ function mountHistoryUi() {
       .icon:disabled { opacity: .3; cursor: default; }
       .icon.active { border-color: #ef444488; background: #ef444420; color: #fff; }
       .icon svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+      .head .icon { border: 0; border-radius: 0; background: transparent; }
+      .head .icon:hover, .head .icon:focus-visible { color: #fff; outline: 0; }
+      .head .icon.active { background: transparent; color: #ef4444; }
       .icon[hidden], .history-view[hidden], .rules-view[hidden], .nav[hidden] { display: none !important; }
       .body { padding: .8rem; }
       .empty { padding: 1.2rem .5rem; color: #888; text-align: center; }
@@ -649,6 +688,17 @@ function mountHistoryUi() {
       .nav { justify-content: space-between; padding: .65rem .8rem; border-top: 1px solid #ffffff12; }
       .position { min-width: 4rem; color: #888; font-size: .62rem; text-align: center; }
       .clear { color: #ff8f98; }
+      .clear-menu {
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: .4rem;
+        padding: .55rem .75rem; border-bottom: 1px solid #ffffff12; background: #121212;
+      }
+      .clear-menu[hidden] { display: none !important; }
+      .clear-choice {
+        min-height: 2rem; padding: .4rem; border: 1px solid #ef444455; border-radius: 5px;
+        background: #ef444410; color: #ff9ca3; font-size: .58rem; font-weight: 800;
+        text-transform: uppercase; cursor: pointer;
+      }
+      .clear-choice:hover, .clear-choice:focus-visible { border-color: #ef4444; background: #ef444420; outline: 0; }
       .rules-view { max-height: min(67vh, 34rem); overflow: auto; padding: .8rem; }
       .rules-section + .rules-section { margin-top: 1rem; }
       .rules-section h3 {
@@ -661,6 +711,11 @@ function mountHistoryUi() {
         padding: .65rem; border: 1px solid #ffffff14; border-radius: 6px;
         background: #ffffff05;
       }
+      .rule-cover {
+        width: 2.45rem; height: 2.45rem; flex: 0 0 2.45rem; display: grid; place-items: center;
+        overflow: hidden; border-radius: 4px; background: #111; color: #555; font-size: 1rem;
+      }
+      .rule-cover img { width: 100%; height: 100%; object-fit: cover; }
       .rule-copy { min-width: 0; display: flex; flex-direction: column; gap: .12rem; }
       .rule-copy strong { overflow-wrap: anywhere; color: #fff; font-size: .68rem; }
       .rule-copy > span { overflow-wrap: anywhere; color: #aaa; font-size: .61rem; }
@@ -715,7 +770,7 @@ function mountHistoryUi() {
     </button>
     <section class="panel" role="dialog" aria-modal="false" aria-hidden="true">
       <div class="head">
-        <span class="badge" aria-hidden="true"><svg viewBox="0 0 294 294"><path d="${EXTENSION_ICON_PATH}"/></svg></span>
+        <span class="badge" aria-hidden="true"><img class="badge-image" alt="" hidden><svg class="badge-icon" viewBox="0 0 294 294"><path d="${EXTENSION_ICON_PATH}"/></svg></span>
         <div class="heading"><small class="kicker">Histórico da extensão</small><strong class="title">Nenhuma ação registrada</strong></div>
         <button class="icon open-full" type="button" aria-label="Abrir visão completa" title="Abrir visão completa">
           <svg viewBox="0 0 24 24"><path d="M14 3h7v7M21 3l-9 9M19 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6"/></svg>
@@ -723,12 +778,14 @@ function mountHistoryUi() {
         <button class="icon clear" type="button" aria-label="Excluir histórico" title="Excluir histórico">
           <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 10v6M14 10v6"/></svg>
         </button>
-        <button class="icon settings" type="button" aria-label="Gerenciar regras automáticas" title="Gerenciar regras automáticas">
+        <button class="icon settings" type="button" aria-label="Regras automáticas" title="Regras automáticas">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21h-4v-.09A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3v-4h.09A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.09A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.13.38.35.72.66 1 .3.27.68.4 1.08.4H21v4h-.09c-.4 0-.78.13-1.08.4-.3.28-.52.62-.65 1Z"/></svg>
         </button>
-        <button class="icon close" type="button" aria-label="Fechar" title="Fechar">
-          <svg viewBox="0 0 24 24"><path d="m18 6-12 12M6 6l12 12"/></svg>
-        </button>
+      </div>
+      <div class="clear-menu" hidden>
+        <button class="clear-choice" type="button" data-clear-scope="manual">Manual</button>
+        <button class="clear-choice" type="button" data-clear-scope="automatic">Automático</button>
+        <button class="clear-choice" type="button" data-clear-scope="all">Ambos</button>
       </div>
       <div class="history-view">
         <div class="body">
@@ -776,7 +833,10 @@ function mountHistoryUi() {
     openFull: find('.open-full'),
     settings: find('.settings'),
     clear: find('.clear'),
-    close: find('.close'),
+    clearMenu: find('.clear-menu'),
+    badge: find('.badge'),
+    badgeImage: find('.badge-image'),
+    badgeIcon: find('.badge-icon'),
     historyView: find('.history-view'),
     rulesView: find('.rules-view'),
     changedRules: find('.changed-rules'),
@@ -809,11 +869,6 @@ function mountHistoryUi() {
       scheduleHistoryPanelPosition(historyUi);
     }
   });
-  historyUi.close.addEventListener('click', () => {
-    historyUi.panel.classList.remove('open');
-    historyUi.panel.setAttribute('aria-hidden', 'true');
-    historyUi.launcher.setAttribute('aria-expanded', 'false');
-  });
   historyUi.older.addEventListener('click', () => {
     if (historyIndex < historyEntries.length - 1) historyIndex += 1;
     renderHistory();
@@ -823,6 +878,7 @@ function mountHistoryUi() {
     renderHistory();
   });
   historyUi.settings.addEventListener('click', () => {
+    historyUi.clearMenu.hidden = true;
     setHistoryView(historyView === 'rules' ? 'history' : 'rules');
   });
   historyUi.openFull.addEventListener('click', () => {
@@ -857,10 +913,21 @@ function mountHistoryUi() {
     );
     renderRuleSettings();
   });
-  historyUi.clear.addEventListener('click', async () => {
-    if (!historyEntries.length || !window.confirm('Deseja excluir todo o histórico da extensão?')) return;
-    historyEntries = [];
+  historyUi.clear.addEventListener('click', () => {
+    if (!historyEntries.length) return;
+    historyUi.clearMenu.hidden = !historyUi.clearMenu.hidden;
+  });
+  historyUi.clearMenu.addEventListener('click', async event => {
+    const button = event.target.closest('[data-clear-scope]');
+    if (!button) return;
+    const scope = button.dataset.clearScope;
+    const label = scope === 'manual' ? 'manual' : scope === 'automatic' ? 'automático' : 'completo';
+    if (!window.confirm(`Deseja excluir o histórico ${label} da extensão?`)) return;
+    historyEntries = scope === 'all'
+      ? []
+      : historyEntries.filter(entry => String(entry?.mode || 'manual') !== scope);
     historyIndex = 0;
+    historyUi.clearMenu.hidden = true;
     await persistHistory();
     renderHistory();
   });
@@ -1027,6 +1094,17 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     progress: Number(message.progress) || 0,
   }, location.origin);
   return undefined;
+});
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'local') return;
+  if (changes[PANEL_PLACEMENT_STORAGE_KEY]) {
+    const nextPlacement = changes[PANEL_PLACEMENT_STORAGE_KEY].newValue;
+    historyPanelPlacement = ['bottom-left', 'bottom-right', 'top-left', 'top-right'].includes(nextPlacement)
+      ? nextPlacement
+      : 'bottom-left';
+    scheduleHistoryPanelPosition(historyUi);
+  }
 });
 
 mountHistoryUi();

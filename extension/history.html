@@ -11,9 +11,16 @@
   <header class="app-header">
     <div class="brand">
       <span class="brand-icon"><img src="icons/icon.svg" alt=""></span>
-      <div>
-        <span>Extensão collager.fm</span>
-        <h1>Atividade e regras automáticas</h1>
+      <div><span>Extensão collager.fm</span><h1>Atividade e regras automáticas</h1></div>
+      <div class="header-actions">
+        <button class="icon-button clear-history" type="button" aria-label="Excluir histórico" title="Excluir histórico">
+          <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 10v6M14 10v6"/></svg>
+        </button>
+        <div class="clear-menu" hidden>
+          <button type="button" data-clear-scope="manual">Manual</button>
+          <button type="button" data-clear-scope="automatic">Automático</button>
+          <button type="button" data-clear-scope="all">Ambos</button>
+        </div>
       </div>
     </div>
   </header>
@@ -28,6 +35,11 @@
     <section class="view active" data-panel="history">
       <div class="section-heading">
         <div><span>Operações</span><h2>Histórico completo</h2></div>
+        <div class="history-filter" aria-label="Tipo de histórico">
+          <button type="button" data-history-mode="manual">Manual</button>
+          <button type="button" data-history-mode="automatic">Automático</button>
+          <button class="active" type="button" data-history-mode="all">Ambos</button>
+        </div>
         <strong class="count" data-count="history">0</strong>
       </div>
       <div class="list" data-list="history"></div>
@@ -49,7 +61,6 @@
       <div class="list" data-list="deleted"></div>
     </section>
   </main>
-
   <script src="history.js"></script>
 </body>
 </html>
