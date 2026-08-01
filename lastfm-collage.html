@@ -94,6 +94,25 @@
   .logo-action-btn:hover,
   .logo-action-btn[aria-expanded="true"] { color: var(--text); background: #ffffff0d; }
   .logo-action-btn svg { width: 14px; height: 14px; }
+  .logo-actions [data-tooltip] { position: relative; }
+  .logo-actions [data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute; z-index: 900;
+    top: calc(100% + 8px); right: 0;
+    min-width: max-content; padding: 8px 10px;
+    border: 1px solid #555; border-radius: 4px;
+    background: #111; color: #fff;
+    box-shadow: 0 6px 18px #000a;
+    font: 600 13px/1.2 'Inter', sans-serif;
+    letter-spacing: 0; text-transform: none; white-space: nowrap;
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transform: translateY(-2px);
+    transition: opacity .12s ease, transform .12s ease, visibility .12s ease;
+  }
+  .logo-actions [data-tooltip]:hover::after,
+  .logo-actions [data-tooltip]:focus-visible::after {
+    opacity: 1; visibility: visible; transform: translateY(0);
+  }
   .ui-icon {
     width: 1em; height: 1em; flex: 0 0 1em; display: inline-block;
     fill: none; stroke: currentColor; stroke-width: 2;
@@ -233,7 +252,7 @@
     transition: color .15s, background .15s;
   }
   .eye-toggle-btn:hover { color: var(--text); background: #ffffff0d; }
-  .type-toggle { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  .type-toggle { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
   .type-btn[data-type="new_artists"] { grid-column: 1 / -1; }
   .type-btn {
     position: relative;
@@ -245,11 +264,12 @@
     overflow: hidden; padding: 0; min-height: 38px;
   }
   .type-btn-label {
-    flex: 1; display: flex; align-items: center;
-    padding: 8px 0 8px 9px;
+    flex: 1; display: flex; align-items: center; gap: 4px;
+    padding: 8px 4px 8px 6px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     pointer-events: none;
   }
+  .type-btn-label .ui-icon { width: 11px; height: 11px; flex: 0 0 11px; }
   .type-btn[data-type="artists"].active { border-color: var(--artist); color: var(--artist); background: #f5e04210; }
   .type-btn[data-type="albums"].active  { border-color: var(--album);  color: var(--album);  background: #f5424210; }
   .type-btn[data-type="tracks"].active  { border-color: var(--track);  color: var(--track);  background: #426cf510; }
@@ -259,7 +279,7 @@
     grid-column: 1 / -1;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 6px;
+    gap: 4px;
   }
   .type-btn[data-type="new_artists"] .type-btn-label,
   .type-btn[data-type="specific_artists"] .type-btn-label {
@@ -272,7 +292,15 @@
   .type-btn[data-type="recent"].active { border-color: var(--recent); color: var(--recent); background: color-mix(in srgb, var(--recent) 10%, transparent); }
   .type-btn[data-type="loved"].active { border-color: var(--loved); color: var(--loved); background: color-mix(in srgb, var(--loved) 10%, transparent); }
   .type-btn[data-type="obsessions"].active { border-color: var(--obsessions); color: var(--obsessions); background: color-mix(in srgb, var(--obsessions) 10%, transparent); }
-  .type-special-row .type-btn-label { justify-content: center; padding-left: 0; }
+  .type-special-row .type-btn { font-size: 10px; }
+  .type-special-row .type-btn-label {
+    justify-content: flex-start;
+    gap: 3px;
+    padding-inline: 4px 2px;
+  }
+  .type-special-row .type-btn-label .ui-icon { width: 10px; height: 10px; flex-basis: 10px; }
+  .type-special-row .color-swatch { width: 15px; }
+  .type-toggle > .type-btn .color-swatch { width: 16px; }
   @media (max-width: 24rem) {
     .type-special-row { grid-template-columns: 1fr; }
   }
@@ -497,7 +525,7 @@
   .msc-page-btn.active { border-color: #22c55e; color: #22c55e; background: #22c55e1a; }
 
   .color-swatch {
-    width: 20px; flex-shrink: 0; position: relative;
+    width: 18px; flex-shrink: 0; position: relative;
     cursor: pointer; transition: filter .15s;
     border-left: 1.5px solid rgba(0,0,0,.25);
   }
@@ -1945,7 +1973,7 @@
   .toggle-group { min-width: 0; }
   .type-toggle { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .type-btn { min-width: 0; }
-  .type-btn-label { min-width: 0; padding-left: .45rem; padding-right: .2rem; }
+  .type-btn-label { min-width: 0; padding-left: .35rem; padding-right: .15rem; }
 
   .preview-area {
     display: grid !important;
@@ -3390,15 +3418,15 @@
       </div>
       <div class="logo-actions">
         <div class="settings-transfer-control" role="group" aria-label="Exportar ou importar configurações">
-          <button class="settings-transfer-btn" id="settings-export-btn" title="Exportar configurações (.txt)" aria-label="Exportar configurações">
+          <button class="settings-transfer-btn" id="settings-export-btn" data-tooltip="Exportar configurações" aria-label="Exportar configurações">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           </button>
-          <button class="settings-transfer-btn" id="settings-import-btn" title="Importar configurações (.txt)" aria-label="Importar configurações">
+          <button class="settings-transfer-btn" id="settings-import-btn" data-tooltip="Importar configurações" aria-label="Importar configurações">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           </button>
         </div>
         <div id="desktop-menu-wrap">
-          <button class="logo-action-btn" id="desktop-menu-toggle" title="Menu" aria-label="Abrir menu" aria-expanded="false" aria-controls="desktop-settings-menu">
+          <button class="logo-action-btn" id="desktop-menu-toggle" data-tooltip="Menu" aria-label="Abrir menu" aria-expanded="false" aria-controls="desktop-settings-menu">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
           </button>
         </div>
