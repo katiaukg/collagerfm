@@ -145,10 +145,10 @@
   .settings-transfer-btn { width: 28px; padding: 0; }
   #desktop-menu-wrap { position: relative; }
   #desktop-settings-menu {
-    position: absolute; z-index: 720; top: calc(100% + 8px); right: 0;
-    width: min(340px, calc(100% - 8px), calc(100vw - 32px)); max-height: min(78vh, 680px);
+    position: absolute; z-index: 720; top: calc(100% + 8px); left: 0; right: 0;
+    width: auto; max-height: calc(100dvh - 9rem);
     display: none; overflow-x: hidden; overflow-y: auto;
-    padding: 10px; border: 1px solid #343434; border-radius: 7px;
+    padding: 10px; border: 1px solid #343434; border-radius: 0 0 7px 7px;
     background: #181818; box-shadow: 0 18px 48px #000c;
     scrollbar-width: thin; scrollbar-color: #444 transparent;
   }
@@ -164,12 +164,14 @@
     display: flex; align-items: center; gap: 8px;
     border: 1px solid #303030; border-radius: 6px;
     background: #202020; color: #ddd; cursor: pointer;
-    font: 700 11px/1.2 inherit; text-align: left;
+    font-family: inherit; font-size: 11px; font-weight: 700; line-height: 1.2;
+    text-align: left; text-decoration: none;
   }
   .desktop-menu-item:hover, .desktop-account-entry.expanded > .desktop-menu-item {
     border-color: #555; background: #272727; color: #fff;
   }
-  .desktop-menu-item svg { width: 14px; height: 14px; flex: 0 0 14px; color: #888; }
+  .desktop-menu-item svg,
+  .desktop-menu-item .menu-brand-icon { width: 17px; height: 17px; flex: 0 0 17px; color: #888; object-fit: contain; }
   .desktop-menu-note { margin-left: auto; color: #666; font-size: 9px; white-space: nowrap; }
   .desktop-menu-divider { width: 100%; height: 1px; margin: 1px 0; border: 0; background: #303030; }
   .desktop-account-entry { display: grid; gap: 5px; min-width: 0; }
@@ -354,6 +356,43 @@
     border: 1px solid #3a3a3a; border-radius: 8px; background: #181818; box-shadow: 0 24px 70px #000d;
   }
   .compact-dialog-title { color: var(--text); font-size: 13px; font-weight: 800; text-transform: uppercase; }
+  .language-choice-list {
+    display: grid; overflow: hidden; border: 1px solid var(--border); border-radius: 7px;
+    background: #121212;
+  }
+  .language-choice {
+    position: relative; min-height: 48px; padding: 0 38px; display: flex; align-items: center; justify-content: center;
+    border: 0; border-bottom: 1px solid var(--border); background: transparent; color: #aaa;
+    overflow: hidden; font-family: inherit; text-align: left; cursor: pointer; transition: background .16s ease, color .16s ease;
+  }
+  .language-choice:last-child { border-bottom: 0; }
+  .language-choice:hover { background: #222; color: var(--text); }
+  .language-choice img {
+    position: absolute; inset: 0 auto 0 0; width: 110px; height: 100%; object-fit: cover; opacity: .76;
+    -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 15%, transparent 72%, transparent 100%);
+    mask-image: linear-gradient(90deg, #000 0%, #000 15%, transparent 72%, transparent 100%);
+  }
+  .language-choice strong { position: relative; z-index: 1; font-size: 13px; font-weight: 500; }
+  .language-code {
+    position: absolute; right: 14px; z-index: 1; color: #777;
+    font-size: 10px; font-weight: 800; letter-spacing: .08em;
+  }
+  .language-choice.active { background: #1f1f1f; color: var(--text); box-shadow: inset 3px 0 0 var(--red); }
+  .language-choice.active .language-code { color: var(--red); }
+  .bug-report-field { display: grid; gap: 6px; }
+  .bug-report-field label {
+    color: #888; font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+  }
+  .bug-report-field textarea {
+    width: 100%; min-height: 112px; resize: vertical;
+    padding: 10px 12px; border: 1px solid var(--border); border-radius: 7px;
+    outline: none; background: var(--surface2); color: var(--text);
+    font: 500 12px/1.45 'Inter', sans-serif;
+  }
+  .bug-report-field textarea:focus { border-color: #666; }
+  #bug-report-hint { min-height: 16px; color: #777; font-size: 10px; line-height: 1.4; }
+  #bug-report-hint.success { color: #65e58d; }
+  #bug-report-hint.error { color: #ff8b8b; }
   .preset-name-row { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 8px; }
   .preset-name-row .color-swatch { width: 42px; height: 38px; border-radius: 7px; }
   #preset-name-input { min-width: 0; }
@@ -2503,9 +2542,10 @@
       position: fixed;
       z-index: 980;
       top: 0;
+      left: 0;
       right: 0;
       bottom: 0;
-      width: min(88vw, 23rem);
+      width: 100%;
       padding: max(1rem, env(safe-area-inset-top)) 1rem calc(1rem + env(safe-area-inset-bottom));
       display: flex;
       flex-direction: column;
@@ -2518,7 +2558,9 @@
       transform: translateX(105%);
       transition: transform .26s cubic-bezier(.2,.8,.2,1);
       overscroll-behavior: contain;
+      scrollbar-width: none;
     }
+    #mobile-menu-drawer::-webkit-scrollbar { display: none; }
     body.mobile-drawer-open #mobile-menu-drawer { transform: translateX(0); }
     .mobile-drawer-head {
       min-height: 2.75rem;
@@ -2555,12 +2597,17 @@
       border-radius: .4375rem;
       background: #202020;
       color: #ddd;
-      font: 700 .75rem/1.2 inherit;
+      font-family: inherit;
+      font-size: .75rem;
+      font-weight: 700;
+      line-height: 1.2;
       text-align: left;
       cursor: pointer;
+      text-decoration: none;
     }
     .mobile-menu-item:active { border-color: #555; background: #252525; }
-    .mobile-menu-item svg { width: 1rem; height: 1rem; flex: 0 0 1rem; color: #8a8a8a; }
+    .mobile-menu-item svg,
+    .mobile-menu-item .menu-brand-icon { width: 1.125rem; height: 1.125rem; flex: 0 0 1.125rem; color: #8a8a8a; object-fit: contain; }
     .mobile-menu-item .mobile-menu-note {
       min-width: 0;
       margin-left: auto;
@@ -3301,6 +3348,9 @@
     <button type="button" class="mobile-icon-btn" id="mobile-search-toggle" aria-label="Pesquisar" title="Pesquisar" aria-expanded="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
     </button>
+    <button type="button" class="mobile-icon-btn" id="mobile-header-language-btn" aria-label="Idioma" title="Idioma">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>
+    </button>
     <button type="button" class="mobile-icon-btn" id="mobile-preset-toggle" aria-label="Abrir presets" title="Presets" aria-expanded="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12a2 2 0 0 1 2 2v14l-8-4-8 4V5a2 2 0 0 1 2-2Z"/><path d="M8 7h8M8 11h5"/></svg>
     </button>
@@ -3333,7 +3383,7 @@
     <div class="mobile-menu-list">
       <div class="mobile-account-entry" data-mobile-account="lastfm">
         <button type="button" class="mobile-menu-item mobile-account-toggle" aria-expanded="false">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/></svg>
+          <svg viewBox="0 0 640 640" fill="currentColor" aria-hidden="true"><path d="M289.8 431.1L271 380.1S240.5 414.1 194.8 414.1c-40.5 0-69.2-35.2-69.2-91.5 0-72.1 36.4-97.9 72.1-97.9 66.5 0 74.8 53.3 100.9 134.9 18.8 56.9 54 102.6 155.4 102.6 72.7 0 122-22.3 122-80.9 0-72.9-62.7-80.6-115-92.1-25.8-5.9-33.4-16.4-33.4-34 0-19.9 15.8-31.7 41.6-31.7 28.2 0 43.4 10.6 45.7 35.8l58.6-7c-4.7-52.8-41.1-74.5-100.9-74.5-52.8 0-104.4 19.9-104.4 83.9 0 39.9 19.4 65.1 68 76.8 44.9 10.6 79.8 13.8 79.8 45.7 0 21.7-21.1 30.5-61 30.5-59.2 0-83.9-31.1-97.9-73.9-32-96.8-43.6-163-161.3-163-86.1 0-131.8 54.5-131.8 147.2 0 89.1 45.7 137.2 127.9 137.2 66.2 0 97.9-31.1 97.9-31.1Z"/></svg>
           Last.fm <span class="mobile-menu-note">usuário e API</span>
         </button>
         <div class="mobile-account-slot" id="mobile-account-lastfm-slot"></div>
@@ -3345,7 +3395,7 @@
       <div class="mobile-account-entry" data-mobile-account="spotify">
         <button type="button" class="mobile-menu-item mobile-account-toggle" aria-expanded="false">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M7 10.5c3.6-1.1 7.4-.7 10.5 1M8 14c2.9-.8 5.9-.5 8.4.8M9 17c2.1-.5 4.2-.3 6 .6"/></svg>
-          Spotify <span class="mobile-menu-note">Premium</span>
+          Spotify <span class="mobile-menu-note">necessita premium</span>
         </button>
         <div class="mobile-account-slot" id="mobile-account-spotify-slot"></div>
       </div>
@@ -3358,7 +3408,7 @@
       </div>
       <div class="mobile-account-entry" data-mobile-account="fanart">
         <button type="button" class="mobile-menu-item mobile-account-toggle" aria-expanded="false">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+          <img class="menu-brand-icon" src="./fanarttv.svg" alt="" aria-hidden="true">
           Fanart.tv
         </button>
         <div class="mobile-account-slot" id="mobile-account-fanart-slot"></div>
@@ -3406,6 +3456,27 @@
       </button>
     </div>
   </section>
+  <section class="mobile-drawer-section">
+    <span class="mobile-drawer-label">Projeto</span>
+    <div class="mobile-menu-list">
+      <a class="mobile-menu-item" href="https://github.com/katiaukg/collagerfm" target="_blank" rel="noopener noreferrer">
+        <img class="menu-brand-icon" src="./github.svg" alt="" aria-hidden="true">
+        GitHub do projeto <span class="mobile-menu-note">katiaukg/collagerfm</span>
+      </a>
+      <a class="mobile-menu-item" href="https://discord.gg/MyCnB7KRHD" target="_blank" rel="noopener noreferrer">
+        <img class="menu-brand-icon" src="./discord.svg" alt="" aria-hidden="true">
+        Canal do Discord
+      </a>
+      <button type="button" class="mobile-menu-item" id="mobile-report-bug-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2h8M9 2v3m6-3v3"/><rect x="5" y="5" width="14" height="16" rx="7"/><path d="M3 13h4m10 0h4M4 7l3 2m10 0 3-2M4 19l3-2m10 0 3 2"/></svg>
+        Achou um bug?
+      </button>
+      <a class="mobile-menu-item" href="https://ko-fi.com/katiau" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h14v7a6 6 0 0 1-6 6H10a6 6 0 0 1-6-6Z"/><path d="M18 9h2a2 2 0 0 1 0 4h-2"/><path d="M8 11c1-2 4-2 5 0 1-2 4-2 4 1 0 2-4 4-4 4s-5-2-5-4c0-.4 0-.7.1-1Z"/></svg>
+        Ajudar o projeto? <span class="mobile-menu-note">Ko-fi</span>
+      </a>
+    </div>
+  </section>
 </aside>
 
 <div class="app">
@@ -3424,6 +3495,9 @@
           <button class="settings-transfer-btn" id="settings-import-btn" data-tooltip="Importar configurações" aria-label="Importar configurações">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           </button>
+          <button class="settings-transfer-btn" id="settings-language-btn" data-tooltip="Idioma" aria-label="Idioma">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>
+          </button>
         </div>
         <div id="desktop-menu-wrap">
           <button class="logo-action-btn" id="desktop-menu-toggle" data-tooltip="Menu" aria-label="Abrir menu" aria-expanded="false" aria-controls="desktop-settings-menu">
@@ -3439,7 +3513,7 @@
         <span class="desktop-menu-label">Conta Last.fm</span>
         <div class="desktop-account-entry" data-desktop-account="lastfm">
           <button type="button" class="desktop-menu-item desktop-account-toggle" aria-expanded="false">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/></svg>
+            <svg viewBox="0 0 640 640" fill="currentColor" aria-hidden="true"><path d="M289.8 431.1L271 380.1S240.5 414.1 194.8 414.1c-40.5 0-69.2-35.2-69.2-91.5 0-72.1 36.4-97.9 72.1-97.9 66.5 0 74.8 53.3 100.9 134.9 18.8 56.9 54 102.6 155.4 102.6 72.7 0 122-22.3 122-80.9 0-72.9-62.7-80.6-115-92.1-25.8-5.9-33.4-16.4-33.4-34 0-19.9 15.8-31.7 41.6-31.7 28.2 0 43.4 10.6 45.7 35.8l58.6-7c-4.7-52.8-41.1-74.5-100.9-74.5-52.8 0-104.4 19.9-104.4 83.9 0 39.9 19.4 65.1 68 76.8 44.9 10.6 79.8 13.8 79.8 45.7 0 21.7-21.1 30.5-61 30.5-59.2 0-83.9-31.1-97.9-73.9-32-96.8-43.6-163-161.3-163-86.1 0-131.8 54.5-131.8 147.2 0 89.1 45.7 137.2 127.9 137.2 66.2 0 97.9-31.1 97.9-31.1Z"/></svg>
             Informar conta Last.fm <span class="desktop-menu-note">usuário e API</span>
           </button>
           <div class="desktop-account-slot" id="desktop-account-lastfm-slot">
@@ -3455,7 +3529,7 @@
         <span class="desktop-menu-label">Informar fontes de imagem</span>
         <div class="desktop-menu-list">
           <div class="desktop-account-entry" data-desktop-account="spotify">
-            <button type="button" class="desktop-menu-item desktop-account-toggle" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M7 10.5c3.6-1.1 7.4-.7 10.5 1M8 14c2.9-.8 5.9-.5 8.4.8M9 17c2.1-.5 4.2-.3 6 .6"/></svg>Spotify <span class="desktop-menu-note">Premium</span></button>
+            <button type="button" class="desktop-menu-item desktop-account-toggle" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M7 10.5c3.6-1.1 7.4-.7 10.5 1M8 14c2.9-.8 5.9-.5 8.4.8M9 17c2.1-.5 4.2-.3 6 .6"/></svg>Spotify <span class="desktop-menu-note">necessita premium</span></button>
             <div class="desktop-account-slot" id="desktop-account-spotify-slot"></div>
           </div>
           <div class="desktop-account-entry" data-desktop-account="youtube">
@@ -3463,7 +3537,7 @@
             <div class="desktop-account-slot" id="desktop-account-youtube-slot"></div>
           </div>
           <div class="desktop-account-entry" data-desktop-account="fanart">
-            <button type="button" class="desktop-menu-item desktop-account-toggle" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>Fanart.tv</button>
+            <button type="button" class="desktop-menu-item desktop-account-toggle" aria-expanded="false"><img class="menu-brand-icon" src="./fanarttv.svg" alt="" aria-hidden="true">Fanart.tv</button>
             <div class="desktop-account-slot" id="desktop-account-fanart-slot"></div>
           </div>
           <div class="desktop-account-entry" data-desktop-account="local">
@@ -3486,6 +3560,16 @@
           <button type="button" class="desktop-menu-item" id="desktop-merged-list-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 7h11v11H8z"/><path d="M5 16H3V5h11v2"/><path d="m12 12 2 2 4-4"/></svg>Listagem de mesclados</button>
         </div>
       </section>
+      <hr class="desktop-menu-divider">
+      <section class="desktop-menu-section">
+        <span class="desktop-menu-label">Projeto</span>
+        <div class="desktop-menu-list">
+          <a class="desktop-menu-item" href="https://github.com/katiaukg/collagerfm" target="_blank" rel="noopener noreferrer"><img class="menu-brand-icon" src="./github.svg" alt="" aria-hidden="true">GitHub do projeto <span class="desktop-menu-note">katiaukg/collagerfm</span></a>
+          <a class="desktop-menu-item" href="https://discord.gg/MyCnB7KRHD" target="_blank" rel="noopener noreferrer"><img class="menu-brand-icon" src="./discord.svg" alt="" aria-hidden="true">Canal do Discord</a>
+          <button type="button" class="desktop-menu-item" id="desktop-report-bug-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 2h8M9 2v3m6-3v3"/><rect x="5" y="5" width="14" height="16" rx="7"/><path d="M3 13h4m10 0h4M4 7l3 2m10 0 3-2M4 19l3-2m10 0 3 2"/></svg>Achou um bug?</button>
+          <a class="desktop-menu-item" href="https://ko-fi.com/katiau" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h14v7a6 6 0 0 1-6 6H10a6 6 0 0 1-6-6Z"/><path d="M18 9h2a2 2 0 0 1 0 4h-2"/><path d="M8 11c1-2 4-2 5 0 1-2 4-2 4 1 0 2-4 4-4 4s-5-2-5-4c0-.4 0-.7.1-1Z"/></svg>Ajudar o projeto? <span class="desktop-menu-note">Ko-fi</span></a>
+        </div>
+      </section>
     </div>
 
     <div id="sidebar-search-bar">
@@ -3506,7 +3590,7 @@
     </nav>
 
     <button type="button" id="mobile-open-account-menu">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/></svg>
+      <svg viewBox="0 0 640 640" fill="currentColor" aria-hidden="true"><path d="M289.8 431.1L271 380.1S240.5 414.1 194.8 414.1c-40.5 0-69.2-35.2-69.2-91.5 0-72.1 36.4-97.9 72.1-97.9 66.5 0 74.8 53.3 100.9 134.9 18.8 56.9 54 102.6 155.4 102.6 72.7 0 122-22.3 122-80.9 0-72.9-62.7-80.6-115-92.1-25.8-5.9-33.4-16.4-33.4-34 0-19.9 15.8-31.7 41.6-31.7 28.2 0 43.4 10.6 45.7 35.8l58.6-7c-4.7-52.8-41.1-74.5-100.9-74.5-52.8 0-104.4 19.9-104.4 83.9 0 39.9 19.4 65.1 68 76.8 44.9 10.6 79.8 13.8 79.8 45.7 0 21.7-21.1 30.5-61 30.5-59.2 0-83.9-31.1-97.9-73.9-32-96.8-43.6-163-161.3-163-86.1 0-131.8 54.5-131.8 147.2 0 89.1 45.7 137.2 127.9 137.2 66.2 0 97.9-31.1 97.9-31.1Z"/></svg>
       <span><strong id="mobile-account-title">Informar conta</strong><small id="mobile-account-note">Last.fm, Spotify, YouTube, Fanart.tv e pasta local</small></span>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
     </button>
@@ -5236,7 +5320,7 @@
       </button>
     </div>
     <button type="button" id="mobile-account-error-action">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/></svg>
+      <svg viewBox="0 0 640 640" fill="currentColor" aria-hidden="true"><path d="M289.8 431.1L271 380.1S240.5 414.1 194.8 414.1c-40.5 0-69.2-35.2-69.2-91.5 0-72.1 36.4-97.9 72.1-97.9 66.5 0 74.8 53.3 100.9 134.9 18.8 56.9 54 102.6 155.4 102.6 72.7 0 122-22.3 122-80.9 0-72.9-62.7-80.6-115-92.1-25.8-5.9-33.4-16.4-33.4-34 0-19.9 15.8-31.7 41.6-31.7 28.2 0 43.4 10.6 45.7 35.8l58.6-7c-4.7-52.8-41.1-74.5-100.9-74.5-52.8 0-104.4 19.9-104.4 83.9 0 39.9 19.4 65.1 68 76.8 44.9 10.6 79.8 13.8 79.8 45.7 0 21.7-21.1 30.5-61 30.5-59.2 0-83.9-31.1-97.9-73.9-32-96.8-43.6-163-161.3-163-86.1 0-131.8 54.5-131.8 147.2 0 89.1 45.7 137.2 127.9 137.2 66.2 0 97.9-31.1 97.9-31.1Z"/></svg>
       Informar conta Last.fm
     </button>
     <div id="collage-wrap" style="position:relative;">
@@ -5425,6 +5509,38 @@
     <div style="display:flex;gap:8px;justify-content:flex-end;">
       <button type="button" id="settings-export-cancel" style="padding:8px 12px;border:1px solid var(--border);border-radius:7px;background:var(--surface2);color:var(--muted);font-family:inherit;font-weight:700;cursor:pointer;">CANCELAR</button>
       <button type="button" id="settings-export-confirm" style="padding:8px 12px;border:1px solid #d51007;border-radius:7px;background:#d51007;color:#fff;font-family:inherit;font-weight:700;cursor:pointer;">EXPORTAR</button>
+    </div>
+  </div>
+</div>
+
+<div id="language-overlay" class="compact-dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="language-dialog-title" aria-hidden="true">
+  <div class="compact-dialog">
+    <div class="compact-dialog-title" id="language-dialog-title">Escolher idioma</div>
+    <div class="language-choice-list" data-i18n-skip>
+      <button type="button" class="language-choice" data-locale="en-US"><img src="./assets/flags/en-US.svg" alt=""><strong>English</strong><span class="language-code">EN</span></button>
+      <button type="button" class="language-choice" data-locale="pt-BR"><img src="./assets/flags/pt-BR.svg" alt=""><strong>Português</strong><span class="language-code">PT</span></button>
+    </div>
+    <div class="compact-dialog-actions">
+      <button type="button" class="dialog-secondary" id="language-dialog-cancel">CANCELAR</button>
+    </div>
+  </div>
+</div>
+
+<div id="bug-report-overlay" class="compact-dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="bug-report-title" aria-hidden="true">
+  <div class="compact-dialog">
+    <div class="compact-dialog-title" id="bug-report-title">Relatar um bug</div>
+    <div class="bug-report-field">
+      <label for="bug-report-subject">Título</label>
+      <input type="text" id="bug-report-subject" maxlength="100" placeholder="Resumo do problema..." autocomplete="off">
+    </div>
+    <div class="bug-report-field">
+      <label for="bug-report-message">Assunto</label>
+      <textarea id="bug-report-message" maxlength="1800" placeholder="Conte o que aconteceu e como reproduzir..."></textarea>
+    </div>
+    <div id="bug-report-hint">A mensagem será copiada e o canal de bugs do Discord será aberto para você enviá-la.</div>
+    <div class="compact-dialog-actions">
+      <button type="button" class="dialog-secondary" id="bug-report-cancel">CANCELAR</button>
+      <button type="button" class="dialog-primary" id="bug-report-submit">COPIAR E ABRIR DISCORD</button>
     </div>
   </div>
 </div>
@@ -5646,6 +5762,7 @@
   </div>
 </div>
 
+<script src="./i18n.js?v=20260802-5"></script>
 <script>
 // ─────────────────────────────────────────────────────────────
 // CONFIG & STATE
@@ -23435,7 +23552,54 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
     sidebarSearchInput.focus();
   });
 
-  // Botão de idioma — reservado para depois; sem funcionalidade por enquanto.
+  const languageOverlay = document.getElementById('language-overlay');
+  const languageChoices = Array.from(document.querySelectorAll('.language-choice'));
+
+  function syncLanguageChoices() {
+    const locale = window.collagerI18n?.locale || document.documentElement.lang || 'pt-BR';
+    languageChoices.forEach(button => {
+      const active = button.dataset.locale === locale;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+  }
+
+  function openLanguageSettings() {
+    document.body.classList.remove('mobile-drawer-open');
+    document.getElementById('mobile-menu-toggle')?.setAttribute('aria-expanded', 'false');
+    document.getElementById('mobile-menu-drawer')?.setAttribute('aria-hidden', 'true');
+    document.getElementById('mobile-menu-backdrop')?.setAttribute('aria-hidden', 'true');
+    document.getElementById('desktop-settings-menu')?.classList.remove('visible');
+    document.getElementById('desktop-menu-toggle')?.setAttribute('aria-expanded', 'false');
+    syncLanguageChoices();
+    languageOverlay.style.display = 'flex';
+    languageOverlay.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeLanguageSettings() {
+    languageOverlay.style.display = 'none';
+    languageOverlay.setAttribute('aria-hidden', 'true');
+  }
+
+  languageChoices.forEach(button => {
+    button.addEventListener('click', async () => {
+      const locale = button.dataset.locale;
+      try {
+        await window.collagerI18n?.setLocale(locale);
+        syncLanguageChoices();
+        closeLanguageSettings();
+        showStatus(locale === 'en-US' ? 'Language changed to English.' : 'Idioma alterado para Português (Brasil).');
+      } catch (error) {
+        showStatus(error?.message || 'Não foi possível alterar o idioma.');
+      }
+    });
+  });
+  document.getElementById('language-dialog-cancel').addEventListener('click', closeLanguageSettings);
+  languageOverlay.addEventListener('click', event => {
+    if (event.target === languageOverlay) closeLanguageSettings();
+  });
+  document.getElementById('settings-language-btn').addEventListener('click', openLanguageSettings);
+  document.getElementById('mobile-header-language-btn').addEventListener('click', openLanguageSettings);
 
   const settingsExportOverlay = document.getElementById('settings-export-overlay');
   const settingsExportAll = document.getElementById('settings-export-all');
@@ -24093,9 +24257,84 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       if (event.target === event.currentTarget) body.classList.remove('mobile-menu-all-history');
     });
 
-    const openLanguageSettings = () => showStatus('Configurações de idioma estarão disponíveis em breve.');
     document.getElementById('mobile-language-btn').addEventListener('click', openLanguageSettings);
     document.getElementById('desktop-language-btn')?.addEventListener('click', openLanguageSettings);
+
+    const bugReportChannelUrl = 'https://discord.com/channels/1533229728058708190/1533262608134705292';
+    const bugReportOverlay = document.getElementById('bug-report-overlay');
+    const bugReportSubject = document.getElementById('bug-report-subject');
+    const bugReportMessage = document.getElementById('bug-report-message');
+    const bugReportHint = document.getElementById('bug-report-hint');
+
+    function setBugReportHint(message, state = '') {
+      if (!bugReportHint) return;
+      bugReportHint.textContent = message;
+      bugReportHint.classList.toggle('success', state === 'success');
+      bugReportHint.classList.toggle('error', state === 'error');
+    }
+
+    function openBugReportDialog() {
+      closeMobileDrawer();
+      closeDesktopMenu();
+      if (!bugReportOverlay) return;
+      setBugReportHint('A mensagem será copiada e o canal de bugs do Discord será aberto para você enviá-la.');
+      bugReportOverlay.style.display = 'flex';
+      bugReportOverlay.setAttribute('aria-hidden', 'false');
+      requestAnimationFrame(() => bugReportSubject?.focus());
+    }
+
+    function closeBugReportDialog() {
+      if (!bugReportOverlay) return;
+      bugReportOverlay.style.display = 'none';
+      bugReportOverlay.setAttribute('aria-hidden', 'true');
+    }
+
+    async function copyBugReportText(text) {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return;
+      }
+      const helper = document.createElement('textarea');
+      helper.value = text;
+      helper.setAttribute('readonly', '');
+      helper.style.position = 'fixed';
+      helper.style.opacity = '0';
+      document.body.appendChild(helper);
+      helper.select();
+      const copied = document.execCommand('copy');
+      helper.remove();
+      if (!copied) throw new Error('Não foi possível copiar a mensagem.');
+    }
+
+    document.getElementById('mobile-report-bug-btn')?.addEventListener('click', openBugReportDialog);
+    document.getElementById('desktop-report-bug-btn')?.addEventListener('click', openBugReportDialog);
+    document.getElementById('bug-report-cancel')?.addEventListener('click', closeBugReportDialog);
+    bugReportOverlay?.addEventListener('click', event => {
+      if (event.target === bugReportOverlay) closeBugReportDialog();
+    });
+    document.getElementById('bug-report-submit')?.addEventListener('click', async () => {
+      const title = bugReportSubject?.value.trim() || '';
+      const subject = bugReportMessage?.value.trim() || '';
+      if (!title || !subject) {
+        setBugReportHint('Preencha o título e o assunto antes de continuar.', 'error');
+        (!title ? bugReportSubject : bugReportMessage)?.focus();
+        return;
+      }
+      const reportText = `**Bug no collager.fm**\n**Título:** ${title}\n**Assunto:**\n${subject}\n\n**Página:** ${location.href}`;
+      const discordTab = window.open(bugReportChannelUrl, '_blank');
+      if (discordTab) discordTab.opener = null;
+      try {
+        await copyBugReportText(reportText);
+        setBugReportHint('Mensagem copiada. Cole no canal aberto do Discord e confirme o envio.', 'success');
+        showStatus('Relatório de bug copiado. Cole a mensagem no canal aberto do Discord.');
+      } catch (error) {
+        setBugReportHint(error?.message || 'Não foi possível copiar a mensagem.', 'error');
+      }
+    });
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && bugReportOverlay?.style.display === 'flex') closeBugReportDialog();
+    });
+
     document.getElementById('mobile-export-btn').addEventListener('click', () => {
       closeMobileDrawer();
       document.getElementById('settings-export-btn')?.click();
