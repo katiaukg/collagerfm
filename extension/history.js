@@ -7,11 +7,12 @@ let historyEntries = [];
 let metadataRules = [];
 let historyMode = 'all';
 const pendingControls = new Set();
+const xt = value => ExtI18n.t(value);
 
 function clean(value, maximum = 500) { return String(value || '').trim().slice(0, maximum); }
 function formatDate(timestamp) {
   try {
-    return timestamp ? new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'medium' }).format(new Date(Number(timestamp))) : '';
+    return timestamp ? new Intl.DateTimeFormat(ExtI18n.locale, { dateStyle: 'short', timeStyle: 'medium' }).format(new Date(Number(timestamp))) : '';
   } catch (_) { return ''; }
 }
 function element(tag, className, text) {
@@ -21,7 +22,7 @@ function element(tag, className, text) {
   return node;
 }
 function entryMode(entry) {
-  if (entry?.mode === 'automatic' || /^Correção automática/i.test(clean(entry?.title))) return 'automatic';
+  if (entry?.mode === 'automatic' || /^(Correção automática|Automatic correction)/i.test(clean(entry?.title))) return 'automatic';
   return 'manual';
 }
 function coverNode(url) {
@@ -41,7 +42,7 @@ function ruleLabel(rule) {
   const source = rule?.original || rule?.edited || {};
   const artist = clean(source.artist);
   const track = clean(source.track);
-  return artist && track ? `${artist} — ${track}` : track || artist || 'Metadata sem nome';
+  return artist && track ? `${artist} — ${track}` : track || artist || xt('Metadata sem nome');
 }
 function ruleAlbum(rule) { return clean(rule?.original?.album || rule?.edited?.album); }
 function hasCorrection(rule) {
@@ -100,7 +101,7 @@ async function persistRuleControl(key, field, enabled, removeOperation = false) 
   await storageSet({ [RULES_STORAGE_KEY]: metadataRules });
   render();
 }
-function emptyCard(message) { return element('div', 'empty', message); }
+function emptyCard(message) { return element('div', 'empty', xt(message)); }
 function cardShell(coverUrl) {
   const card = element('article', 'card');
   const layout = element('div', 'card-layout');
@@ -113,14 +114,14 @@ function renderHistoryCard(entry) {
   const { card, copy } = cardShell(entry?.coverUrl);
   const head = element('div', 'card-head');
   head.append(
-    element('h3', '', clean(entry?.title) || 'Ação da extensão'),
-    element('span', `state${entry?.ok ? '' : ' off'}`, entry?.ok ? 'Concluída' : 'Erro')
+    element('h3', '', xt(clean(entry?.title) || 'Ação da extensão')),
+    element('span', `state${entry?.ok ? '' : ' off'}`, xt(entry?.ok ? 'Concluída' : 'Erro'))
   );
   copy.append(head, element('time', '', formatDate(entry?.timestamp)));
   const target = element('div', 'detail', clean(entry?.target));
   if (target.textContent) copy.append(target);
-  copy.append(element('p', 'message', entry?.restoredAt ? 'Este scrobble foi recolocado no Last.fm.' : clean(entry?.message)));
-  copy.append(element('span', 'history-kind', entryMode(entry) === 'automatic' ? 'Automático' : 'Manual'));
+  copy.append(element('p', 'message', xt(entry?.restoredAt ? 'Este scrobble foi recolocado no Last.fm.' : clean(entry?.message))));
+  copy.append(element('span', 'history-kind', xt(entryMode(entry) === 'automatic' ? 'Automático' : 'Manual')));
   return card;
 }
 function renderRuleCard(rule, field, description) {
@@ -133,12 +134,12 @@ function renderRuleCard(rule, field, description) {
   const toggle = element('input');
   toggle.type = 'checkbox'; toggle.checked = active; toggle.disabled = pendingControls.has(pendingKey);
   toggle.dataset.key = rule.key; toggle.dataset.field = field;
-  toggle.setAttribute('aria-label', `Ativar ou desativar ${ruleLabel(rule)}`);
-  toggleLabel.append(toggle, element('span', '', active ? 'Ativada' : 'Desativada'));
+  toggle.setAttribute('aria-label', xt(`Ativar ou desativar ${ruleLabel(rule)}`));
+  toggleLabel.append(toggle, element('span', '', xt(active ? 'Ativada' : 'Desativada')));
   const remove = element('button', 'remove-operation', '×');
   remove.type = 'button'; remove.disabled = pendingControls.has(pendingKey);
   remove.dataset.key = rule.key; remove.dataset.field = field;
-  remove.setAttribute('aria-label', `Excluir operação de ${ruleLabel(rule)}`);
+  remove.setAttribute('aria-label', xt(`Excluir operação de ${ruleLabel(rule)}`));
   actions.append(toggleLabel, remove);
   head.append(element('h3', '', ruleLabel(rule)), actions);
   copy.append(head);
@@ -146,7 +147,7 @@ function renderRuleCard(rule, field, description) {
   if (detail.textContent) copy.append(detail);
   const album = ruleAlbum(rule);
   const since = activationDate(rule, field);
-  const meta = element('span', 'meta', [album ? `Álbum: ${album}` : '', since ? `Ativa desde ${since}` : ''].filter(Boolean).join(' · '));
+  const meta = element('span', 'meta', [album ? xt(`Álbum: ${album}`) : '', since ? xt(`Ativa desde ${since}`) : ''].filter(Boolean).join(' · '));
   if (meta.textContent) copy.append(meta);
   return card;
 }
@@ -161,7 +162,7 @@ function render() {
   const deleted = metadataRules.filter(rule => rule?.deletionConfigured);
   renderList('history', visibleHistory, renderHistoryCard, 'A extensão ainda não registrou nenhuma ação neste filtro.');
   renderList('changed', changed, rule => renderRuleCard(rule, 'applyMetadataCorrection', correctionDescription), 'Nenhuma correção automática foi configurada.');
-  renderList('deleted', deleted, rule => renderRuleCard(rule, 'deleteFutureScrobbles', candidate => `Mesmo metadata de ${ruleLabel(candidate)}`), 'Nenhuma exclusão automática foi configurada.');
+  renderList('deleted', deleted, rule => renderRuleCard(rule, 'deleteFutureScrobbles', candidate => xt(`Mesmo metadata de ${ruleLabel(candidate)}`)), 'Nenhuma exclusão automática foi configurada.');
 }
 function selectView(view) {
   const target = ['history', 'changed', 'deleted'].includes(view) ? view : 'history';
@@ -200,8 +201,8 @@ document.querySelector('.clear-menu').addEventListener('click', async event => {
   const button = event.target.closest('[data-clear-scope]');
   if (!button) return;
   const scope = button.dataset.clearScope;
-  const label = scope === 'manual' ? 'manual' : scope === 'automatic' ? 'automático' : 'completo';
-  if (!window.confirm(`Deseja excluir o histórico ${label} da extensão?`)) return;
+  const label = xt(scope === 'manual' ? 'manual' : scope === 'automatic' ? 'automático' : 'completo');
+  if (!window.confirm(xt(`Deseja excluir o histórico ${label} da extensão?`))) return;
   historyEntries = scope === 'all' ? [] : historyEntries.filter(entry => entryMode(entry) !== scope);
   await storageSet({ [HISTORY_STORAGE_KEY]: historyEntries });
   document.querySelector('.clear-menu').hidden = true;
@@ -215,7 +216,7 @@ document.querySelector('main').addEventListener('change', async event => {
   pendingControls.add(pendingKey); render();
   const accepted = await sendRuleControl('toggleRule', key, field, toggle.checked);
   if (accepted) await persistRuleControl(key, field, toggle.checked);
-  else window.alert('Abra o collager.fm em outra aba para alterar esta regra.');
+  else window.alert(xt('Abra o collager.fm em outra aba para alterar esta regra.'));
   pendingControls.delete(pendingKey); render();
 });
 document.querySelector('main').addEventListener('click', async event => {
@@ -224,19 +225,26 @@ document.querySelector('main').addEventListener('click', async event => {
   const { key, field } = remove.dataset;
   const rule = metadataRules.find(candidate => candidate?.key === key);
   if (!rule) return;
-  const kind = field === 'applyMetadataCorrection' ? 'alteração automática' : 'exclusão automática';
-  if (!window.confirm(`Deseja excluir a operação de ${kind} para ${ruleLabel(rule)}?`)) return;
+  const kind = xt(field === 'applyMetadataCorrection' ? 'alteração automática' : 'exclusão automática');
+  if (!window.confirm(xt(`Deseja excluir a operação de ${kind} para ${ruleLabel(rule)}?`))) return;
   const pendingKey = `${key}|${field}`;
   pendingControls.add(pendingKey); render();
   const accepted = await sendRuleControl('deleteRule', key, field, false);
   if (accepted) await persistRuleControl(key, field, false, true);
-  else window.alert('Abra o collager.fm em outra aba para excluir esta regra.');
+  else window.alert(xt('Abra o collager.fm em outra aba para excluir esta regra.'));
   pendingControls.delete(pendingKey); render();
 });
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== 'local') return;
   if (changes[HISTORY_STORAGE_KEY]) historyEntries = Array.isArray(changes[HISTORY_STORAGE_KEY].newValue) ? changes[HISTORY_STORAGE_KEY].newValue : [];
   if (changes[RULES_STORAGE_KEY]) metadataRules = Array.isArray(changes[RULES_STORAGE_KEY].newValue) ? changes[RULES_STORAGE_KEY].newValue : [];
+  if (changes[ExtI18n.STORAGE_KEY]) {
+    ExtI18n.setLocale(changes[ExtI18n.STORAGE_KEY].newValue, false);
+    ExtI18n.apply();
+  }
   render();
 });
-load();
+ExtI18n.init().then(() => {
+  ExtI18n.apply();
+  load();
+});

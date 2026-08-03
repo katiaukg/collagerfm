@@ -192,7 +192,6 @@
     "Ajustar imagem do cabeçalho": "Adjust header image",
     "Álbum": "Album",
     "Álbuns": "Albums",
-    "ALTERAR CONTA": "CHANGE ACCOUNT",
     "Alterar tamanho do cabeçalho": "Resize header",
     "Alternar entre visualização e edição": "Switch between viewing and editing",
     "Alternar visualização e edição": "Switch view and edit mode",
@@ -217,6 +216,12 @@
     "automático": "automatic",
     "automático…": "automatic…",
     "BAIXAR EXTENSÃO": "DOWNLOAD EXTENSION",
+    "Extensão não detectada.": "Extension not detected.",
+    "Girar 90°": "Rotate 90°",
+    "Tamanho em pixels": "Size in pixels",
+    "Arraste para redimensionar": "Drag to resize",
+    "A extensão não concluiu a ação.": "The extension did not complete the action.",
+    "A extensão não concluiu a operação.": "The extension did not complete the operation.",
     "Botões arrastáveis e ativáveis, para ordenar a sua prioridade e preferência de uso.": "Drag and enable sources to set their priority and usage preference.",
     "Buscar": "Search",
     "Caso não queira depender de filas, você deve usar sua própria chave API": "Use your own API key if you do not want to depend on queues",
@@ -455,6 +460,9 @@
     "Imagem aplicada ao tile, mas não consegui salvar na pasta local.": "Image applied to the tile, but it could not be saved to the local folder.",
     "Nenhuma fonte selecionada.": "No font selected.",
     "Permissão para acessar as fontes do sistema foi negada.": "Permission to access system fonts was denied.",
+    "Seu navegador não suporta acessar as fontes do sistema diretamente (recurso disponível apenas em Chrome/Edge, com a página servida por http(s), não abrindo o arquivo direto do disco). Use \"+ Adicionar fonte\" para enviar o arquivo da fonte manualmente.": "Your browser does not support direct access to system fonts (this feature is available only in Chrome/Edge when the page is served over http(s), not opened directly from disk). Use \"+ Add font\" to upload the font file manually.",
+    "Selecione um período específico (não \"Geral\") para o modo Novos.": "Select a specific period (not \"All time\") for New in period mode.",
+    "Escolha um tile diferente do que está sendo mesclado.": "Choose a tile other than the one being merged.",
     "Não foi possível acessar as fontes do sistema.": "System fonts could not be accessed.",
     "Tamanho da logo da linha 1": "Line 1 logo size",
     "Tamanho da logo da linha 2": "Line 2 logo size",
@@ -511,7 +519,6 @@
     "Configurações e memórias do Last.fm Collage Generator. Inclui exclusões, mesclagens, textos e referências de imagens por identidade estável.": "Last.fm Collage Generator settings and memories. Includes deleted and merged items, text and image references by stable identity.",
     "Contém usuário, caminhos locais e credenciais de API. Não compartilhe este arquivo.": "Contains a username, local paths and API credentials. Do not share this file.",
     "Curtindo faixa...": "Loving track...",
-    "Definindo obsessão...": "Setting obsession...",
     "Deseja desativar a imagem do cabeçalho para colocar o gradiente?": "Disable the header image to use the gradient?",
     "Deseja desativar o gradiente do cabeçalho para colocar a imagem?": "Disable the header gradient to use the image?",
     "Faixa curtida no Last.fm. Gere a collage novamente para atualizá-la.": "Track loved on Last.fm. Generate the collage again to update it.",
@@ -544,8 +551,74 @@
     "Não foi possível salvar na pasta local:": "Could not save to the local folder:",
     "Seleção da pasta local cancelada/falhou:": "Local folder selection was canceled or failed:",
     "Pacifico (cursiva)": "Pacifico (cursive)",
+    "Autorize sua conta para editar informações diretamente no seu perfil.": "Authorize your account to edit information directly on your profile.",
+    "AUTORIZAÇÃO INDISPONÍVEL": "AUTHORIZATION UNAVAILABLE",
+    "ALTERAR CONTA": "CHANGE ACCOUNT",
+    "Informe o Client ID e conecte sua conta. Use a URI:": "Enter the Client ID and connect your account. Use the URI:",
+    "sua chave YouTube Data API v3...": "your YouTube Data API v3 key...",
+    "sua chave Fanart.tv...": "your Fanart.tv key...",
+    "Usa Artist Thumb e Background para artistas, e Album Cover para álbuns e faixas.": "Uses Artist Thumb and Background for artists, and Album Cover for albums and tracks.",
+    "Qualidade do WebP": "WebP quality",
+    "Nenhuma regra global salva.": "No global rules saved.",
+    "Nenhum item deste período.": "No items from this period.",
+    "Buscando nos seus artistas ouvidos...": "Searching your listened artists...",
+    "Buscando faixas...": "Searching tracks...",
+    "Falha na busca": "Search failed",
+    "Definindo obsessão no Last.fm...": "Setting obsession on Last.fm...",
+    "Definindo obsessão...": "Setting obsession...",
+    "Faixa definida como obsessão.": "Track set as an obsession.",
+    "Faixa definida novamente como a obsessão mais recente.": "Track set again as the most recent obsession.",
+    "Faixa definida novamente como obsessão.": "Track set as an obsession again.",
+    "Excluindo...": "Deleting...",
+    "Mesclando...": "Merging...",
+    "Busca por nome do artista.": "Search by artist name.",
+    "Busca por nome do álbum e também considera o nome do artista como apoio.": "Search by album name, also using the artist name as context.",
+    "Busca por nome da faixa e também considera o nome do álbum e artista como apoio.": "Search by track name, also using the album and artist names as context.",
+    "nome da faixa, álbum ou artista...": "track, album or artist name...",
+    "Na imaginação": "In the collage",
+    "clique para restaurar": "click to restore",
+    "Deste período": "This period",
+    "Todo o período": "All time",
+    "Nessa semana": "This week",
+    "Nesse mês": "This month",
+    "Nesses 3 meses": "In the last 3 months",
+    "Nesses 6 meses": "In the last 6 months",
+    "Nesses 12 meses": "In the last 12 months",
+    "Novos Artistas": "New Artists",
+    "Data de scrobble": "Scrobble date",
+    "Conta informada com sucesso": "Account entered successfully",
+    "Cancelar geração": "Cancel generation",
+    "Selecione, na janela do navegador, quais fontes do seu computador permitir...": "In the browser window, select which fonts from your computer to allow...",
+    "A mensagem será copiada e o canal de bugs do Discord será aberto para você enviar.": "The message will be copied and the Discord bug channel will open so you can send it.",
+    "Copiar e abrir Discord": "Copy and open Discord",
+    "Excluindo o scrobble com metadata antigo...": "Deleting the scrobble with old metadata...",
+    "Scrobble corrigido enviado. Excluindo o registro com metadata antigo...": "Corrected scrobble submitted. Deleting the record with old metadata...",
+    "Excluindo scrobble do Last.fm...": "Deleting scrobble from Last.fm...",
+    "Excluindo obsessão do Last.fm...": "Deleting obsession from Last.fm...",
+    "Nenhum metadado foi alterado.": "No metadata was changed.",
+    "Na imaginação (clique para restaurar)": "In the collage (click to restore)",
     "Voltar para este ponto": "Return to this point",
-    "Cole a imagem usando a área de transferência do teclado.": "Paste the image using the keyboard clipboard."
+    "Cole a imagem usando a área de transferência do teclado.": "Paste the image using the keyboard clipboard.",
+    "Configuração:": "Settings:",
+    "Título/texto:": "Title/text:",
+    "Download": "Download",
+    "alterado": "changed",
+    "alterada": "changed",
+    "Conta autorizada para edição.": "Account authorized for editing.",
+    "Premium necessário": "Premium required",
+    "Nenhuma regra automática foi configurada.": "No automatic rule has been configured.",
+    "Nenhuma exclusão automática foi configurada.": "No automatic deletion has been configured.",
+    "Nenhuma correção automática foi configurada.": "No automatic correction has been configured.",
+    "RELATAR UM BUG": "REPORT A BUG",
+    "TORNAR OBSESSÃO NOVAMENTE": "MAKE OBSESSION AGAIN",
+    "OBSESSÃO EXCLUÍDA": "OBSESSION DELETED",
+    "SCROBBLE EXCLUÍDO": "SCROBBLE DELETED",
+    "A faixa ainda está sendo escutada; ela poderá ser alterada ou excluída quando virar um scrobble.": "The track is still playing; it can be edited or deleted once it becomes a scrobble.",
+    "Executando ação": "Running action",
+    "Enviando comando à extensão...": "Sending command to the extension...",
+    "Não foi possível tentar novamente.": "Could not try again.",
+    "Imagem alterada": "Image changed",
+    "Contagem de scrobbles": "Scrobble count"
   },
   "patterns": [
     {
@@ -753,6 +826,54 @@
       "target": "Size for header + borders: {width}px × {height}px"
     },
     {
+      "source": "Conta {name} autorizada para edição.",
+      "target": "Account {name} authorized for editing."
+    },
+    {
+      "source": "Informe o Client ID e conecte sua conta. Use a URI: {url}",
+      "target": "Enter the Client ID and connect your account. Use the URI: {url}"
+    },
+    {
+      "source": "Qualidade do {format}",
+      "target": "{format} quality"
+    },
+    {
+      "source": "Salvar {format}",
+      "target": "Save {format}"
+    },
+    {
+      "source": "Você quer mesclar \"{source}\" com \"{target}\"?",
+      "target": "Do you want to merge \"{source}\" with \"{target}\"?"
+    },
+    {
+      "source": "Você quer excluir \"{item}\"?",
+      "target": "Do you want to delete \"{item}\"?"
+    },
+    {
+      "source": "{item} (clique para restaurar)",
+      "target": "{item} (click to restore)"
+    },
+    {
+      "source": "{area}: {label} alterado.",
+      "target": "{area}: {label} changed."
+    },
+    {
+      "source": "{area}: {label} alterada.",
+      "target": "{area}: {label} changed."
+    },
+    {
+      "source": "Regras dos últimos 14 dias conferidas: {item}.",
+      "target": "Rules from the last 14 days checked: {item}."
+    },
+    {
+      "source": "Texto do quadro alterado: {item}.",
+      "target": "Tile text changed: {item}."
+    },
+    {
+      "source": "Definindo obsessão no Last.fm: {item}.",
+      "target": "Setting obsession on Last.fm: {item}."
+    },
+    {
       "source": "Você deseja excluir {name}?",
       "target": "Do you want to delete {name}?"
     },
@@ -787,6 +908,62 @@
     {
       "source": "{time} — {message}",
       "target": "{time} — {message}"
+    },
+    {
+      "source": "Imagem alterada: {item}.",
+      "target": "Image changed: {item}."
+    },
+    {
+      "source": "Mesclagem pesquisada aplicada em {item}.",
+      "target": "Searched merge applied to {item}."
+    },
+    {
+      "source": "Clique em outro quadro da collage para mesclar \"{item}\" com ele. Pressione Esc para cancelar.",
+      "target": "Click another collage tile to merge \"{item}\" with it. Press Esc to cancel."
+    },
+    {
+      "source": "Mesclagem: {source} → {target}.",
+      "target": "Merge: {source} → {target}."
+    },
+    {
+      "source": "Quadro restaurado: {item}.",
+      "target": "Tile restored: {item}."
+    },
+    {
+      "source": "Quadro excluído: {item}.",
+      "target": "Tile deleted: {item}."
+    },
+    {
+      "source": "Preset aplicado: {name}.",
+      "target": "Preset applied: {name}."
+    },
+    {
+      "source": "Preset {action}: {name}.",
+      "target": "Preset {action}: {name}."
+    },
+    {
+      "source": "Buscando scrobbles dos artistas escolhidos... página {page}",
+      "target": "Fetching scrobbles from selected artists... page {page}"
+    },
+    {
+      "source": "Fixar {item}",
+      "target": "Pin {item}"
+    },
+    {
+      "source": "Desafixar {item}",
+      "target": "Unpin {item}"
+    },
+    {
+      "source": "Girar {item} em 90 graus",
+      "target": "Rotate {item} by 90 degrees"
+    },
+    {
+      "source": "Tamanho de {item} em pixels",
+      "target": "{item} size in pixels"
+    },
+    {
+      "source": "Redimensionar {item}",
+      "target": "Resize {item}"
     }
   ]
 }

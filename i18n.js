@@ -7,19 +7,19 @@
   const textState = new WeakMap();
   const attributeState = new WeakMap();
   const translatedAttributes = ['aria-label', 'data-tooltip', 'data-placeholder', 'placeholder', 'title'];
-  let currentLocale = 'pt-BR';
+  let currentLocale = 'en-US';
   let currentMessages = { strings: {}, patterns: [] };
   let observer = null;
 
   function preferredLocale() {
     const saved = localStorage.getItem(storageKey);
     if (supportedLocales.includes(saved)) return saved;
-    return String(navigator.language || '').toLowerCase().startsWith('en') ? 'en-US' : 'pt-BR';
+    return 'en-US';
   }
 
   async function loadLocale(locale) {
     if (localeCache.has(locale)) return localeCache.get(locale);
-    const response = await fetch(`./locales/${locale}.json?v=20260802-5`, { cache: 'no-store' });
+    const response = await fetch(`./locales/${locale}.json?v=20260803-2`, { cache: 'no-store' });
     if (!response.ok) throw new Error(`Não foi possível carregar o idioma ${locale}.`);
     const messages = await response.json();
     localeCache.set(locale, messages);
@@ -112,7 +112,7 @@
   }
 
   async function setLocale(locale) {
-    const normalized = supportedLocales.includes(locale) ? locale : 'pt-BR';
+    const normalized = supportedLocales.includes(locale) ? locale : 'en-US';
     currentMessages = await loadLocale(normalized);
     currentLocale = normalized;
     localStorage.setItem(storageKey, normalized);
@@ -127,7 +127,7 @@
       await setLocale(preferredLocale());
     } catch (error) {
       console.warn(error);
-      currentLocale = 'pt-BR';
+      currentLocale = 'en-US';
     }
     observer = new MutationObserver(mutations => {
       mutations.forEach(mutation => {

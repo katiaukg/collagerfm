@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en-US">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -5762,7 +5762,7 @@
   </div>
 </div>
 
-<script src="./i18n.js?v=20260802-5"></script>
+<script src="./i18n.js?v=20260803-2"></script>
 <script>
 // ─────────────────────────────────────────────────────────────
 // CONFIG & STATE
@@ -6500,6 +6500,7 @@ const DEFAULTS = {
 };
 
 const TYPE_LABELS = { artists: 'Artistas', albums: 'Álbuns', tracks: 'Faixas', new_artists: 'Novos no período', specific_artists: 'Artistas específicos', recent: 'Recentes', loved: 'Curtidas', obsessions: 'Obsessões' };
+const uiText = value => window.collagerI18n?.t(String(value ?? '')) ?? String(value ?? '');
 const TILE_SIZE   = 300;
 
 // ── Fontes de imagem por tipo — a ORDEM DE PRIORIDADE agora é lida
@@ -13718,9 +13719,12 @@ function getHeaderLabel(type, mode, period, dateFrom, dateTo) {
     : type === 'specific_artists'
     ? (queryState?.specificSubType || specificSubType || 'albums')
     : (queryState?.effectiveType || type);
-  const label = headerUseUsernameLabel && headerUsernameOverlayTitle && userLabel
+  const labelSource = headerUseUsernameLabel && headerUsernameOverlayTitle && userLabel
     ? userLabel
     : ((headerTypeLabelOverrides[type] || '').trim() || TYPE_LABELS[labelType] || TYPE_LABELS[type]);
+  const hasCustomLabel = Boolean(headerTypeLabelOverrides[type])
+    || Boolean(headerUseUsernameLabel && headerUsernameOverlayTitle && userLabel);
+  const label = hasCustomLabel ? labelSource : uiText(labelSource);
   let subtitle;
   if (headerSubtitleOverride !== null && headerSubtitleOverride.trim() !== '') {
     subtitle = headerSubtitleOverride.trim();
@@ -13729,11 +13733,11 @@ function getHeaderLabel(type, mode, period, dateFrom, dateTo) {
   } else if (mode==='custom') {
     const from = dateFrom.split('-').reverse().join('/');
     const to   = dateTo.split('-').reverse().join('/');
-    subtitle = `${from} até ${to}`;
+    subtitle = uiText(`${from} até ${to}`);
   } else {
     const names = { '7day':'Nessa semana','1month':'Nesse mês','3month':'Nesses 3 meses',
                     '6month':'Nesses 6 meses','12month':'Nesses 12 meses','overall':'Todo o período' };
-    subtitle = names[period] || period;
+    subtitle = uiText(names[period] || period);
   }
   const sep = headerSeparatorMode === 'bar' ? '|' : headerSeparatorMode === 'none' ? '' : '\u00b7';
   return sep ? `${label}  ${sep}  ${subtitle}` : `${label}  ${subtitle}`;
@@ -13742,7 +13746,7 @@ function getHeaderLabel(type, mode, period, dateFrom, dateTo) {
 function getHeaderSubtitlePart(headerLabel) {
   const text = String(headerLabel || '');
   if (headerSeparatorMode === 'none') {
-    const typeLabels = Object.values(TYPE_LABELS).sort((a, b) => b.length - a.length);
+    const typeLabels = Object.values(TYPE_LABELS).map(uiText).sort((a, b) => b.length - a.length);
     const found = typeLabels.find(label => text.startsWith(label + '  '));
     if (found) return text.slice(found.length).trim();
     const separated = text.match(/^(.+?)\s{2,}(.+)$/);
@@ -16273,7 +16277,7 @@ async function buildStandaloneHtml() {
   const viewportHeightWidth = (width / height * 100).toFixed(7);
   const viewportPaddingWidth = (32 * width / height).toFixed(7);
   return `<!doctype html>
-<html lang="pt-BR">
+<html lang="${window.collagerI18n?.locale || 'en-US'}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -16384,7 +16388,7 @@ function updateDownloadFilename() {
   const baseName = dlBtn.dataset.baseName || 'lastfm-collage';
   const extension = downloadOutput === 'html' ? 'html' : downloadFormat;
   dlBtn.download = `${baseName}.${extension}`;
-  dlBtn.textContent = `Salvar ${extension.toUpperCase()}`;
+  dlBtn.textContent = `${uiText('Salvar')} ${extension.toUpperCase()}`;
 }
 
 function syncDownloadSettingsUi() {
@@ -16401,7 +16405,7 @@ function syncDownloadSettingsUi() {
   const qualityRow = document.getElementById('download-quality-row');
   const hasQuality = downloadOutput === 'image' && (downloadFormat === 'jpg' || downloadFormat === 'webp');
   qualityRow.classList.toggle('visible', hasQuality);
-  document.getElementById('download-quality-label').textContent = `Qualidade do ${downloadFormat === 'webp' ? 'WebP' : 'JPG'}`;
+  document.getElementById('download-quality-label').textContent = uiText(`Qualidade do ${downloadFormat === 'webp' ? 'WebP' : 'JPG'}`);
   document.getElementById('download-quality').value = downloadQuality;
   document.getElementById('download-quality-value').textContent = `${downloadQuality}%`;
   updateDownloadFilename();
@@ -17651,7 +17655,7 @@ function redrawDeletingOverlay() {
 }
 
 function showDeletingOverlay(index, label = 'Excluindo...', color = '#ef4444') {
-  deletingIndices.set(index, { label, color, icon: label === 'Excluindo...' ? 'trash' : '' });
+  deletingIndices.set(index, { label: uiText(label), color, icon: label === 'Excluindo...' ? 'trash' : '' });
   redrawDeletingOverlay();
 }
 
@@ -20750,14 +20754,14 @@ function renderHistoryModal() {
   if (!grid.children.length) {
     const empty = document.createElement('div');
     empty.style.cssText = 'grid-column:1/-1;padding:28px 12px;text-align:center;color:var(--muted);font-size:12px;';
-    empty.textContent = historyModalFilter === 'all'
+    empty.textContent = uiText(historyModalFilter === 'all'
       ? 'Nenhuma regra global salva.'
-      : 'Nenhum item deste período.';
+      : 'Nenhum item deste período.');
     grid.appendChild(empty);
   }
-  document.getElementById('history-list-title').textContent = historyModalKind === 'merged'
+  document.getElementById('history-list-title').textContent = uiText(historyModalKind === 'merged'
     ? 'Listagem de mesclados'
-    : 'Listagem de excluídos';
+    : 'Listagem de excluídos');
   document.querySelectorAll('#history-list-filter button').forEach(button => {
     button.classList.toggle('active', button.dataset.filter === historyModalFilter);
   });
@@ -21507,8 +21511,8 @@ function createStatusRestoreButton(entry) {
   button.className = 'status-restore-btn';
   button.dataset.entryId = entry.id;
   button.textContent = '↶';
-  button.title = 'Voltar para este ponto';
-  button.setAttribute('aria-label', `Voltar para: ${entry.message}`);
+  button.title = uiText('Voltar para este ponto');
+  button.setAttribute('aria-label', uiText(`Voltar para: ${entry.message}`));
   button.addEventListener('click', event => {
     event.stopPropagation();
     restoreStatusHistoryEntry(entry);
@@ -21521,11 +21525,12 @@ function createStatusHistoryPreviewEntry(entry) {
   row.className = 'status-history-entry' + (entry.error ? ' error' : '');
   const message = document.createElement('span');
   message.className = 'status-history-message';
-  if (entry.icon) setUiIconText(message, entry.icon, entry.message);
-  else message.textContent = entry.message;
+  const renderedMessage = uiText(entry.message);
+  if (entry.icon) setUiIconText(message, entry.icon, renderedMessage);
+  else message.textContent = renderedMessage;
   row.appendChild(message);
   if (entry.snapshot) row.appendChild(createStatusRestoreButton(entry));
-  row.title = `${entry.timeLabel} — ${entry.message}`;
+  row.title = `${entry.timeLabel} — ${renderedMessage}`;
   return row;
 }
 
@@ -21539,8 +21544,9 @@ function createStatusConsoleEntry(entry) {
 
   const message = document.createElement('span');
   message.className = 'status-console-message';
-  if (entry.icon) setUiIconText(message, entry.icon, entry.message);
-  else message.textContent = entry.message;
+  const renderedMessage = uiText(entry.message);
+  if (entry.icon) setUiIconText(message, entry.icon, renderedMessage);
+  else message.textContent = renderedMessage;
 
   row.append(time, message);
   if (entry.snapshot) row.appendChild(createStatusRestoreButton(entry));
@@ -21714,13 +21720,13 @@ function setLoading(on) {
   const btn = document.getElementById('gen-btn');
   if (on) {
     btn.dataset.mode = 'cancel';
-    btn.textContent = '✕ Cancelar geração';
+    btn.textContent = `✕ ${uiText('Cancelar geração')}`;
     btn.style.background = 'transparent';
     btn.style.border = '1.5px solid #f5424255';
     btn.style.color = '#f54242';
   } else {
     btn.dataset.mode = 'generate';
-    btn.textContent = 'Gerar Collage';
+    btn.textContent = uiText('Gerar Collage');
     btn.style.background = '';
     btn.style.border = '';
     btn.style.color = '';
@@ -21739,8 +21745,9 @@ function showStatus(msg, err=false, iconName='') {
   const el = document.getElementById('status');
   el.style.display='';
   el.className = 'status-msg'+(err?' error':'');
-  if (iconName) setUiIconText(el, iconName, text);
-  else el.textContent = text;
+  const renderedText = uiText(text);
+  if (iconName) setUiIconText(el, iconName, renderedText);
+  else el.textContent = renderedText;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -23588,6 +23595,16 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
         await window.collagerI18n?.setLocale(locale);
         syncLanguageChoices();
         closeLanguageSettings();
+        const dateFrom = periodMode === 'custom' ? document.getElementById('date-from')?.value || '' : null;
+        const dateTo = periodMode === 'custom' ? document.getElementById('date-to')?.value || '' : null;
+        headerLabelText = getHeaderLabel(currentType, periodMode, currentPeriod, dateFrom, dateTo);
+        updateDownloadFilename();
+        syncDownloadSettingsUi();
+        const preview = document.getElementById('status-history-preview');
+        if (preview) preview.replaceChildren(...getStatusHistoryEntries().map(createStatusHistoryPreviewEntry));
+        renderStatusConsole();
+        renderHistoryModal();
+        redrawIfReady();
         showStatus(locale === 'en-US' ? 'Language changed to English.' : 'Idioma alterado para Português (Brasil).');
       } catch (error) {
         showStatus(error?.message || 'Não foi possível alterar o idioma.');

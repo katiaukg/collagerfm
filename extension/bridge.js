@@ -17,6 +17,86 @@ const RULES_STORAGE_KEY = 'collager.fm.metadata-rules.v1';
 const PANEL_PLACEMENT_STORAGE_KEY = 'collager.fm.extension-panel-placement.v1';
 const HISTORY_LIMIT = 60;
 const COMPACT_RULES_PER_PAGE = 2;
+const EXTENSION_EN = {
+  'Histórico da extensão': 'Extension history',
+  'Configurações da extensão': 'Extension settings',
+  'Regras automáticas': 'Automatic rules',
+  'Nenhuma ação registrada': 'No recorded actions',
+  'A extensão ainda não registrou nenhuma ação.': 'The extension has not recorded any actions yet.',
+  'Abrir histórico da extensão': 'Open extension history',
+  'Abrir visão completa': 'Open full view',
+  'Excluir histórico': 'Delete history',
+  'Automático': 'Automatic',
+  'Ambos': 'Both',
+  'Alterados': 'Changed',
+  'Apagados': 'Deleted',
+  'Página anterior': 'Previous page',
+  'Próxima página': 'Next page',
+  'Ação anterior': 'Previous action',
+  'Ação seguinte': 'Next action',
+  'RECOLOCAR SCROBBLE': 'RESTORE SCROBBLE',
+  'RECOLOCANDO...': 'RESTORING...',
+  'Este scrobble foi recolocado no Last.fm.': 'This scrobble was restored on Last.fm.',
+  'Scrobble excluído': 'Scrobble deleted',
+  'Obsessão excluída': 'Obsession deleted',
+  'Obsessão atualizada': 'Obsession updated',
+  'Edição salva': 'Edit saved',
+  'Edição incompleta': 'Incomplete edit',
+  'Correção automática aplicada': 'Automatic correction applied',
+  'Correção automática incompleta': 'Incomplete automatic correction',
+  'Ação da extensão': 'Extension action',
+  'O scrobble corrigido foi salvo e o registro original foi removido.': 'The corrected scrobble was saved and the original record was removed.',
+  'A extensão não concluiu esta ação.': 'The extension did not complete this action.',
+  'Metadata sem nome': 'Unnamed metadata',
+  'Nenhuma correção automática foi configurada.': 'No automatic correction has been configured.',
+  'Nenhuma exclusão automática foi configurada.': 'No automatic deletion has been configured.',
+};
+
+function extensionText(value) {
+  const text = String(value ?? '');
+  if (globalThis.ExtI18n) return ExtI18n.t(text, document.documentElement.lang);
+  if (document.documentElement.lang !== 'en-US') return text;
+  if (EXTENSION_EN[text]) return EXTENSION_EN[text];
+  return text
+    .replace(/^(\d+) de (\d+)$/, '$1 of $2')
+    .replace(/^Ativa desde (.+)$/, 'Active since $1')
+    .replace(/^Excluir operação de (.+)$/, 'Delete operation for $1')
+    .replace(/^Mesmo metadata de (.+)$/, 'Same metadata as $1');
+}
+
+function localizeExtensionUi() {
+  if (!historyUi) return;
+  const root = historyUi.host.shadowRoot;
+  const setText = (selector, source) => {
+    const node = root?.querySelector(selector);
+    if (node) node.textContent = extensionText(source);
+  };
+  const setLabel = (selector, source) => {
+    const node = root?.querySelector(selector);
+    if (!node) return;
+    const translated = extensionText(source);
+    node.setAttribute('aria-label', translated);
+    node.setAttribute('title', translated);
+  };
+  setLabel('.launcher', 'Abrir histórico da extensão');
+  setLabel('.open-full', 'Abrir visão completa');
+  setLabel('.clear', 'Excluir histórico');
+  setLabel('.settings', 'Regras automáticas');
+  setText('[data-clear-scope="manual"]', 'Manual');
+  setText('[data-clear-scope="automatic"]', 'Automático');
+  setText('[data-clear-scope="all"]', 'Ambos');
+  setText('.empty', 'A extensão ainda não registrou nenhuma ação.');
+  setText('.restore', 'RECOLOCAR SCROBBLE');
+  setText('.rules-section:first-child h3', 'Alterados');
+  setText('.rules-section:last-child h3', 'Apagados');
+  root?.querySelectorAll('.rule-page-button[data-rule-page="-1"]').forEach(node => node.setAttribute('aria-label', extensionText('Página anterior')));
+  root?.querySelectorAll('.rule-page-button[data-rule-page="1"]').forEach(node => node.setAttribute('aria-label', extensionText('Próxima página')));
+  const older = root?.querySelector('.older');
+  const newer = root?.querySelector('.newer');
+  if (older) older.setAttribute('aria-label', extensionText('Ação anterior'));
+  if (newer) newer.setAttribute('aria-label', extensionText('Ação seguinte'));
+  setHistoryView(historyView);
+}
 const ALLOWED_ORIGINS = new Set([
   'https://collagerfm.vercel.app',
   'http://127.0.0.1:8767',
@@ -186,7 +266,7 @@ function canRestoreEntry(entry) {
 
 function formatDate(timestamp) {
   try {
-    return new Intl.DateTimeFormat('pt-BR', {
+    return new Intl.DateTimeFormat(document.documentElement.lang === 'en-US' ? 'en-US' : 'pt-BR', {
       dateStyle: 'short',
       timeStyle: 'medium',
     }).format(new Date(timestamp));
@@ -203,9 +283,9 @@ function renderHistory() {
   historyUi.empty.hidden = Boolean(entry);
   historyUi.content.hidden = !entry;
   if (historyView === 'history') {
-    historyUi.title.textContent = entry?.title || 'Nenhuma ação registrada';
+    historyUi.title.textContent = extensionText(entry?.title || 'Nenhuma ação registrada');
   }
-  historyUi.position.textContent = total ? `${historyIndex + 1} de ${total}` : '0 de 0';
+  historyUi.position.textContent = extensionText(total ? `${historyIndex + 1} de ${total}` : '0 de 0');
   historyUi.older.disabled = !entry || historyIndex >= total - 1;
   historyUi.newer.disabled = !entry || historyIndex <= 0;
   historyUi.clear.disabled = !total;
@@ -222,21 +302,21 @@ function renderHistory() {
   const currentTarget = operationTarget(entry.payload) || entry.target || '';
   historyUi.target.textContent = currentTarget;
   historyUi.target.hidden = !currentTarget;
-  historyUi.message.textContent = entry.restoredAt
+  historyUi.message.textContent = extensionText(entry.restoredAt
     ? 'Este scrobble foi recolocado no Last.fm.'
-    : entry.message;
+    : entry.message);
   historyUi.events.innerHTML = '';
   (entry.events || []).forEach(text => {
     const row = document.createElement('div');
     row.className = 'event';
-    row.textContent = text;
+    row.textContent = extensionText(text);
     historyUi.events.appendChild(row);
   });
   historyUi.restore.hidden = !canRestoreEntry(entry);
   historyUi.restore.disabled = pendingRestores.has(entry.id);
-  historyUi.restore.textContent = pendingRestores.has(entry.id)
+  historyUi.restore.textContent = extensionText(pendingRestores.has(entry.id)
     ? 'RECOLOCANDO...'
-    : 'RECOLOCAR SCROBBLE';
+    : 'RECOLOCAR SCROBBLE');
   scheduleHistoryPanelPosition();
 }
 
@@ -244,7 +324,7 @@ function metadataRuleLabel(rule) {
   const source = rule?.original || rule?.edited || {};
   const artist = clean(source.artist);
   const track = clean(source.track);
-  return artist && track ? `${artist} — ${track}` : track || artist || 'Metadata sem nome';
+  return artist && track ? `${artist} — ${track}` : track || artist || extensionText('Metadata sem nome');
 }
 
 function metadataRuleAlbum(rule) {
@@ -273,10 +353,10 @@ function metadataRuleActivation(rule, field) {
     : Number(rule?.createdAt || 0);
   if (!activatedAt) return '';
   try {
-    return `Ativa desde ${new Intl.DateTimeFormat('pt-BR', {
+    return extensionText(`Ativa desde ${new Intl.DateTimeFormat(document.documentElement.lang === 'en-US' ? 'en-US' : 'pt-BR', {
       dateStyle: 'short',
       timeStyle: 'short',
-    }).format(new Date(activatedAt))}`;
+    }).format(new Date(activatedAt))}`);
   } catch (_) {
     return '';
   }
@@ -305,7 +385,7 @@ function buildRuleRow(rule, field, description) {
   const album = metadataRuleAlbum(rule);
   const activation = metadataRuleActivation(rule, field);
   const meta = document.createElement('small');
-  meta.textContent = [album ? `Álbum: ${album}` : '', activation].filter(Boolean).join(' · ');
+  meta.textContent = [album ? extensionText(`Álbum: ${album}`) : '', activation].filter(Boolean).join(' · ');
   copy.append(title, detail);
   if (meta.textContent) copy.append(meta);
   const toggle = document.createElement('input');
@@ -314,14 +394,14 @@ function buildRuleRow(rule, field, description) {
   toggle.disabled = pendingRuleToggles.has(`${rule.key}|${field}`);
   toggle.dataset.key = rule.key;
   toggle.dataset.field = field;
-  toggle.setAttribute('aria-label', `Ativar ou desativar ${metadataRuleLabel(rule)}`);
+  toggle.setAttribute('aria-label', extensionText(`Ativar ou desativar ${metadataRuleLabel(rule)}`));
   const remove = document.createElement('button');
   remove.type = 'button';
   remove.className = 'rule-remove';
   remove.dataset.key = rule.key;
   remove.dataset.field = field;
   remove.disabled = pendingRuleDeletes.has(`${rule.key}|${field}`);
-  remove.setAttribute('aria-label', `Excluir operação de ${metadataRuleLabel(rule)}`);
+  remove.setAttribute('aria-label', extensionText(`Excluir operação de ${metadataRuleLabel(rule)}`));
   remove.title = 'Excluir operação';
   remove.textContent = '×';
   const controls = document.createElement('span');
@@ -348,7 +428,7 @@ function renderRuleSection(container, pagination, rules, field, emptyMessage, de
   rules.slice(start, start + COMPACT_RULES_PER_PAGE)
     .forEach(rule => container.appendChild(buildRuleRow(rule, field, description)));
   pagination.hidden = totalPages <= 1;
-  pagination.querySelector('.rule-page-position').textContent = `${page + 1} de ${totalPages}`;
+  pagination.querySelector('.rule-page-position').textContent = extensionText(`${page + 1} de ${totalPages}`);
   pagination.querySelector('[data-rule-page="-1"]').disabled = page <= 0;
   pagination.querySelector('[data-rule-page="1"]').disabled = page >= totalPages - 1;
   pagination.dataset.section = sectionKey;
@@ -365,7 +445,7 @@ function renderRuleSettings() {
     historyUi.changedPagination,
     changed,
     'applyMetadataCorrection',
-    'Nenhuma correção automática foi configurada.',
+    extensionText('Nenhuma correção automática foi configurada.'),
     metadataRuleEditDescription,
     'changed'
   );
@@ -374,8 +454,8 @@ function renderRuleSettings() {
     historyUi.deletedPagination,
     deleted,
     'deleteFutureScrobbles',
-    'Nenhuma exclusão automática foi configurada.',
-    rule => `Mesmo metadata de ${metadataRuleLabel(rule)}`,
+    extensionText('Nenhuma exclusão automática foi configurada.'),
+    rule => extensionText(`Mesmo metadata de ${metadataRuleLabel(rule)}`),
     'deleted'
   );
   scheduleHistoryPanelPosition();
@@ -391,12 +471,12 @@ function setHistoryView(view) {
   historyUi.clear.hidden = rulesOpen;
   historyUi.settings.classList.toggle('active', rulesOpen);
   if (rulesOpen) {
-    historyUi.kicker.textContent = 'Configurações da extensão';
-    historyUi.title.textContent = 'Regras automáticas';
+    historyUi.kicker.textContent = extensionText('Configurações da extensão');
+    historyUi.title.textContent = extensionText('Regras automáticas');
     renderRuleSettings();
     window.postMessage({ type: PAGE_RULES_REQUEST }, location.origin);
   } else {
-    historyUi.kicker.textContent = 'Histórico da extensão';
+    historyUi.kicker.textContent = extensionText('Histórico da extensão');
     renderHistory();
   }
   scheduleHistoryPanelPosition();
@@ -429,8 +509,8 @@ function requestRuleDelete(key, field, confirmUser = true) {
   if (!key || pendingRuleDeletes.has(pendingKey)) return false;
   const rule = metadataRules.find(candidate => candidate.key === key);
   if (!rule) return false;
-  const operation = field === 'applyMetadataCorrection' ? 'alteração automática' : 'exclusão automática';
-  if (confirmUser && !window.confirm(`Deseja excluir a operação de ${operation} para ${metadataRuleLabel(rule)}?`)) {
+  const operation = extensionText(field === 'applyMetadataCorrection' ? 'alteração automática' : 'exclusão automática');
+  if (confirmUser && !window.confirm(extensionText(`Deseja excluir a operação de ${operation} para ${metadataRuleLabel(rule)}?`))) {
     return false;
   }
   const requestId = randomId();
@@ -855,6 +935,16 @@ function mountHistoryUi() {
     position: find('.position'),
     nav: find('.nav'),
   };
+  globalThis.ExtI18n?.setLocale(document.documentElement.lang === 'en-US' ? 'en-US' : 'pt-BR');
+  localizeExtensionUi();
+  new MutationObserver(() => {
+    const locale = document.documentElement.lang === 'en-US' ? 'en-US' : 'pt-BR';
+    globalThis.ExtI18n?.setLocale(locale);
+    localizeExtensionUi();
+  }).observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['lang'],
+  });
   const launcherWasDragged = installLauncherDrag(historyUi);
   historyUi.launcher.addEventListener('click', () => {
     if (launcherWasDragged()) return;
@@ -921,8 +1011,8 @@ function mountHistoryUi() {
     const button = event.target.closest('[data-clear-scope]');
     if (!button) return;
     const scope = button.dataset.clearScope;
-    const label = scope === 'manual' ? 'manual' : scope === 'automatic' ? 'automático' : 'completo';
-    if (!window.confirm(`Deseja excluir o histórico ${label} da extensão?`)) return;
+    const label = extensionText(scope === 'manual' ? 'manual' : scope === 'automatic' ? 'automático' : 'completo');
+    if (!window.confirm(extensionText(`Deseja excluir o histórico ${label} da extensão?`))) return;
     historyEntries = scope === 'all'
       ? []
       : historyEntries.filter(entry => String(entry?.mode || 'manual') !== scope);
@@ -934,7 +1024,7 @@ function mountHistoryUi() {
   historyUi.restore.addEventListener('click', () => {
     const entry = historyEntries[historyIndex];
     if (!canRestoreEntry(entry) || pendingRestores.has(entry.id)) return;
-    if (!window.confirm('Recolocar este scrobble no Last.fm com os dados e horário originais?')) return;
+    if (!window.confirm(extensionText('Recolocar este scrobble no Last.fm com os dados e horário originais?'))) return;
     const requestId = randomId();
     pendingRestores.set(entry.id, requestId);
     renderHistory();
@@ -1034,7 +1124,7 @@ window.addEventListener('message', event => {
           type: PAGE_RESPONSE,
           requestId,
           ok: false,
-          error: result.__error,
+          error: extensionText(result.__error),
           openUrl: result.__openUrl || '',
           code: result.__code || '',
           retryable: Boolean(result.__retryable),
@@ -1058,7 +1148,7 @@ window.addEventListener('message', event => {
         type: PAGE_RESPONSE,
         requestId,
         ok: false,
-        error: error?.message || 'A extensao nao concluiu a operacao.',
+        error: extensionText(error?.message || 'A extensao nao concluiu a operacao.'),
       }, location.origin);
     });
 });
@@ -1090,7 +1180,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     type: PAGE_PROGRESS,
     requestId: message.requestId,
     phase: message.phase || '',
-    message: progressMessage,
+    message: extensionText(progressMessage),
     progress: Number(message.progress) || 0,
   }, location.origin);
   return undefined;

@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "collager.fm - Last.fm companion"
+  },
+  "extensionDescription": {
+    "message": "Lets collager.fm manage scrobbles and obsessions using your Last.fm web session."
+  },
+  "extensionAction": {
+    "message": "Open collager.fm extension"
+  }
+}

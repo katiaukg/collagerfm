@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "collager.fm - companheira do Last.fm"
+  },
+  "extensionDescription": {
+    "message": "Permite ao collager.fm gerenciar scrobbles e obsessões usando a sessão web do Last.fm."
+  },
+  "extensionAction": {
+    "message": "Abrir extensão collager.fm"
+  }
+}

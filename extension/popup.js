@@ -14,6 +14,11 @@ function selectPlacement(value) {
   document.querySelectorAll('[data-placement]').forEach(button => button.classList.toggle('active', button.dataset.placement === placement));
 }
 
+function updateLanguageName() {
+  const label = document.querySelector('[data-language-name]');
+  if (label) label.textContent = ExtI18n.locale === 'en-US' ? 'English' : 'Português';
+}
+
 document.addEventListener('click', event => {
   const link = event.target.closest('[data-link]');
   if (link) {
@@ -25,7 +30,16 @@ document.addEventListener('click', event => {
   if (placement) {
     selectPlacement(placement.dataset.placement);
     chrome.storage.local.set({ [PANEL_PLACEMENT_STORAGE_KEY]: placement.dataset.placement });
+    return;
+  }
+  if (event.target.closest('[data-language]')) {
+    ExtI18n.setLocale(ExtI18n.locale === 'en-US' ? 'pt-BR' : 'en-US');
+    updateLanguageName();
   }
 });
 
-chrome.storage.local.get(PANEL_PLACEMENT_STORAGE_KEY, result => selectPlacement(result?.[PANEL_PLACEMENT_STORAGE_KEY]));
+ExtI18n.init().then(() => {
+  ExtI18n.apply();
+  updateLanguageName();
+  chrome.storage.local.get(PANEL_PLACEMENT_STORAGE_KEY, result => selectPlacement(result?.[PANEL_PLACEMENT_STORAGE_KEY]));
+});
