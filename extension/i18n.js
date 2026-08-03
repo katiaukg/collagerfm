@@ -157,7 +157,9 @@
 
   function apply(root = typeof document !== 'undefined' ? document : null) {
     if (!root || typeof document === 'undefined') return;
-    document.documentElement.lang = locale;
+    if (document.documentElement.lang !== locale) {
+      document.documentElement.lang = locale;
+    }
     document.querySelectorAll('[data-i18n]').forEach(node => { node.textContent = t(node.dataset.i18n); });
     document.querySelectorAll('[data-i18n-title]').forEach(node => {
       const translated = t(node.dataset.i18nTitle);

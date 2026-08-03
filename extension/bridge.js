@@ -935,13 +935,8 @@ function mountHistoryUi() {
     position: find('.position'),
     nav: find('.nav'),
   };
-  globalThis.ExtI18n?.setLocale(document.documentElement.lang === 'en-US' ? 'en-US' : 'pt-BR');
   localizeExtensionUi();
-  new MutationObserver(() => {
-    const locale = document.documentElement.lang === 'en-US' ? 'en-US' : 'pt-BR';
-    globalThis.ExtI18n?.setLocale(locale);
-    localizeExtensionUi();
-  }).observe(document.documentElement, {
+  new MutationObserver(localizeExtensionUi).observe(document.documentElement, {
     attributes: true,
     attributeFilter: ['lang'],
   });
