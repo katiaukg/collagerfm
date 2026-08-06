@@ -3461,7 +3461,7 @@
     <div class="mobile-menu-list">
       <a class="mobile-menu-item" href="https://github.com/katiaukg/collagerfm" target="_blank" rel="noopener noreferrer">
         <img class="menu-brand-icon" src="./github.svg" alt="" aria-hidden="true">
-        GitHub do projeto <span class="mobile-menu-note">katiaukg/collagerfm</span>
+        Repositório do GitHub <span class="mobile-menu-note">katiaukg/collagerfm</span>
       </a>
       <a class="mobile-menu-item" href="https://discord.gg/MyCnB7KRHD" target="_blank" rel="noopener noreferrer">
         <img class="menu-brand-icon" src="./discord.svg" alt="" aria-hidden="true">
@@ -3564,7 +3564,7 @@
       <section class="desktop-menu-section">
         <span class="desktop-menu-label">Projeto</span>
         <div class="desktop-menu-list">
-          <a class="desktop-menu-item" href="https://github.com/katiaukg/collagerfm" target="_blank" rel="noopener noreferrer"><img class="menu-brand-icon" src="./github.svg" alt="" aria-hidden="true">GitHub do projeto <span class="desktop-menu-note">katiaukg/collagerfm</span></a>
+          <a class="desktop-menu-item" href="https://github.com/katiaukg/collagerfm" target="_blank" rel="noopener noreferrer"><img class="menu-brand-icon" src="./github.svg" alt="" aria-hidden="true">Repositório do GitHub <span class="desktop-menu-note">katiaukg/collagerfm</span></a>
           <a class="desktop-menu-item" href="https://discord.gg/MyCnB7KRHD" target="_blank" rel="noopener noreferrer"><img class="menu-brand-icon" src="./discord.svg" alt="" aria-hidden="true">Canal do Discord</a>
           <button type="button" class="desktop-menu-item" id="desktop-report-bug-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 2h8M9 2v3m6-3v3"/><rect x="5" y="5" width="14" height="16" rx="7"/><path d="M3 13h4m10 0h4M4 7l3 2m10 0 3-2M4 19l3-2m10 0 3 2"/></svg>Achou um bug?</button>
           <a class="desktop-menu-item" href="https://ko-fi.com/katiau" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h14v7a6 6 0 0 1-6 6H10a6 6 0 0 1-6-6Z"/><path d="M18 9h2a2 2 0 0 1 0 4h-2"/><path d="M8 11c1-2 4-2 5 0 1-2 4-2 4 1 0 2-4 4-4 4s-5-2-5-4c0-.4 0-.7.1-1Z"/></svg>Ajudar o projeto? <span class="desktop-menu-note">Ko-fi</span></a>
@@ -5536,11 +5536,12 @@
     <div class="bug-report-field">
       <label for="bug-report-message">Assunto</label>
       <textarea id="bug-report-message" maxlength="1800" placeholder="Conte o que aconteceu e como reproduzir..."></textarea>
+      <input type="text" id="bug-report-website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-10000px;width:1px;height:1px;opacity:0;">
     </div>
-    <div id="bug-report-hint">A mensagem será copiada e o canal de bugs do Discord será aberto para você enviá-la.</div>
+    <div id="bug-report-hint" aria-live="polite"></div>
     <div class="compact-dialog-actions">
       <button type="button" class="dialog-secondary" id="bug-report-cancel">CANCELAR</button>
-      <button type="button" class="dialog-primary" id="bug-report-submit">COPIAR E ABRIR DISCORD</button>
+      <button type="button" class="dialog-primary" id="bug-report-submit">ENVIAR BUG</button>
     </div>
   </div>
 </div>
@@ -24277,7 +24278,6 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
     document.getElementById('mobile-language-btn').addEventListener('click', openLanguageSettings);
     document.getElementById('desktop-language-btn')?.addEventListener('click', openLanguageSettings);
 
-    const bugReportChannelUrl = 'https://discord.com/channels/1533229728058708190/1533262608134705292';
     const bugReportOverlay = document.getElementById('bug-report-overlay');
     const bugReportSubject = document.getElementById('bug-report-subject');
     const bugReportMessage = document.getElementById('bug-report-message');
@@ -24294,7 +24294,7 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       closeMobileDrawer();
       closeDesktopMenu();
       if (!bugReportOverlay) return;
-      setBugReportHint('A mensagem será copiada e o canal de bugs do Discord será aberto para você enviá-la.');
+      setBugReportHint('');
       bugReportOverlay.style.display = 'flex';
       bugReportOverlay.setAttribute('aria-hidden', 'false');
       requestAnimationFrame(() => bugReportSubject?.focus());
@@ -24306,23 +24306,6 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       bugReportOverlay.setAttribute('aria-hidden', 'true');
     }
 
-    async function copyBugReportText(text) {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(text);
-        return;
-      }
-      const helper = document.createElement('textarea');
-      helper.value = text;
-      helper.setAttribute('readonly', '');
-      helper.style.position = 'fixed';
-      helper.style.opacity = '0';
-      document.body.appendChild(helper);
-      helper.select();
-      const copied = document.execCommand('copy');
-      helper.remove();
-      if (!copied) throw new Error('Não foi possível copiar a mensagem.');
-    }
-
     document.getElementById('mobile-report-bug-btn')?.addEventListener('click', openBugReportDialog);
     document.getElementById('desktop-report-bug-btn')?.addEventListener('click', openBugReportDialog);
     document.getElementById('bug-report-cancel')?.addEventListener('click', closeBugReportDialog);
@@ -24330,22 +24313,39 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       if (event.target === bugReportOverlay) closeBugReportDialog();
     });
     document.getElementById('bug-report-submit')?.addEventListener('click', async () => {
+      const submitButton = document.getElementById('bug-report-submit');
       const title = bugReportSubject?.value.trim() || '';
-      const subject = bugReportMessage?.value.trim() || '';
-      if (!title || !subject) {
+      const details = bugReportMessage?.value.trim() || '';
+      if (!title || !details) {
         setBugReportHint('Preencha o título e o assunto antes de continuar.', 'error');
         (!title ? bugReportSubject : bugReportMessage)?.focus();
         return;
       }
-      const reportText = `**Bug no collager.fm**\n**Título:** ${title}\n**Assunto:**\n${subject}\n\n**Página:** ${location.href}`;
-      const discordTab = window.open(bugReportChannelUrl, '_blank');
-      if (discordTab) discordTab.opener = null;
+      submitButton.disabled = true;
+      setBugReportHint('Enviando relatório...');
       try {
-        await copyBugReportText(reportText);
-        setBugReportHint('Mensagem copiada. Cole no canal aberto do Discord e confirme o envio.', 'success');
-        showStatus('Relatório de bug copiado. Cole a mensagem no canal aberto do Discord.');
+        const response = await fetch('/api/discord-bug', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title,
+            details,
+            page: location.href,
+            website: document.getElementById('bug-report-website')?.value || '',
+          }),
+        });
+        await response.json().catch(() => ({}));
+        if (response.status === 429) throw new Error('Muitos relatórios enviados. Tente novamente mais tarde.');
+        if (response.status === 503) throw new Error('O envio de bugs ainda não está configurado.');
+        if (!response.ok) throw new Error('Não foi possível enviar o bug. Tente novamente.');
+        setBugReportHint('Bug enviado ao Discord com sucesso.', 'success');
+        showStatus('Bug enviado ao Discord com sucesso.');
+        bugReportSubject.value = '';
+        bugReportMessage.value = '';
       } catch (error) {
-        setBugReportHint(error?.message || 'Não foi possível copiar a mensagem.', 'error');
+        setBugReportHint(error?.message || 'Não foi possível enviar o bug. Tente novamente.', 'error');
+      } finally {
+        submitButton.disabled = false;
       }
     });
     document.addEventListener('keydown', event => {

@@ -30,6 +30,9 @@
     },
     "api/youtube-music.js": {
       "maxDuration": 30
+    },
+    "api/discord-bug.js": {
+      "maxDuration": 10
     }
   },
   "headers": [

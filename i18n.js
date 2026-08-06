@@ -50,7 +50,7 @@
   }
 
   function shouldIgnore(element) {
-    return !element || Boolean(element.closest('script, style, noscript, textarea, canvas, [data-i18n-skip]'));
+    return !element || Boolean(element.closest('script, style, noscript, canvas, [data-i18n-skip]'));
   }
 
   function translateTextNode(node) {
