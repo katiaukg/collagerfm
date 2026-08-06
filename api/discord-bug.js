@@ -69,6 +69,14 @@ function sameOriginRequest(request) {
   }
 }
 
+function discordConfigurationError(status) {
+  if (status === 401) return { code: 'discord_token_invalid', message: 'Discord bot token is invalid.' };
+  if (status === 403) return { code: 'discord_permission_denied', message: 'Discord bot does not have permission to send messages.' };
+  if (status === 404) return { code: 'discord_channel_unavailable', message: 'Discord bug channel was not found.' };
+  if (status === 429) return { code: 'discord_rate_limited', message: 'Discord is temporarily rate limiting bug reports.' };
+  return { code: 'discord_request_failed', message: 'Discord rejected the bug report.' };
+}
+
 module.exports = async function handler(request, response) {
   if (request.method !== 'POST') {
     response.setHeader('Allow', 'POST');
@@ -119,11 +127,11 @@ module.exports = async function handler(request, response) {
     if (!discordResponse.ok) {
       const discordError = await discordResponse.text().catch(() => '');
       console.error('Discord bug report failed:', discordResponse.status, discordError.slice(0, 500));
-      return sendJson(response, 502, { error: 'Discord rejected the bug report.' });
+      return sendJson(response, 502, discordConfigurationError(discordResponse.status));
     }
     return sendJson(response, 200, { ok: true });
   } catch (error) {
     console.error('Discord bug report error:', error.message);
-    return sendJson(response, 502, { error: 'Could not send the bug report.' });
+    return sendJson(response, 502, { code: 'discord_connection_failed', error: 'Could not send the bug report.' });
   }
 };

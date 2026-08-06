@@ -19,6 +19,8 @@ DISCORD_BOT_TOKEN=your_bot_token
 DISCORD_BUG_CHANNEL_ID=1533262608134705292
 ```
 
+The configured channel is `1533262608134705292` in the Discord server `1533229728058708190`.
+
 Redeploy the project after saving the variables. Reports are limited to five submissions per IP every ten minutes. If Upstash Redis is configured, that limit is shared across all Vercel instances.
 
 Never place `DISCORD_BOT_TOKEN` in the HTML, a client-side JavaScript file, or GitHub.

@@ -24334,10 +24334,19 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
             website: document.getElementById('bug-report-website')?.value || '',
           }),
         });
-        await response.json().catch(() => ({}));
+        const result = await response.json().catch(() => ({}));
         if (response.status === 429) throw new Error('Muitos relatórios enviados. Tente novamente mais tarde.');
         if (response.status === 503) throw new Error('O envio de bugs ainda não está configurado.');
-        if (!response.ok) throw new Error('Não foi possível enviar o bug. Tente novamente.');
+        if (!response.ok) {
+          const discordMessages = {
+            discord_token_invalid: 'O token do bot do Discord é inválido.',
+            discord_permission_denied: 'O bot do Discord não tem permissão para enviar mensagens neste canal.',
+            discord_channel_unavailable: 'O canal de bugs do Discord não foi encontrado.',
+            discord_rate_limited: 'O Discord limitou temporariamente os relatórios. Tente novamente mais tarde.',
+            discord_connection_failed: 'Não foi possível conectar ao Discord. Tente novamente.',
+          };
+          throw new Error(discordMessages[result.code] || 'Não foi possível enviar o bug. Tente novamente.');
+        }
         setBugReportHint('Bug enviado ao Discord com sucesso.', 'success');
         showStatus('Bug enviado ao Discord com sucesso.');
         bugReportSubject.value = '';
