@@ -64,8 +64,10 @@
     'RECOLOCAR SCROBBLE': 'RESTORE SCROBBLE',
     'RECOLOCANDO...': 'RESTORING...',
     'Scrobble excluído': 'Scrobble deleted',
+    'Excluindo scrobble': 'Deleting scrobble',
     'Obsessão excluída': 'Obsession deleted',
     'Obsessão atualizada': 'Obsession updated',
+    'Definindo obsessão': 'Setting obsession',
     'Edição salva': 'Edit saved',
     'Edição incompleta': 'Incomplete edit',
     'Correção automática aplicada': 'Automatic correction applied',
@@ -123,6 +125,7 @@
     'O Last.fm não exibiu o controle de obsessão. A página da faixa foi aberta para você concluir a ação.': 'Last.fm did not show the obsession control. The track page was opened so you can complete the action.',
     'Sua sessão do Last.fm expirou. Entre novamente e repita a operação.': 'Your Last.fm session expired. Sign in again and repeat the operation.',
     'O Last.fm limitou esta ação temporariamente. Aguarde alguns segundos e tente novamente.': 'Last.fm temporarily limited this action. Wait a few seconds and try again.',
+    'O Last.fm recebeu a solicitação, mas a faixa não apareceu como obsessão no perfil.': 'Last.fm received the request, but the track did not appear as the profile obsession.',
     'Falha ao excluir o scrobble.': 'Failed to delete the scrobble.',
     'Falha ao excluir a obsessao.': 'Failed to delete the obsession.',
     'Falha ao definir a obsessao.': 'Failed to set the obsession.'

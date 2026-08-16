@@ -498,6 +498,11 @@
   .inline-source-credential-head small {
     color: #777; font-size: 9px; font-weight: 550; text-align: right;
   }
+  .inline-source-help {
+    color: #777; font-size: 9px; font-weight: 500;
+    text-decoration: underline; text-underline-offset: 2px;
+  }
+  .inline-source-help:hover { color: var(--text); }
   .inline-source-credential-controls {
     display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; align-items: stretch;
   }
@@ -3761,7 +3766,7 @@
         <div id="inline-source-credentials" aria-label="Credenciais necessárias para fontes de imagem">
           <div class="inline-source-credential" data-inline-source-credential="spotify">
             <div class="inline-source-credential-head">
-              <span>Configurar Spotify</span>
+              <span>Configurar Spotify <a class="inline-source-help" href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener noreferrer">obter ID ↗</a></span>
               <small>Client ID e conexão necessários</small>
             </div>
             <div class="inline-source-credential-controls">
@@ -3771,14 +3776,14 @@
           </div>
           <div class="inline-source-credential" data-inline-source-credential="youtube">
             <div class="inline-source-credential-head">
-              <span>Configurar YouTube</span>
+              <span>Configurar YouTube <a class="inline-source-help" href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer">obter chave ↗</a></span>
               <small>Chave da YouTube Data API v3</small>
             </div>
             <input id="inline-youtube-apikey" type="text" placeholder="YouTube API Key..." autocomplete="off" class="masked">
           </div>
           <div class="inline-source-credential" data-inline-source-credential="fanart">
             <div class="inline-source-credential-head">
-              <span>Configurar Fanart.tv</span>
+              <span>Configurar Fanart.tv <a class="inline-source-help" href="https://fanart.tv/get-an-api-key/" target="_blank" rel="noopener noreferrer">obter chave ↗</a></span>
               <small>Chave da Fanart.tv</small>
             </div>
             <input id="inline-fanart-apikey" type="text" placeholder="Fanart.tv API Key..." autocomplete="off" class="masked">
@@ -3807,7 +3812,7 @@
         </div>
 
         <div class="source-key-box" id="spotify-key-box">
-          <span class="source-key-label">Spotify Client ID &nbsp;<a href="https://developer.spotify.com/dashboard" target="_blank" style="color:#555;font-size:10px;font-weight:400">obter no dashboard ↗</a></span>
+          <span class="source-key-label">Spotify Client ID &nbsp;<a href="https://developer.spotify.com/dashboard" target="_blank" style="color:#555;font-size:10px;font-weight:400">obter ID ↗</a></span>
           <div class="apikey-field-wrap">
             <input id="spotify-client-id" type="text" placeholder="client id..." autocomplete="off" class="masked">
             <button type="button" class="eye-toggle-btn source-key-eye" data-target="spotify-client-id" aria-label="Mostrar/ocultar" title="Mostrar/ocultar">
@@ -5668,7 +5673,10 @@
       <div id="obsession-action-status" aria-live="polite" style="display:none;color:var(--muted);font-size:10.5px;line-height:1.4;"></div>
     </div>
     <div id="track-obsession-actions" style="display:none;flex-direction:column;gap:8px;padding:11px;border:1px solid #c281ee55;border-radius:8px;background:#c281ee0d;">
-      <button type="button" id="edit-track-obsession" style="width:100%;padding:10px;border:1px solid #c281ee88;border-radius:8px;background:#c281ee18;color:#deb8fa;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">TORNAR OBSESSÃO</button>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button type="button" id="edit-track-love" class="extension-dependent-action" style="flex:1;padding:10px;border:1px solid #f89bad88;border-radius:8px;background:#f89bad16;color:#ffc1ce;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">CURTIR FAIXA</button>
+        <button type="button" id="edit-track-obsession" class="extension-dependent-action" style="flex:1;padding:10px;border:1px solid #c281ee88;border-radius:8px;background:#c281ee18;color:#deb8fa;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">TORNAR OBSESSÃO</button>
+      </div>
       <div id="track-obsession-status" aria-live="polite" style="display:none;color:var(--muted);font-size:10.5px;line-height:1.4;"></div>
     </div>
     <div id="temporal-profile-access" style="display:none;flex-direction:column;gap:7px;padding:11px;border:1px solid #d5100744;border-radius:8px;background:#d5100708;">
@@ -6076,13 +6084,15 @@ async function fetchTrackImageYoutube(artistName, trackName) {
 const SPOTIFY_AUTH_STORAGE_KEY = 'lastfm_collage_spotify_auth';
 const SPOTIFY_PKCE_VERIFIER_KEY = 'lastfm_collage_spotify_pkce_verifier';
 const SPOTIFY_PKCE_STATE_KEY = 'lastfm_collage_spotify_pkce_state';
+const SPOTIFY_PRODUCTION_REDIRECT_URI = 'https://collagerfm.vercel.app/';
 let spotifyTokenCache = null;
 let spotifyTokenExpiry = 0;
 
 function getSpotifyRedirectUri() {
   const hostname = window.location.hostname.toLowerCase();
   if (hostname === 'collagerfm.vercel.app') {
-    return 'https://collagerfm.vercel.app/';
+    // This must be byte-for-byte identical to the URI registered in Spotify.
+    return SPOTIFY_PRODUCTION_REDIRECT_URI;
   }
   return `${window.location.origin}${window.location.pathname}`;
 }
@@ -6121,7 +6131,7 @@ function updateSpotifyConnectionUi(message = '') {
   if (status) {
     status.textContent = message || (connected
       ? 'Spotify conectado. As imagens públicas já podem ser pesquisadas.'
-      : `Informe o Client ID e conecte sua conta. Use a URI: ${getSpotifyRedirectUri()}`);
+      : `Informe o Client ID e conecte sua conta. Cadastre exatamente esta Redirect URI: ${getSpotifyRedirectUri()}`);
     const isError = /^(não|informe)/i.test(message);
     status.style.color = isError ? '#ef4444' : connected ? '#1ed760' : 'var(--muted)';
   }
@@ -14636,6 +14646,17 @@ function ensureCanvasFontLoaded(spec) {
   return canvasFontLoadCache.get(spec);
 }
 
+async function ensureCanvasFontsReady(specs) {
+  if (!document.fonts?.load) return;
+  await Promise.all(specs.map(ensureCanvasFontLoaded));
+  // A API de fontes resolve antes de o canvas sempre atualizar suas metricas.
+  // Esperar o ciclo de layout evita que a primeira geracao calcule uma fonte
+  // automatica menor usando a fonte de fallback; a segunda geracao antes fazia
+  // esse redesenho de forma acidental, quando as fontes ja estavam prontas.
+  await document.fonts.ready.catch(() => undefined);
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+}
+
 const HEADER_AUTO_FONT_RATIO = 0.56;
 function resolveHeaderFontPx(bandHeight, explicitPx = 0) {
   const automaticSize = Math.max(5, Math.round(bandHeight * HEADER_AUTO_FONT_RATIO));
@@ -14947,13 +14968,13 @@ async function drawCollage(items, type, cols, rows, headerLabel, apikey, accentO
   // primeira vez que uma fonte customizada é selecionada (ela ainda não
   // terminou de carregar do Google Fonts nesse instante).
   try {
-    await Promise.all([
-      ensureCanvasFontLoaded(`${HEADER_FONT_WEIGHT} 16px ${fontFamilyCSS(headerFontFamily)}`),
-      ensureCanvasFontLoaded(`${MAIN_FONT_WEIGHT} 16px ${MAIN_FONT_FAMILY}`),
-      ensureCanvasFontLoaded(`${ALBUM_FONT_WEIGHT} 16px ${ALBUM_FONT_FAMILY}`),
-      ensureCanvasFontLoaded(`${SUB_FONT_WEIGHT} 16px ${SUB_FONT_FAMILY}`),
-      ensureCanvasFontLoaded(`${PLAYS_FONT_WEIGHT} 16px ${PLAYS_FONT_FAMILY}`),
-      ensureCanvasFontLoaded(`${BADGE_FONT_WEIGHT} 16px ${BADGE_FONT_FAMILY}`),
+    await ensureCanvasFontsReady([
+      `${HEADER_FONT_WEIGHT} 16px ${fontFamilyCSS(headerFontFamily)}`,
+      `${MAIN_FONT_WEIGHT} 16px ${MAIN_FONT_FAMILY}`,
+      `${ALBUM_FONT_WEIGHT} 16px ${ALBUM_FONT_FAMILY}`,
+      `${SUB_FONT_WEIGHT} 16px ${SUB_FONT_FAMILY}`,
+      `${PLAYS_FONT_WEIGHT} 16px ${PLAYS_FONT_FAMILY}`,
+      `${BADGE_FONT_WEIGHT} 16px ${BADGE_FONT_FAMILY}`,
     ]);
   } catch (e) { /* segue mesmo se falhar — cai no fallback da pilha de fontes */ }
 
@@ -18005,6 +18026,7 @@ const obsessionDeleteButton = document.getElementById('edit-obsession-delete');
 const obsessionLastfmLinkButton = document.getElementById('edit-obsession-lastfm-link');
 const obsessionActionStatus = document.getElementById('obsession-action-status');
 const trackObsessionActions = document.getElementById('track-obsession-actions');
+const trackLoveButton = document.getElementById('edit-track-love');
 const trackObsessionButton = document.getElementById('edit-track-obsession');
 const trackObsessionStatus = document.getElementById('track-obsession-status');
 const lastfmWriteAccountState = document.getElementById('lastfm-write-account-state');
@@ -18101,6 +18123,9 @@ function openTextEditModal(index) {
   const canSetObsession = renderedMode === 'tracks'
     || (obsessionsMode && !isLatestObsession);
   trackObsessionActions.style.display = canSetObsession ? 'flex' : 'none';
+  trackLoveButton.style.display = renderedMode === 'tracks' ? '' : 'none';
+  trackLoveButton.textContent = item._loved ? 'CURTIDA' : 'CURTIR FAIXA';
+  trackLoveButton.disabled = Boolean(item._loved);
   trackObsessionButton.textContent = obsessionsMode ? 'TORNAR OBSESSÃO NOVAMENTE' : 'TORNAR OBSESSÃO';
   trackObsessionButton.disabled = false;
   trackObsessionStatus.style.display = 'none';
@@ -21359,6 +21384,31 @@ obsessionDeleteButton.addEventListener('click', async () => {
   }
 });
 
+trackLoveButton.addEventListener('click', async () => {
+  const item = activeClickItem;
+  const renderedMode = getRenderedQueryState()?.mode || currentType;
+  if (!item || renderedMode !== 'tracks' || item._loved) return;
+  const track = activeTrackActionData(item);
+  if (!track.name || !track.artist) {
+    setTrackObsessionActionStatus('Não foi possível identificar faixa e artista.', true);
+    return;
+  }
+  trackLoveButton.disabled = true;
+  setTrackObsessionActionStatus('Curtindo faixa no Last.fm...');
+  try {
+    await sendLastfmWrite({ action: 'love', artist: track.artist, track: track.name });
+    item._loved = true;
+    trackLoveButton.textContent = 'CURTIDA';
+    setTrackObsessionActionStatus('Faixa curtida no Last.fm.');
+    appendStatusHistoryEntry(`Faixa curtida: ${track.artist} — ${track.name}.`);
+    triggerHapticFeedback('short');
+  } catch (error) {
+    setTrackObsessionActionStatus(error.message, true);
+  } finally {
+    trackLoveButton.disabled = Boolean(item._loved);
+  }
+});
+
 trackObsessionButton.addEventListener('click', async () => {
   const item = activeClickItem;
   if (!item || trackObsessionActions.style.display === 'none') return;
@@ -24285,16 +24335,43 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
 
     function setBugReportHint(message, state = '') {
       if (!bugReportHint) return;
+      bugReportHint.removeAttribute('data-i18n-skip');
       bugReportHint.textContent = message;
       bugReportHint.classList.toggle('success', state === 'success');
       bugReportHint.classList.toggle('error', state === 'error');
+    }
+
+    function isLocalBugReportEnvironment() {
+      return ['localhost', '127.0.0.1', '::1'].includes(location.hostname);
+    }
+
+    function setLocalBugReportHint() {
+      if (!bugReportHint) return;
+      bugReportHint.setAttribute('data-i18n-skip', '');
+      bugReportHint.replaceChildren();
+      bugReportHint.append(document.createTextNode(uiText('O envio de bugs não funciona no modo local. Envie o bug no canal do ')));
+      const discordLink = document.createElement('a');
+      discordLink.href = 'https://discord.com/invite/MyCnB7KRHD';
+      discordLink.target = '_blank';
+      discordLink.rel = 'noopener noreferrer';
+      discordLink.textContent = 'Discord';
+      bugReportHint.append(discordLink, document.createTextNode(uiText(' ou envie ')));
+      const websiteLink = document.createElement('a');
+      websiteLink.href = 'https://collagerfm.vercel.app';
+      websiteLink.target = '_blank';
+      websiteLink.rel = 'noopener noreferrer';
+      websiteLink.textContent = uiText('diretamente pelo site');
+      bugReportHint.append(websiteLink, document.createTextNode('.'));
+      bugReportHint.classList.remove('success');
+      bugReportHint.classList.add('error');
     }
 
     function openBugReportDialog() {
       closeMobileDrawer();
       closeDesktopMenu();
       if (!bugReportOverlay) return;
-      setBugReportHint('');
+      if (isLocalBugReportEnvironment()) setLocalBugReportHint();
+      else setBugReportHint('');
       bugReportOverlay.style.display = 'flex';
       bugReportOverlay.setAttribute('aria-hidden', 'false');
       requestAnimationFrame(() => bugReportSubject?.focus());
@@ -24336,6 +24413,10 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
         });
         const result = await response.json().catch(() => ({}));
         if (response.status === 429) throw new Error('Muitos relatórios enviados. Tente novamente mais tarde.');
+        if (response.status === 503 && isLocalBugReportEnvironment()) {
+          setLocalBugReportHint();
+          return;
+        }
         if (response.status === 503) throw new Error('O envio de bugs ainda não está configurado.');
         if (!response.ok) {
           const discordMessages = {
@@ -24352,10 +24433,14 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
         bugReportSubject.value = '';
         bugReportMessage.value = '';
       } catch (error) {
-        setBugReportHint(error?.message || 'Não foi possível enviar o bug. Tente novamente.', 'error');
+        if (isLocalBugReportEnvironment()) setLocalBugReportHint();
+        else setBugReportHint(error?.message || 'Não foi possível enviar o bug. Tente novamente.', 'error');
       } finally {
         submitButton.disabled = false;
       }
+    });
+    document.addEventListener('collager:language-changed', () => {
+      if (isLocalBugReportEnvironment() && bugReportOverlay?.style.display === 'flex') setLocalBugReportHint();
     });
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && bugReportOverlay?.style.display === 'flex') closeBugReportDialog();

@@ -207,7 +207,13 @@ async function setObsession(payload, report = () => {}) {
     report('confirming', 'Alteração confirmada pelo Last.fm.', 90);
     if (created) await chrome.tabs.remove(tab.id).catch(() => {});
     report('done', 'Obsessão atualizada com sucesso.', 100);
-    return { obsessionSet: true, username: safe.username, artist: safe.artist, track: safe.track };
+    return {
+      obsessionSet: true,
+      verified: result.verified === true,
+      username: safe.username,
+      artist: safe.artist,
+      track: safe.track,
+    };
   } catch (error) {
     if (!error.openUrl) error.openUrl = trackUrl;
     if (created) await chrome.tabs.remove(tab.id).catch(() => {});

@@ -176,6 +176,102 @@ if (!globalThis.__collagerLastfmContentInstalled) {
     return encodeURIComponent(String(value || '').trim()).replace(/%20/g, '+');
   }
 
+  function normalizeObsessionMetadata(value) {
+    return String(value || '')
+      .normalize('NFKC')
+      .trim()
+      .replace(/\s+/g, ' ')
+      .toLocaleLowerCase();
+  }
+
+  async function confirmCurrentObsession(username, artist, track) {
+    const expectedArtist = normalizeObsessionMetadata(artist);
+    const expectedTrack = normalizeObsessionMetadata(track);
+    const profilePath = `/user/${encodeLastfmPath(username)}/obsessions`;
+
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      if (attempt) await new Promise(resolve => setTimeout(resolve, 900));
+      const separator = profilePath.includes('?') ? '&' : '?';
+      const response = await timedFetch(`${profilePath}${separator}_collager_verify=${Date.now()}`, {
+        credentials: 'include',
+        cache: 'no-store',
+        headers: {
+          Accept: 'text/html',
+          'Cache-Control': 'no-cache',
+        },
+      });
+      if (!response.ok) continue;
+      const profileDocument = new DOMParser().parseFromString(await response.text(), 'text/html');
+      const latest = profileDocument.querySelector('.obsession-history-item');
+      const currentTrack = normalizeObsessionMetadata(
+        latest?.querySelector('.obsession-history-item-heading')?.textContent,
+      );
+      const currentArtist = normalizeObsessionMetadata(
+        latest?.querySelector('.obsession-history-item-artist')?.textContent,
+      );
+      if (currentTrack === expectedTrack && currentArtist === expectedArtist) return true;
+    }
+    return false;
+  }
+
+  function describeForm(form) {
+    return [
+      form.getAttribute('action'),
+      form.getAttribute('aria-label'),
+      form.textContent,
+      ...Array.from(form.querySelectorAll('button,input,textarea')).map(control => [
+        control.getAttribute('name'), control.getAttribute('value'), control.getAttribute('title'), control.textContent,
+      ].join(' ')),
+    ].join(' ').toLocaleLowerCase();
+  }
+
+  function appendFormControl(body, control, blankTextareas = false) {
+    if (!control.name || control.disabled) return;
+    const type = String(control.type || '').toLowerCase();
+    if ((type === 'checkbox' || type === 'radio') && !control.checked) return;
+    if (type === 'submit' || type === 'button' || type === 'reset' || type === 'file') return;
+    if (control.tagName === 'SELECT' && control.multiple) {
+      Array.from(control.options).filter(option => option.selected).forEach(option => body.append(control.name, option.value));
+      return;
+    }
+    const isOptionalObsessionNote = control.tagName === 'TEXTAREA'
+      && (blankTextareas || /note|comment|thought|review|reason|message|content/i.test(control.name));
+    body.append(control.name, isOptionalObsessionNote ? '' : (control.value || ''));
+  }
+
+  async function submitLastfmForm(form, baseUrl, username, { blankTextareas = false } = {}) {
+    const body = new URLSearchParams();
+    form.querySelectorAll('input[name],select[name],textarea[name]')
+      .forEach(control => appendFormControl(body, control, blankTextareas));
+    if (!body.get('csrfmiddlewaretoken')) {
+      const csrf = cookieValue('csrftoken') || await csrfToken(username);
+      if (csrf) body.set('csrfmiddlewaretoken', csrf);
+    }
+    const submitControl = Array.from(form.querySelectorAll('button[name],input[type="submit"][name]'))
+      .find(control => !/cancel|back|voltar|cancelar/i.test(`${control.value || ''} ${control.textContent || ''}`));
+    if (submitControl) body.set(submitControl.name, submitControl.value || '');
+
+    const action = new URL(form.getAttribute('action') || baseUrl, baseUrl || location.origin);
+    if (action.origin !== location.origin) throw new Error('Endereco da obsessao invalido.');
+    const method = String(form.getAttribute('method') || 'POST').toUpperCase();
+    const options = {
+      method,
+      credentials: 'include',
+      redirect: 'follow',
+      headers: {
+        Accept: 'text/html, */*; q=0.01',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+    };
+    if (method === 'GET') {
+      body.forEach((value, key) => action.searchParams.append(key, value));
+    } else {
+      options.headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8';
+      options.body = body.toString();
+    }
+    return timedFetch(action.pathname + action.search, options);
+  }
+
   async function setObsession(payload) {
     const username = String(payload?.username || '').trim();
     const artist = String(payload?.artist || '').trim();
@@ -190,14 +286,7 @@ if (!globalThis.__collagerLastfmContentInstalled) {
     const pageDocument = new DOMParser().parseFromString(await pageResponse.text(), 'text/html');
     const forms = Array.from(pageDocument.querySelectorAll('form[action]'));
     const form = forms.find(candidate => {
-      const descriptor = [
-        candidate.getAttribute('action'),
-        candidate.getAttribute('aria-label'),
-        candidate.textContent,
-        ...Array.from(candidate.querySelectorAll('button,input')).map(control => [
-          control.getAttribute('name'), control.getAttribute('value'), control.getAttribute('title'), control.textContent,
-        ].join(' ')),
-      ].join(' ').toLocaleLowerCase();
+      const descriptor = describeForm(candidate);
       return /obsession/.test(descriptor) && !/\bdelete\b|excluir/.test(descriptor);
     });
     if (!form) {
@@ -208,27 +297,7 @@ if (!globalThis.__collagerLastfmContentInstalled) {
       };
     }
 
-    const body = new URLSearchParams();
-    form.querySelectorAll('input[name],select[name],textarea[name]').forEach(control => {
-      if ((control.type === 'checkbox' || control.type === 'radio') && !control.checked) return;
-      body.append(control.name, control.value || '');
-    });
-    if (!body.get('csrfmiddlewaretoken')) {
-      const csrf = cookieValue('csrftoken') || await csrfToken(username);
-      if (csrf) body.set('csrfmiddlewaretoken', csrf);
-    }
-    const submitControl = Array.from(form.querySelectorAll('button[name],input[type="submit"][name]'))
-      .find(control => /obsession/i.test(`${control.value || ''} ${control.textContent || ''}`));
-    if (submitControl) body.set(submitControl.name, submitControl.value || '');
-
-    const action = new URL(form.getAttribute('action') || trackPath, location.origin);
-    const response = await timedFetch(action.pathname + action.search, {
-      method: String(form.getAttribute('method') || 'POST').toUpperCase(),
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
-      body: body.toString(),
-      redirect: 'follow',
-    });
+    let response = await submitLastfmForm(form, pageResponse.url || new URL(trackPath, location.origin).href, username);
     if (response.status === 403) {
       return { ok: false, authRequired: true, error: 'Sua sessão do Last.fm expirou. Entre novamente e repita a operação.' };
     }
@@ -236,7 +305,42 @@ if (!globalThis.__collagerLastfmContentInstalled) {
       return { ok: false, error: 'O Last.fm limitou esta ação temporariamente. Aguarde alguns segundos e tente novamente.' };
     }
     if (!response.ok) return { ok: false, error: `O Last.fm respondeu ${response.status} ao definir a obsessão.` };
-    return { ok: true, obsessionSet: true };
+
+    // Last.fm may answer with a second, optional "what did you think?" form.
+    // Submit that form once with an empty note so setting the obsession really finishes.
+    const responseHtml = await response.text();
+    const confirmationDocument = new DOMParser().parseFromString(responseHtml, 'text/html');
+    const responseLooksLikeObsessionFlow = /\/obsessions?(?:\/|$)/i.test(new URL(response.url || location.href).pathname);
+    const confirmationForm = Array.from(confirmationDocument.querySelectorAll('form[action]')).find(candidate => {
+      const descriptor = describeForm(candidate);
+      return candidate.querySelector('textarea[name]')
+        && (responseLooksLikeObsessionFlow || /obsession/.test(descriptor))
+        && !/\bdelete\b|excluir/.test(descriptor);
+    });
+    if (confirmationForm) {
+      response = await submitLastfmForm(
+        confirmationForm,
+        response.url || location.href,
+        username,
+        { blankTextareas: true },
+      );
+      if (response.status === 403) {
+        return { ok: false, authRequired: true, error: 'Sua sessão do Last.fm expirou. Entre novamente e repita a operação.' };
+      }
+      if (response.status === 406 || response.status === 429) {
+        return { ok: false, error: 'O Last.fm limitou esta ação temporariamente. Aguarde alguns segundos e tente novamente.' };
+      }
+      if (!response.ok) return { ok: false, error: `O Last.fm respondeu ${response.status} ao definir a obsessão.` };
+    }
+
+    const confirmed = await confirmCurrentObsession(username, artist, track);
+    if (!confirmed) {
+      return {
+        ok: false,
+        error: 'O Last.fm recebeu a solicitação, mas a faixa não apareceu como obsessão no perfil.',
+      };
+    }
+    return { ok: true, obsessionSet: true, verified: true };
   }
 
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
