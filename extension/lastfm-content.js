@@ -225,6 +225,50 @@ if (!globalThis.__collagerLastfmContentInstalled) {
     ].join(' ').toLocaleLowerCase();
   }
 
+  function findObsessionForm(pageDocument, responseUrl = '') {
+    const responseLooksLikeObsessionFlow = (() => {
+      try {
+        return /\/obsessions?(?:\/|$)|set[-_]?obsession/i.test(new URL(responseUrl || location.href).pathname);
+      } catch (_) {
+        return false;
+      }
+    })();
+    return Array.from(pageDocument.querySelectorAll('form[action]')).find(candidate => {
+      const descriptor = describeForm(candidate);
+      return !/\bdelete\b|excluir/.test(descriptor)
+        && (/obsession/.test(descriptor) || responseLooksLikeObsessionFlow);
+    }) || null;
+  }
+
+  function findObsessionModalUrl(pageDocument, baseUrl) {
+    const trigger = Array.from(pageDocument.querySelectorAll('[data-open-modal],a[href]')).find(candidate => {
+      const descriptor = [
+        candidate.getAttribute('data-open-modal'),
+        candidate.getAttribute('href'),
+        candidate.getAttribute('aria-label'),
+        candidate.textContent,
+      ].join(' ').toLocaleLowerCase();
+      return /obsession/.test(descriptor) && !/\bdelete\b|excluir/.test(descriptor);
+    });
+    const target = trigger?.getAttribute('data-open-modal') || trigger?.getAttribute('href');
+    if (!target) return '';
+    const url = new URL(target, baseUrl || location.origin);
+    if (url.origin !== location.origin || /\/login(?:\/|\?|$)|\/join(?:\/|\?|$)/i.test(url.pathname)) return '';
+    return url.pathname + url.search;
+  }
+
+  async function fetchLastfmModal(path) {
+    return timedFetch(path, {
+      credentials: 'include',
+      cache: 'no-store',
+      headers: {
+        Accept: 'text/html, */*; q=0.01',
+        'Cache-Control': 'no-cache',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+    });
+  }
+
   function appendFormControl(body, control, blankTextareas = false) {
     if (!control.name || control.disabled) return;
     const type = String(control.type || '').toLowerCase();
@@ -284,11 +328,25 @@ if (!globalThis.__collagerLastfmContentInstalled) {
     }
     if (!pageResponse.ok) return { ok: false, error: `O Last.fm respondeu ${pageResponse.status} ao abrir a faixa.` };
     const pageDocument = new DOMParser().parseFromString(await pageResponse.text(), 'text/html');
-    const forms = Array.from(pageDocument.querySelectorAll('form[action]'));
-    const form = forms.find(candidate => {
-      const descriptor = describeForm(candidate);
-      return /obsession/.test(descriptor) && !/\bdelete\b|excluir/.test(descriptor);
-    });
+    const pageUrl = pageResponse.url || new URL(trackPath, location.origin).href;
+    let formDocument = pageDocument;
+    let formBaseUrl = pageUrl;
+    let form = findObsessionForm(formDocument, formBaseUrl);
+    if (!form) {
+      const modalUrl = findObsessionModalUrl(pageDocument, pageUrl);
+      if (modalUrl) {
+        const modalResponse = await fetchLastfmModal(modalUrl);
+        if (modalResponse.status === 403) {
+          return { ok: false, authRequired: true, error: 'Sua sessão do Last.fm expirou. Entre novamente e repita a operação.' };
+        }
+        if (!modalResponse.ok) {
+          return { ok: false, error: `O Last.fm respondeu ${modalResponse.status} ao abrir a confirmação da obsessão.` };
+        }
+        formBaseUrl = modalResponse.url || new URL(modalUrl, location.origin).href;
+        formDocument = new DOMParser().parseFromString(await modalResponse.text(), 'text/html');
+        form = findObsessionForm(formDocument, formBaseUrl);
+      }
+    }
     if (!form) {
       return {
         ok: false,
@@ -297,7 +355,7 @@ if (!globalThis.__collagerLastfmContentInstalled) {
       };
     }
 
-    let response = await submitLastfmForm(form, pageResponse.url || new URL(trackPath, location.origin).href, username);
+    let response = await submitLastfmForm(form, formBaseUrl, username, { blankTextareas: true });
     if (response.status === 403) {
       return { ok: false, authRequired: true, error: 'Sua sessão do Last.fm expirou. Entre novamente e repita a operação.' };
     }
@@ -306,21 +364,16 @@ if (!globalThis.__collagerLastfmContentInstalled) {
     }
     if (!response.ok) return { ok: false, error: `O Last.fm respondeu ${response.status} ao definir a obsessão.` };
 
-    // Last.fm may answer with a second, optional "what did you think?" form.
-    // Submit that form once with an empty note so setting the obsession really finishes.
-    const responseHtml = await response.text();
-    const confirmationDocument = new DOMParser().parseFromString(responseHtml, 'text/html');
-    const responseLooksLikeObsessionFlow = /\/obsessions?(?:\/|$)/i.test(new URL(response.url || location.href).pathname);
-    const confirmationForm = Array.from(confirmationDocument.querySelectorAll('form[action]')).find(candidate => {
-      const descriptor = describeForm(candidate);
-      return candidate.querySelector('textarea[name]')
-        && (responseLooksLikeObsessionFlow || /obsession/.test(descriptor))
-        && !/\bdelete\b|excluir/.test(descriptor);
-    });
-    if (confirmationForm) {
+    // Some Last.fm layouts split the action into two modal forms. Keep following
+    // that flow and leave the optional "what did you think?" field empty.
+    for (let step = 0; step < 2; step += 1) {
+      const confirmationHtml = await response.text();
+      const confirmationDocument = new DOMParser().parseFromString(confirmationHtml, 'text/html');
+      const confirmationForm = findObsessionForm(confirmationDocument, response.url || formBaseUrl);
+      if (!confirmationForm) break;
       response = await submitLastfmForm(
         confirmationForm,
-        response.url || location.href,
+        response.url || formBaseUrl,
         username,
         { blankTextareas: true },
       );
