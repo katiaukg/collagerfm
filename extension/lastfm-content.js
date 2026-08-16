@@ -321,41 +321,37 @@ if (!globalThis.__collagerLastfmContentInstalled) {
     const artist = String(payload?.artist || '').trim();
     const track = String(payload?.track || '').trim();
     if (!username || !artist || !track) return { ok: false, error: 'Dados da faixa invalidos.' };
-    const trackPath = `/music/${encodeLastfmPath(artist)}/_/${encodeLastfmPath(track)}`;
-    const pageResponse = await timedFetch(trackPath, { credentials: 'include' });
-    if (pageResponse.status === 403) {
-      return { ok: false, authRequired: true, error: 'Entre na sua conta no Last.fm e tente novamente.' };
-    }
-    if (!pageResponse.ok) return { ok: false, error: `O Last.fm respondeu ${pageResponse.status} ao abrir a faixa.` };
-    const pageDocument = new DOMParser().parseFromString(await pageResponse.text(), 'text/html');
-    const pageUrl = pageResponse.url || new URL(trackPath, location.origin).href;
-    let formDocument = pageDocument;
-    let formBaseUrl = pageUrl;
-    let form = findObsessionForm(formDocument, formBaseUrl);
-    if (!form) {
-      const modalUrl = findObsessionModalUrl(pageDocument, pageUrl);
-      if (modalUrl) {
-        const modalResponse = await fetchLastfmModal(modalUrl);
-        if (modalResponse.status === 403) {
-          return { ok: false, authRequired: true, error: 'Sua sessão do Last.fm expirou. Entre novamente e repita a operação.' };
-        }
-        if (!modalResponse.ok) {
-          return { ok: false, error: `O Last.fm respondeu ${modalResponse.status} ao abrir a confirmação da obsessão.` };
-        }
-        formBaseUrl = modalResponse.url || new URL(modalUrl, location.origin).href;
-        formDocument = new DOMParser().parseFromString(await modalResponse.text(), 'text/html');
-        form = findObsessionForm(formDocument, formBaseUrl);
-      }
-    }
-    if (!form) {
+    const csrf = cookieValue('csrftoken') || await csrfToken(username);
+    if (!csrf) {
       return {
         ok: false,
-        manualActionRequired: true,
-        error: 'O Last.fm não exibiu o controle de obsessão. A página da faixa foi aberta para você concluir a ação.',
+        authRequired: true,
+        error: 'Entre na sua conta no Last.fm nesta aba e tente novamente.',
       };
     }
 
-    let response = await submitLastfmForm(form, formBaseUrl, username, { blankTextareas: true });
+    // Current obsessions are a private website action, not a public API method.
+    const body = new URLSearchParams({
+      csrfmiddlewaretoken: csrf,
+      artist_name: artist,
+      name: track,
+      reason: '',
+      ajax: '1',
+    });
+    const profilePath = `/user/${encodeLastfmPath(username)}`;
+    const response = await timedFetch(`${profilePath}/obsessions`, {
+      method: 'POST',
+      credentials: 'include',
+      redirect: 'follow',
+      headers: {
+        Accept: 'text/html, */*; q=0.01',
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      body: body.toString(),
+      referrer: new URL(profilePath, location.origin).href,
+      referrerPolicy: 'strict-origin-when-cross-origin',
+    });
     if (response.status === 403) {
       return { ok: false, authRequired: true, error: 'Sua sessão do Last.fm expirou. Entre novamente e repita a operação.' };
     }
@@ -363,28 +359,6 @@ if (!globalThis.__collagerLastfmContentInstalled) {
       return { ok: false, error: 'O Last.fm limitou esta ação temporariamente. Aguarde alguns segundos e tente novamente.' };
     }
     if (!response.ok) return { ok: false, error: `O Last.fm respondeu ${response.status} ao definir a obsessão.` };
-
-    // Some Last.fm layouts split the action into two modal forms. Keep following
-    // that flow and leave the optional "what did you think?" field empty.
-    for (let step = 0; step < 2; step += 1) {
-      const confirmationHtml = await response.text();
-      const confirmationDocument = new DOMParser().parseFromString(confirmationHtml, 'text/html');
-      const confirmationForm = findObsessionForm(confirmationDocument, response.url || formBaseUrl);
-      if (!confirmationForm) break;
-      response = await submitLastfmForm(
-        confirmationForm,
-        response.url || formBaseUrl,
-        username,
-        { blankTextareas: true },
-      );
-      if (response.status === 403) {
-        return { ok: false, authRequired: true, error: 'Sua sessão do Last.fm expirou. Entre novamente e repita a operação.' };
-      }
-      if (response.status === 406 || response.status === 429) {
-        return { ok: false, error: 'O Last.fm limitou esta ação temporariamente. Aguarde alguns segundos e tente novamente.' };
-      }
-      if (!response.ok) return { ok: false, error: `O Last.fm respondeu ${response.status} ao definir a obsessão.` };
-    }
 
     const confirmed = await confirmCurrentObsession(username, artist, track);
     if (!confirmed) {
