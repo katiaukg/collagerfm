@@ -331,22 +331,20 @@
   }
   .preset-option:hover, .preset-option.active { background: #ffffff0b; }
   .preset-option-name { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; font: 700 12px/1.2 inherit; }
-  .preset-delete-btn {
+  .preset-config-btn {
     width: 25px; height: 25px; flex: 0 0 25px; display: inline-flex; align-items: center; justify-content: center;
     border: 0; border-radius: 4px; background: transparent; color: #777; cursor: pointer;
   }
-  .preset-delete-btn:hover { background: #ef44441c; color: #ff6b6b; }
-  .preset-delete-btn svg { width: 14px; height: 14px; }
-  #preset-save-open,
-  #preset-replace-current {
+  .preset-config-btn:hover { background: #ffffff0c; color: var(--text); }
+  .preset-config-btn svg { width: 14px; height: 14px; }
+  #preset-save-open {
     width: 40px; flex: 0 0 40px; display: inline-flex; align-items: center; justify-content: center;
     border: 1px solid var(--border); border-radius: 7px; background: var(--surface2); color: var(--muted); cursor: pointer;
   }
-  #preset-save-open:hover,
-  #preset-replace-current:hover:not(:disabled) { border-color: #666; color: var(--text); }
-  #preset-save-open svg,
-  #preset-replace-current svg { width: 16px; height: 16px; }
-  #preset-replace-current:disabled { opacity: .32; cursor: not-allowed; }
+  #preset-save-open:hover { border-color: #666; color: var(--text); }
+  #preset-save-open svg { width: 16px; height: 16px; }
+  #preset-save-open { width:auto; flex-basis:auto; gap:6px; padding:0 10px; color:var(--text); font:800 10px/1 inherit; }
+  #preset-save-open span { order:-1; }
   .compact-dialog-overlay {
     display: none; position: fixed; inset: 0; z-index: 1700; align-items: center; justify-content: center;
     padding: 20px; background: #000000b8;
@@ -383,16 +381,24 @@
   .bug-report-field label {
     color: #888; font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
   }
-  .bug-report-field textarea {
-    width: 100%; min-height: 112px; resize: vertical;
+  .bug-report-field textarea,
+  .bug-report-field input:not([aria-hidden="true"]) {
+    width: 100%;
     padding: 10px 12px; border: 1px solid var(--border); border-radius: 7px;
     outline: none; background: var(--surface2); color: var(--text);
     font: 500 12px/1.45 'Inter', sans-serif;
   }
-  .bug-report-field textarea:focus { border-color: #666; }
+  .bug-report-field textarea { min-height: 112px; resize: vertical; }
+  .bug-report-field input:not([aria-hidden="true"]) { min-height: 38px; }
+  .bug-report-field textarea:focus,
+  .bug-report-field input:not([aria-hidden="true"]):focus { border-color: #666; }
   #bug-report-hint { min-height: 16px; color: #777; font-size: 10px; line-height: 1.4; }
   #bug-report-hint.success { color: #65e58d; }
   #bug-report-hint.error { color: #ff8b8b; }
+  #bug-report-hint a,
+  #bug-report-hint.error a { color: #ffd1d1; font-weight: 700; text-decoration-color: #ffd1d1aa; }
+  #bug-report-hint a:hover,
+  #bug-report-hint.error a:hover { color: #fff; text-decoration-color: #fff; }
   .preset-name-row { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 8px; }
   .preset-name-row .color-swatch { width: 42px; height: 38px; border-radius: 7px; }
   #preset-name-input { min-width: 0; }
@@ -403,6 +409,45 @@
   .dialog-secondary { border: 1px solid var(--border); background: var(--surface2); color: var(--muted); }
   .dialog-primary { border: 1px solid #d51007; background: #d51007; color: #fff; }
   #preset-delete-message { color: #d5d5d5; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+  .preset-editor-actions { display:grid;grid-template-columns:1fr 1fr;gap:8px; }
+  .preset-editor-actions[hidden] { display:none !important; }
+  .preset-editor-actions button { min-height:34px;border-radius:7px;font:800 10px/1 inherit;cursor:pointer; }
+  #preset-editor-delete { border:1px solid #7f1d1d;background:#3b1111;color:#ffaaaa; }
+  #preset-editor-replace { border:1px solid #555;background:var(--surface2);color:var(--text); }
+
+  .history-list-action { padding:12px 18px;border-bottom:1px solid var(--border);display:grid;gap:10px; }
+  .history-list-search-row { display:flex;gap:8px; }
+  .history-list-search-row input {
+    flex:1;min-width:0;min-height:36px;padding:0 11px;
+    border:1px solid var(--border);border-radius:7px;outline:none;
+    background:var(--surface2);color:var(--text);
+    font:500 11px/1.2 'Inter',sans-serif;
+  }
+  .history-list-search-row input::placeholder { color:#707070;opacity:1; }
+  .history-list-search-row input:hover { border-color:#4b4b4b; }
+  .history-list-search-row input:focus { border-color:var(--red);box-shadow:0 0 0 1px #d5100738; }
+  .history-list-search-row input::-webkit-search-cancel-button { filter:invert(1);opacity:.45;cursor:pointer; }
+  .history-list-search-row button { min-width:96px;border:1px solid var(--red);border-radius:7px;background:var(--red);color:#fff;font:800 10px/1 inherit;cursor:pointer; }
+  #history-list-search-status { min-height:14px;color:var(--muted);font-size:10px;line-height:1.4; }
+  #history-list-search-results { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px; }
+  .history-search-result { min-width:0;min-height:74px;padding:7px;display:grid;grid-template-columns:58px minmax(0,1fr) auto;grid-template-rows:auto auto;gap:4px 9px;align-items:center;border:1px solid var(--border);border-radius:7px;background:var(--surface2); }
+  .history-search-thumb { grid-column:1;grid-row:1/3;width:58px;height:58px;display:grid;place-items:center;overflow:hidden;border-radius:5px;background:#111;color:#444; }
+  .history-search-thumb img,.history-search-thumb canvas { width:100%;height:100%;object-fit:cover;display:block; }
+  .history-search-thumb svg { width:20px;height:20px; }
+  .history-search-result strong,.history-search-result span { overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+  .history-search-result strong { grid-column:2;font-size:12px;color:var(--text); }
+  .history-search-result span { grid-column:2;font-size:10px;color:var(--muted); }
+  .history-search-result button { grid-column:3;grid-row:1/3;min-height:32px;padding:0 10px;border:1px solid var(--red);border-radius:6px;background:transparent;color:#ff8585;font:800 9px/1 inherit;cursor:pointer; }
+  .history-search-selected { min-height:72px;padding:7px;display:grid;grid-template-columns:58px minmax(0,1fr);grid-template-rows:auto auto auto;gap:2px 10px;align-items:center;border:1px solid #a36b18;border-radius:7px;background:#2a2114;color:var(--text); }
+  .history-search-selected .history-search-thumb { grid-row:1/4; }
+  .history-search-selected strong { font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+  .history-search-selected span { font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+  .history-search-selected small { font-size:9px;color:#ffc36a; }
+  .history-search-merge-summary { min-height:76px;padding:8px;display:grid;grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr);gap:8px;align-items:center;border:1px solid #3f6f4a;border-radius:7px;background:#142219; }
+  .history-search-merge-party { min-width:0;display:grid;grid-template-columns:58px minmax(0,1fr);gap:9px;align-items:center; }
+  .history-search-merge-party .history-search-thumb { grid-column:1;grid-row:1; }
+  .history-search-merge-party strong { min-width:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+  .history-search-merge-arrow { color:#78d98c;font-size:18px;font-weight:900;text-align:center; }
 
   /* Fontes de imagem (botões multi-seleção por tipo) */
   .source-toggle-group { display: none; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
@@ -2477,7 +2522,7 @@
       box-shadow: 0 1rem 2.5rem #000c;
     }
     #mobile-preset-quick-menu.visible { display: grid; gap: .25rem; }
-    .mobile-preset-quick-option {
+    .mobile-preset-quick-option, .mobile-preset-create-option {
       width: 100%; min-height: 2.75rem; padding: .6rem .7rem;
       display: flex; align-items: center; gap: .6rem;
       border: 1px solid transparent; border-radius: .375rem;
@@ -2486,6 +2531,13 @@
     }
     .mobile-preset-quick-option.active { border-color: #484848; background: #242424; }
     .mobile-preset-quick-option .preset-color-dot { flex: 0 0 auto; }
+    .mobile-preset-option-row { display:grid;grid-template-columns:minmax(0,1fr) 2.35rem;align-items:center;gap:.2rem; }
+    .mobile-preset-option-row > .preset-config-btn { width:2.35rem;height:2.35rem; }
+    .mobile-preset-create-option { border-bottom:1px solid var(--border);border-radius:0;color:#ddd; }
+    .mobile-preset-create-option svg { width:15px;height:15px; }
+    .mobile-preset-quick-option .preset-option-name { font-size:inherit; }
+
+    #history-list-search-results { grid-template-columns:1fr; }
 
     /* As instrucoes de mouse/teclado nao ajudam no modal de quadro mobile. */
     #text-edit-overlay #paste-hint,
@@ -3638,11 +3690,9 @@
           </button>
           <div id="preset-select-menu" role="listbox" aria-label="Presets da collage"></div>
         </div>
-        <button type="button" id="preset-save-open" title="Salvar configuração atual como preset" aria-label="Salvar configuração atual como preset">
+        <button type="button" id="preset-save-open" title="Criar novo preset" aria-label="Criar novo preset">
+          <span>Novo</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.2 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.8z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>
-        </button>
-        <button type="button" id="preset-replace-current" title="Substituir o preset selecionado pelas configurações atuais" aria-label="Substituir o preset selecionado" disabled>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6v6h-6"/><path d="M4 18v-6h6"/><path d="M18.5 9A7 7 0 0 0 6 6.5L4 9"/><path d="M5.5 15A7 7 0 0 0 18 17.5l2-2.5"/></svg>
         </button>
       </div>
     </div>
@@ -4434,9 +4484,9 @@
             </div>
           </div>
 
-          <div class="slider-row" id="tile-shading-alpha-row"><div class="slider-row-head"><span class="slider-name" id="tile-shading-alpha-label">Transparência do sombreamento</span><span class="slider-val" id="val-tile-shading-alpha">80%</span></div><input type="range" id="tile-shading-alpha" min="0" max="100" value="80" step="1"></div>
-          <div class="slider-row" id="tile-shading-alpha-top-row" style="display:none;"><div class="slider-row-head"><span class="slider-name">Transparência do topo</span><span class="slider-val" id="val-tile-shading-alpha-top">80%</span></div><input type="range" id="tile-shading-alpha-top" min="0" max="100" value="80" step="1"></div>
-          <div class="slider-row" id="tile-shading-alpha-bottom-row" style="display:none;"><div class="slider-row-head"><span class="slider-name">Transparência do fundo</span><span class="slider-val" id="val-tile-shading-alpha-bottom">80%</span></div><input type="range" id="tile-shading-alpha-bottom" min="0" max="100" value="80" step="1"></div>
+          <div class="slider-row" id="tile-shading-alpha-row"><div class="slider-row-head"><span class="slider-name" id="tile-shading-alpha-label">Transparência do sombreamento</span><span class="slider-val" id="val-tile-shading-alpha">90%</span></div><input type="range" id="tile-shading-alpha" min="0" max="100" value="90" step="1"></div>
+          <div class="slider-row" id="tile-shading-alpha-top-row" style="display:none;"><div class="slider-row-head"><span class="slider-name">Transparência do topo</span><span class="slider-val" id="val-tile-shading-alpha-top">90%</span></div><input type="range" id="tile-shading-alpha-top" min="0" max="100" value="90" step="1"></div>
+          <div class="slider-row" id="tile-shading-alpha-bottom-row" style="display:none;"><div class="slider-row-head"><span class="slider-name">Transparência do fundo</span><span class="slider-val" id="val-tile-shading-alpha-bottom">90%</span></div><input type="range" id="tile-shading-alpha-bottom" min="0" max="100" value="90" step="1"></div>
 
           <div>
             <span class="section-label" style="margin-bottom:5px;display:block;">Posição da faixa</span>
@@ -5465,6 +5515,14 @@
       </div>
       <button class="history-modal-close" id="history-list-close" aria-label="Fechar">×</button>
     </div>
+    <div class="history-list-action">
+      <div class="history-list-search-row">
+        <input type="search" id="history-list-search-input" placeholder="Pesquisar artista, álbum ou faixa..." autocomplete="off">
+        <button type="button" id="history-list-search-button">Pesquisar</button>
+      </div>
+      <div id="history-list-search-status" aria-live="polite"></div>
+      <div id="history-list-search-results"></div>
+    </div>
     <div id="history-list-grid"></div>
   </div>
 </div>
@@ -5535,6 +5593,10 @@
   <div class="compact-dialog">
     <div class="compact-dialog-title" id="bug-report-title">Relatar um bug</div>
     <div class="bug-report-field">
+      <label for="bug-report-requester">Usuário solicitante (opcional)</label>
+      <input type="text" id="bug-report-requester" maxlength="80" placeholder="Nome ou usuário..." autocomplete="off">
+    </div>
+    <div class="bug-report-field">
       <label for="bug-report-subject">Título</label>
       <input type="text" id="bug-report-subject" maxlength="100" placeholder="Resumo do problema..." autocomplete="off">
     </div>
@@ -5561,9 +5623,24 @@
       <input type="text" id="preset-name-input" maxlength="30" placeholder="Nome do preset..." autocomplete="off">
     </div>
     <div id="preset-save-hint" style="min-height:14px;color:#777;font-size:10px;line-height:1.4;">Até 30 caracteres. A cor inicial é sorteada.</div>
+    <div class="preset-editor-actions" id="preset-editor-actions" hidden>
+      <button type="button" id="preset-editor-delete">EXCLUIR</button>
+      <button type="button" id="preset-editor-replace">SUBSTITUIR</button>
+    </div>
     <div class="compact-dialog-actions">
       <button type="button" class="dialog-secondary" id="preset-save-cancel">CANCELAR</button>
       <button type="button" class="dialog-primary" id="preset-save-confirm">SALVAR</button>
+    </div>
+  </div>
+</div>
+
+<div id="preset-replace-overlay" class="compact-dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="preset-replace-title">
+  <div class="compact-dialog">
+    <div class="compact-dialog-title" id="preset-replace-title">Substituir preset</div>
+    <div id="preset-replace-message" style="color:#d5d5d5;font-size:12px;line-height:1.5;"></div>
+    <div class="compact-dialog-actions">
+      <button type="button" class="dialog-secondary" id="preset-replace-cancel">CANCELAR</button>
+      <button type="button" class="dialog-primary" id="preset-replace-confirm">SUBSTITUIR</button>
     </div>
   </div>
 </div>
@@ -6393,9 +6470,9 @@ const DEFAULTS = {
   allTextCase: 'default', mainTextCase: 'default', albumTextCase: 'default', subTextCase: 'default',
   tileShadingEnabled: true,
   tileShadingColor: '#000000',
-  tileShadingAlpha: 80,
-  tileShadingAlphaTop: 80,
-  tileShadingAlphaBottom: 80,
+    tileShadingAlpha: 90,
+    tileShadingAlphaTop: 90,
+    tileShadingAlphaBottom: 90,
   tileShadingPosition: 'bottom',
   tileCornerRadiusEnabled: false,
   tileCornerRadius: 10,
@@ -13182,7 +13259,7 @@ function isImageSourceEnabledForDraw(type, source, item = null) {
   return getImageSourceConfigForDraw(type, item).active.has(source);
 }
 
-async function resolveImageUrl(item, type, apikey) {
+async function resolveImageUrl(item, type, apikey, options = {}) {
   // Normaliza o tipo para um dos três tipos "base" (artists/albums/tracks) —
   // imageSources e getSourceOrder só conhecem essas três chaves. Se algum
   // chamador passar 'new_artists' direto (o tipo especial "Novos no
@@ -13194,7 +13271,7 @@ async function resolveImageUrl(item, type, apikey) {
 
   const artistName = item.artist?.name || item.artist?.['#text'] || item.name || '';
   const itemName = item.name || '';
-  const sourceConfig = getImageSourceConfigForDraw(type, item);
+  const sourceConfig = options.sourceConfig || getImageSourceConfigForDraw(type, item);
   const sources = sourceConfig.order.filter(source => sourceConfig.active.has(source));
   const cacheKey = [sourceConfig.sourceType, type, artistName, item.albumName || '', itemName, sources.join('>')].join('|').toLowerCase();
   if (resolvedImageUrlCache.has(cacheKey)) return resolvedImageUrlCache.get(cacheKey);
@@ -20744,6 +20821,232 @@ function renderHistoryPage(kind, indices, hasGlobalRules = false) {
   next.disabled = page >= totalPages - 1;
 }
 
+const historyRuleSearchCache = new Map();
+let historySearchMergeSource = null;
+
+function resetHistoryRuleSearch() {
+  historySearchMergeSource = null;
+  const input = document.getElementById('history-list-search-input');
+  const results = document.getElementById('history-list-search-results');
+  const status = document.getElementById('history-list-search-status');
+  if (input) input.value = '';
+  if (results) results.innerHTML = '';
+  if (status) status.textContent = '';
+}
+
+function historySearchItemText(item, type) {
+  const artist = item?.artist?.name || item?.artist?.['#text'] || '';
+  const album = item?.albumName || item?.album?.['#text'] || '';
+  return type === 'artists' ? String(item?.name || '') : [item?.name, album, artist].filter(Boolean).join(' ');
+}
+
+function getHistorySearchMetadata(item, type) {
+  const artist = item?.artist?.name || item?.artist?.['#text'] || '';
+  const album = item?.albumName || item?.album?.title || item?.album?.['#text'] || '';
+  return type === 'artists' ? '' : [artist, album].filter(Boolean).join(' · ');
+}
+
+function getHistorySearchImageSourceConfig(type) {
+  const normalizedType = normalizeHistoryType(type);
+  const group = document.getElementById(`sources-${normalizedType}`);
+  const order = group
+    ? Array.from(group.querySelectorAll('.source-btn')).map(button => button.dataset.source)
+    : getSourceOrder(normalizedType);
+  const active = group
+    ? new Set(Array.from(group.querySelectorAll('.source-btn.active')).map(button => button.dataset.source))
+    : new Set(imageSources[normalizedType] || []);
+  return { sourceType: normalizedType, order, active };
+}
+
+function attachHistorySearchThumb(host, item, type) {
+  const thumb = document.createElement('div');
+  thumb.className = 'history-search-thumb';
+  thumb.appendChild(createUiIcon('music'));
+  host.appendChild(thumb);
+
+  const applyImage = image => {
+    if (!image || !image.naturalWidth || !image.naturalHeight) return;
+    const canvas = document.createElement('canvas');
+    const size = 116;
+    canvas.width = size;
+    canvas.height = size;
+    canvas.setAttribute('aria-hidden', 'true');
+    const context = canvas.getContext('2d');
+    const scale = Math.max(size / image.naturalWidth, size / image.naturalHeight);
+    const width = image.naturalWidth * scale;
+    const height = image.naturalHeight * scale;
+    context.drawImage(image, (size - width) / 2, (size - height) / 2, width, height);
+    thumb.replaceChildren(canvas);
+  };
+  if (item?._resolvedImg) applyImage(item._resolvedImg);
+  else resolveImageUrl(item, type, currentApiKey, {
+    sourceConfig: getHistorySearchImageSourceConfig(type),
+  }).then(url => url ? loadImage(url) : null).then(applyImage).catch(() => {});
+  return thumb;
+}
+
+function setHistoryRuleSearchStatus(message = '') {
+  const status = document.getElementById('history-list-search-status');
+  if (!status) return;
+  status.replaceChildren();
+  if (historyModalKind === 'merged' && historySearchMergeSource) {
+    const selected = document.createElement('div');
+    selected.className = 'history-search-selected';
+    attachHistorySearchThumb(selected, historySearchMergeSource, historyModalType);
+    const name = document.createElement('strong');
+    name.textContent = historySearchMergeSource.name || '?';
+    const metadata = document.createElement('span');
+    metadata.textContent = getHistorySearchMetadata(historySearchMergeSource, historyModalType);
+    const hint = document.createElement('small');
+    hint.textContent = message || uiText('Agora pesquise e escolha o destino.');
+    selected.append(name, metadata, hint);
+    status.appendChild(selected);
+    return;
+  }
+  status.textContent = message;
+}
+
+function setHistoryMergeCompletedStatus(sourceItem, targetItem) {
+  const status = document.getElementById('history-list-search-status');
+  if (!status) return;
+  status.replaceChildren();
+  const summary = document.createElement('div');
+  summary.className = 'history-search-merge-summary';
+  [sourceItem, targetItem].forEach((item, index) => {
+    if (index) {
+      const arrow = document.createElement('div');
+      arrow.className = 'history-search-merge-arrow';
+      arrow.textContent = '→';
+      summary.appendChild(arrow);
+    }
+    const party = document.createElement('div');
+    party.className = 'history-search-merge-party';
+    attachHistorySearchThumb(party, item, historyModalType);
+    const name = document.createElement('strong');
+    name.textContent = item?.name || '?';
+    party.appendChild(name);
+    summary.appendChild(party);
+  });
+  status.appendChild(summary);
+}
+
+async function getHistoryRuleSearchCandidates() {
+  const user = usernameInput.value.trim();
+  if (!user) throw new Error(uiText('Informe o usuário do Last.fm antes de pesquisar.'));
+  const type = historyModalType;
+  const allPeriods = historyModalFilter === 'all' || historyModalUsesAllPeriods();
+  const range = allPeriods ? null : resolveSearchPeriodRange();
+  if (!allPeriods && !range) throw new Error(uiText('Selecione um período válido antes de pesquisar.'));
+  const rangeKey = allPeriods ? 'all' : periodMode === 'custom'
+    ? `${range.fromTs}-${range.toTs}`
+    : `period:${currentPeriod}`;
+  const cacheKey = `${user}|${type}|${rangeKey}`;
+  if (historyRuleSearchCache.has(cacheKey)) return historyRuleSearchCache.get(cacheKey);
+  const candidates = allPeriods || range.useTop
+    ? await getTopItems(user, currentApiKey, type, 'overall', 1000)
+    : await getItemsForDateRange(user, currentApiKey, type, range.fromTs, range.toTs, Infinity);
+  historyRuleSearchCache.set(cacheKey, candidates);
+  return candidates;
+}
+
+async function redrawAfterHistoryRule(context) {
+  const currentContext = activeCollageMemoryContext || getCollageMemoryContext();
+  if (normalizeHistoryType(currentContext.type) !== normalizeHistoryType(context.type) || !allFetchedItems.length) {
+    renderHistoryModal();
+    return;
+  }
+  applyGlobalCollageBehavior(context);
+  reorderPool();
+  const { cols, rows } = getDrawGrid();
+  currentItems = computeVisibleItems(cols * rows);
+  renderDeletedPanel();
+  await drawCollage(currentItems, getDrawType(), cols, rows, headerLabelText, currentApiKey, getDrawAccentOverride(), { cacheOnlyImages: true });
+  scheduleDownloadRefresh();
+  captureCurrentCollageMemory();
+}
+
+function renderHistoryRuleSearchResults(items) {
+  const results = document.getElementById('history-list-search-results');
+  if (!results) return;
+  results.innerHTML = '';
+  items.slice(0, 30).forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'history-search-result';
+    attachHistorySearchThumb(card, item, historyModalType);
+    const name = document.createElement('strong');
+    name.textContent = item.name || '?';
+    const metadata = document.createElement('span');
+    metadata.textContent = getHistorySearchMetadata(item, historyModalType);
+    const action = document.createElement('button');
+    action.type = 'button';
+    action.textContent = uiText(historyModalKind === 'deleted'
+      ? 'Excluir'
+      : historySearchMergeSource ? 'Mesclar' : 'Origem');
+    action.addEventListener('click', async () => {
+      if (action.disabled) return;
+      action.disabled = true;
+      const context = getHistoryContextForType(historyModalType);
+      if (historyModalKind === 'deleted') {
+        rememberGlobalDeletion(item, context);
+        await redrawAfterHistoryRule(context);
+        setHistoryRuleSearchStatus(uiText('Item adicionado à lista de excluídos.'));
+        const deletedKey = getBehaviorItemKey(item, context.type);
+        renderHistoryRuleSearchResults(items.filter(candidate => (
+          getBehaviorItemKey(candidate, context.type) !== deletedKey
+        )));
+        return;
+      }
+      if (!historySearchMergeSource) {
+        historySearchMergeSource = item;
+        const input = document.getElementById('history-list-search-input');
+        const currentResults = document.getElementById('history-list-search-results');
+        setHistoryRuleSearchStatus(uiText('Agora pesquise e escolha o destino.'));
+        if (input) input.value = '';
+        if (currentResults) currentResults.innerHTML = '';
+        input?.focus();
+        return;
+      }
+      if (getBehaviorItemKey(historySearchMergeSource, context.type) === getBehaviorItemKey(item, context.type)) {
+        action.disabled = false;
+        return;
+      }
+      const completedSource = historySearchMergeSource;
+      rememberGlobalMerge(completedSource, item, context);
+      historySearchMergeSource = null;
+      await redrawAfterHistoryRule(context);
+      setHistoryMergeCompletedStatus(completedSource, item);
+      renderHistoryRuleSearchResults(items);
+    });
+    card.append(name, metadata, action);
+    results.appendChild(card);
+  });
+}
+
+async function runHistoryRuleSearch() {
+  if (!historyModalKind) return;
+  const input = document.getElementById('history-list-search-input');
+  const button = document.getElementById('history-list-search-button');
+  const query = normalizeSearchText(input.value);
+  if (!query) {
+    setHistoryRuleSearchStatus(uiText('Digite um nome para pesquisar.'));
+    return;
+  }
+  button.disabled = true;
+  setHistoryRuleSearchStatus(uiText('Pesquisando...'));
+  try {
+    const candidates = await getHistoryRuleSearchCandidates();
+    const matches = candidates.filter(item => normalizeSearchText(historySearchItemText(item, historyModalType)).includes(query));
+    renderHistoryRuleSearchResults(matches);
+    setHistoryRuleSearchStatus(matches.length
+      ? `${matches.length} ${uiText('resultado(s) encontrado(s).')}`
+      : uiText('Nenhum resultado encontrado.'));
+  } catch (error) {
+    setHistoryRuleSearchStatus(error?.message || uiText('Não foi possível pesquisar.'));
+  } finally {
+    button.disabled = false;
+  }
+}
+
 function renderHistoryModal() {
   if (!historyModalKind) return;
   const grid = document.getElementById('history-list-grid');
@@ -20797,6 +21100,10 @@ function renderHistoryModal() {
   const periodFilter = document.getElementById('history-list-filter');
   periodFilter.hidden = allPeriods;
   periodFilter.style.display = allPeriods ? 'none' : '';
+  const searchInput = document.getElementById('history-list-search-input');
+  searchInput.placeholder = uiText(historyModalKind === 'merged'
+    ? historySearchMergeSource ? 'Pesquisar destino para mesclar...' : 'Pesquisar origem para mesclar...'
+    : 'Pesquisar para excluir...');
 }
 
 function openHistoryModal(kind, options = {}) {
@@ -20814,6 +21121,7 @@ function openHistoryModal(kind, options = {}) {
   if (historyModalKind) document.getElementById('history-list-overlay').style.display = 'flex';
 }
 function closeHistoryModal() {
+  resetHistoryRuleSearch();
   historyModalKind = null;
   historyModalSource = 'collage';
   historyModalBaseContext = null;
@@ -20874,7 +21182,12 @@ document.getElementById('history-list-type-filter').addEventListener('click', ev
   const button = event.target.closest('button[data-history-type]');
   if (!button || !historyModalKind) return;
   historyModalType = normalizeHistoryType(button.dataset.historyType);
+  resetHistoryRuleSearch();
   renderHistoryModal();
+});
+document.getElementById('history-list-search-button').addEventListener('click', runHistoryRuleSearch);
+document.getElementById('history-list-search-input').addEventListener('keydown', event => {
+  if (event.key === 'Enter') { event.preventDefault(); runHistoryRuleSearch(); }
 });
 document.getElementById('history-list-overlay').addEventListener('click', e => { if (e.target.id === 'history-list-overlay') closeHistoryModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && historyModalKind) closeHistoryModal(); });
@@ -22914,6 +23227,8 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
   let defaultPresetSnapshot = null;
   let selectedPresetId = 'default';
   let presetDeleteTargetId = null;
+  let presetEditorTargetId = null;
+  let presetReplaceTargetId = null;
 
   function sanitizePresetSettings(settings) {
     const clean = JSON.parse(JSON.stringify(settings || {}));
@@ -23037,11 +23352,22 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
     const menu = document.getElementById('mobile-preset-quick-menu');
     if (!menu) return;
     menu.innerHTML = '';
+    const create = document.createElement('button');
+    create.type = 'button';
+    create.className = 'mobile-preset-create-option';
+    create.dataset.presetAction = 'create';
+    create.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+    const createLabel = document.createElement('span');
+    createLabel.textContent = uiText('Criar novo preset');
+    create.append(createLabel);
+    menu.appendChild(create);
     const presets = [
       { id: 'default', name: 'Padrão', color: '#d51007' },
       ...userPresets,
     ];
     presets.forEach(preset => {
+      const row = document.createElement('div');
+      row.className = 'mobile-preset-option-row';
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'mobile-preset-quick-option' + (preset.id === selectedPresetId ? ' active' : '');
@@ -23054,8 +23380,20 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       const name = document.createElement('span');
       name.textContent = preset.name;
       name.style.color = preset.color;
+      name.className = 'preset-option-name';
       button.append(dot, name);
-      menu.appendChild(button);
+      row.appendChild(button);
+      if (preset.id !== 'default') {
+        const config = document.createElement('button');
+        config.type = 'button';
+        config.className = 'preset-config-btn';
+        config.dataset.presetConfigId = preset.id;
+        config.title = `Configurar ${preset.name}`;
+        config.setAttribute('aria-label', `Configurar preset ${preset.name}`);
+        config.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.14.37.35.7.6 1 .3.27.68.42 1.09.4H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51.6Z"/></svg>';
+        row.appendChild(config);
+      }
+      menu.appendChild(row);
     });
   }
 
@@ -23067,8 +23405,6 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
     name.textContent = selected.name;
     name.style.color = selected.color;
     dot.style.background = selected.color;
-    const replaceButton = document.getElementById('preset-replace-current');
-    if (replaceButton) replaceButton.disabled = selectedPresetId === 'default' || !getPresetById(selectedPresetId);
   }
 
   function renderPresetMenu() {
@@ -23097,13 +23433,13 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       row.append(dot, name);
 
       if (!preset.locked) {
-        const remove = document.createElement('button');
-        remove.type = 'button';
-        remove.className = 'preset-delete-btn';
-        remove.title = `Excluir ${preset.name}`;
-        remove.setAttribute('aria-label', `Excluir preset ${preset.name}`);
-        remove.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
-        row.appendChild(remove);
+        const config = document.createElement('button');
+        config.type = 'button';
+        config.className = 'preset-config-btn';
+        config.title = `Configurar ${preset.name}`;
+        config.setAttribute('aria-label', `Configurar preset ${preset.name}`);
+        config.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.14.37.35.7.6 1 .3.27.68.42 1.09.4H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51.6Z"/></svg>';
+        row.appendChild(config);
       }
       menu.appendChild(row);
     });
@@ -23177,6 +23513,7 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
 
   function closePresetSaveDialog() {
     document.getElementById('preset-save-overlay').style.display = 'none';
+    presetEditorTargetId = null;
   }
 
   function closePresetDeleteDialog() {
@@ -23187,12 +23524,16 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
   function openPresetSaveDialog() {
     closePresetMenu();
     const color = randomPresetColor();
+    presetEditorTargetId = null;
+    document.getElementById('preset-save-title').textContent = uiText('Criar novo preset');
+    document.getElementById('preset-save-confirm').textContent = uiText('SALVAR');
+    document.getElementById('preset-editor-actions').hidden = true;
     const input = document.getElementById('preset-color-input');
     input.value = color;
     document.getElementById('preset-color-swatch').style.background = color;
     document.getElementById('preset-name-input').value = '';
     const hint = document.getElementById('preset-save-hint');
-    hint.textContent = 'Até 30 caracteres. A cor inicial é sorteada.';
+    hint.textContent = uiText('Até 30 caracteres. A cor inicial é sorteada.');
     hint.style.color = '#777';
     document.getElementById('preset-save-overlay').style.display = 'flex';
     requestAnimationFrame(() => document.getElementById('preset-name-input').focus());
@@ -23223,8 +23564,8 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       if (!row) return;
       const preset = getPresetById(row.dataset.presetId);
       if (!preset) return;
-      if (event.target.closest('.preset-delete-btn')) {
-        openPresetDeleteDialog(preset);
+      if (event.target.closest('.preset-config-btn')) {
+        openPresetEditorDialog(preset);
         closePresetMenu();
         return;
       }
@@ -23236,6 +23577,15 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
 
     document.getElementById('mobile-preset-quick-menu')?.addEventListener('click', async event => {
       event.stopPropagation();
+      if (event.target.closest('[data-preset-action="create"]')) {
+        openPresetSaveDialog();
+        return;
+      }
+      const config = event.target.closest('[data-preset-config-id]');
+      if (config) {
+        openPresetEditorDialog(getPresetById(config.dataset.presetConfigId));
+        return;
+      }
       const option = event.target.closest('.mobile-preset-quick-option[data-preset-id]');
       if (!option) return;
       const preset = getPresetById(option.dataset.presetId);
@@ -23247,12 +23597,28 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
     });
 
     document.getElementById('preset-save-open').addEventListener('click', openPresetSaveDialog);
-    document.getElementById('preset-replace-current').addEventListener('click', () => {
-      const preset = getPresetById(selectedPresetId);
-      if (!preset || preset.id === 'default') return;
+    document.getElementById('preset-editor-delete').addEventListener('click', () => {
+      const preset = getPresetById(presetEditorTargetId);
+      if (!preset) return;
+      document.getElementById('preset-save-overlay').style.display = 'none';
+      presetEditorTargetId = null;
+      openPresetDeleteDialog(preset);
+    });
+    document.getElementById('preset-editor-replace').addEventListener('click', () => {
+      const preset = getPresetById(presetEditorTargetId);
+      if (!preset) return;
+      document.getElementById('preset-save-overlay').style.display = 'none';
+      presetEditorTargetId = null;
+      openPresetReplaceDialog(preset);
+    });
+    document.getElementById('preset-replace-cancel').addEventListener('click', closePresetReplaceDialog);
+    document.getElementById('preset-replace-confirm').addEventListener('click', () => {
+      const preset = getPresetById(presetReplaceTargetId);
+      if (!preset || preset.id === 'default') return closePresetReplaceDialog();
       preset.settings = capturePresetSettings();
       persistUserPresets();
       renderPresetMenu();
+      closePresetReplaceDialog();
       recordTimelineAction(`Preset substituído: ${preset.name}.`);
     });
     document.getElementById('preset-color-input').addEventListener('input', event => {
@@ -23277,20 +23643,27 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       }
 
       const color = document.getElementById('preset-color-input').value;
-      const existing = userPresets.find(preset => normalizeSearchText(preset.name) === normalizeSearchText(name));
+      const editing = getPresetById(presetEditorTargetId);
+      const existing = userPresets.find(preset => preset.id !== editing?.id && normalizeSearchText(preset.name) === normalizeSearchText(name));
+      if (existing) {
+        hint.textContent = 'Já existe um preset com este nome.';
+        hint.style.color = '#ef4444';
+        nameInput.focus();
+        return;
+      }
       const saved = {
-        id: existing?.id || `preset-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        id: editing?.id || `preset-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
         name,
         color,
-        settings: capturePresetSettings(),
+        settings: editing?.settings || capturePresetSettings(),
       };
-      if (existing) userPresets[userPresets.indexOf(existing)] = saved;
+      if (editing) userPresets[userPresets.indexOf(editing)] = saved;
       else userPresets.push(saved);
       selectedPresetId = saved.id;
       persistUserPresets();
       renderPresetMenu();
       closePresetSaveDialog();
-      recordTimelineAction(`Preset ${existing ? 'atualizado' : 'salvo'}: ${name}.`);
+      recordTimelineAction(`Preset ${editing ? 'atualizado' : 'salvo'}: ${name}.`);
     });
     document.getElementById('preset-name-input').addEventListener('keydown', event => {
       if (event.key === 'Enter') document.getElementById('preset-save-confirm').click();
@@ -23311,11 +23684,12 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       recordTimelineAction(`Preset excluído: ${preset.name}.`);
     });
 
-    [document.getElementById('preset-save-overlay'), document.getElementById('preset-delete-overlay')].forEach(overlay => {
+    [document.getElementById('preset-save-overlay'), document.getElementById('preset-delete-overlay'), document.getElementById('preset-replace-overlay')].forEach(overlay => {
       overlay.addEventListener('click', event => {
         if (event.target !== overlay) return;
         if (overlay.id === 'preset-save-overlay') closePresetSaveDialog();
-        else closePresetDeleteDialog();
+        else if (overlay.id === 'preset-delete-overlay') closePresetDeleteDialog();
+        else closePresetReplaceDialog();
       });
     });
     document.addEventListener('click', closePresetMenu);
@@ -23324,6 +23698,7 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       closePresetMenu();
       closePresetSaveDialog();
       closePresetDeleteDialog();
+      closePresetReplaceDialog();
     });
   }
 
@@ -23620,6 +23995,35 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       button.classList.toggle('active', active);
       button.setAttribute('aria-pressed', String(active));
     });
+  }
+
+  function openPresetEditorDialog(preset) {
+    if (!preset || preset.id === 'default') return;
+    closePresetMenu();
+    presetEditorTargetId = preset.id;
+    document.getElementById('preset-save-title').textContent = uiText('Editar preset');
+    document.getElementById('preset-save-confirm').textContent = uiText('SALVAR');
+    document.getElementById('preset-editor-actions').hidden = false;
+    document.getElementById('preset-color-input').value = preset.color;
+    document.getElementById('preset-color-swatch').style.background = preset.color;
+    document.getElementById('preset-name-input').value = preset.name;
+    const hint = document.getElementById('preset-save-hint');
+    hint.textContent = uiText('Altere o nome ou a cor deste preset.');
+    hint.style.color = '#777';
+    document.getElementById('preset-save-overlay').style.display = 'flex';
+    requestAnimationFrame(() => document.getElementById('preset-name-input').focus());
+  }
+
+  function closePresetReplaceDialog() {
+    document.getElementById('preset-replace-overlay').style.display = 'none';
+    presetReplaceTargetId = null;
+  }
+
+  function openPresetReplaceDialog(preset) {
+    if (!preset || preset.id === 'default') return;
+    presetReplaceTargetId = preset.id;
+    document.getElementById('preset-replace-message').textContent = uiText('Deseja substituir este preset pelas configurações atuais?');
+    document.getElementById('preset-replace-overlay').style.display = 'flex';
   }
 
   function openLanguageSettings() {
@@ -24329,6 +24733,7 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
     document.getElementById('desktop-language-btn')?.addEventListener('click', openLanguageSettings);
 
     const bugReportOverlay = document.getElementById('bug-report-overlay');
+    const bugReportRequester = document.getElementById('bug-report-requester');
     const bugReportSubject = document.getElementById('bug-report-subject');
     const bugReportMessage = document.getElementById('bug-report-message');
     const bugReportHint = document.getElementById('bug-report-hint');
@@ -24393,6 +24798,7 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       const submitButton = document.getElementById('bug-report-submit');
       const title = bugReportSubject?.value.trim() || '';
       const details = bugReportMessage?.value.trim() || '';
+      const requester = bugReportRequester?.value.trim() || '';
       if (!title || !details) {
         setBugReportHint('Preencha o título e o assunto antes de continuar.', 'error');
         (!title ? bugReportSubject : bugReportMessage)?.focus();
@@ -24407,6 +24813,7 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
           body: JSON.stringify({
             title,
             details,
+            requester,
             page: location.href,
             website: document.getElementById('bug-report-website')?.value || '',
           }),
@@ -24432,6 +24839,7 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
         showStatus('Bug enviado ao Discord com sucesso.');
         bugReportSubject.value = '';
         bugReportMessage.value = '';
+        if (bugReportRequester) bugReportRequester.value = '';
       } catch (error) {
         if (isLocalBugReportEnvironment()) setLocalBugReportHint();
         else setBugReportHint(error?.message || 'Não foi possível enviar o bug. Tente novamente.', 'error');

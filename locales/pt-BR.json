@@ -413,6 +413,8 @@
     "Salvar ajuste": "Salvar ajuste",
     "Salvar como": "Salvar como",
     "Salvar preset": "Salvar preset",
+    "Altere o nome ou a cor deste preset.": "Altere o nome ou a cor deste preset.",
+    "Deseja substituir este preset pelas configurações atuais?": "Deseja substituir este preset pelas configurações atuais?",
     "Se não caber no mínimo, aplica o modo de corte.": "Se não caber no mínimo, aplica o modo de corte.",
     "Seções de edição": "Seções de edição",
     "Selecionar pasta": "Selecionar pasta",
@@ -976,6 +978,86 @@
     {
       "source": "Redimensionar {item}",
       "target": "Redimensionar {item}"
+    },
+    {
+      "source": "Novo",
+      "target": "Novo"
+    },
+    {
+      "source": "Criar novo preset",
+      "target": "Criar novo preset"
+    },
+    {
+      "source": "Editar preset",
+      "target": "Editar preset"
+    },
+    {
+      "source": "Substituir preset",
+      "target": "Substituir preset"
+    },
+    {
+      "source": "Usuário solicitante (opcional)",
+      "target": "Usuário solicitante (opcional)"
+    },
+    {
+      "source": "Nome ou usuário...",
+      "target": "Nome ou usuário..."
+    },
+    {
+      "source": "Pesquisar para excluir...",
+      "target": "Pesquisar para excluir..."
+    },
+    {
+      "source": "Pesquisar origem para mesclar...",
+      "target": "Pesquisar origem para mesclar..."
+    },
+    {
+      "source": "Pesquisar destino para mesclar...",
+      "target": "Pesquisar destino para mesclar..."
+    },
+    {
+      "source": "Origem",
+      "target": "Origem"
+    },
+    {
+      "source": "Origem selecionada",
+      "target": "Origem selecionada"
+    },
+    {
+      "source": "Agora pesquise e escolha o destino.",
+      "target": "Agora pesquise e escolha o destino."
+    },
+    {
+      "source": "Item adicionado à lista de excluídos.",
+      "target": "Item adicionado à lista de excluídos."
+    },
+    {
+      "source": "Selecione uma nova origem para continuar.",
+      "target": "Selecione uma nova origem para continuar."
+    },
+    {
+      "source": "Pesquisando...",
+      "target": "Pesquisando..."
+    },
+    {
+      "source": "Nenhum resultado encontrado.",
+      "target": "Nenhum resultado encontrado."
+    },
+    {
+      "source": "Não foi possível pesquisar.",
+      "target": "Não foi possível pesquisar."
+    },
+    {
+      "source": "Digite um nome para pesquisar.",
+      "target": "Digite um nome para pesquisar."
+    },
+    {
+      "source": "Informe o usuário do Last.fm antes de pesquisar.",
+      "target": "Informe o usuário do Last.fm antes de pesquisar."
+    },
+    {
+      "source": "Selecione um período válido antes de pesquisar.",
+      "target": "Selecione um período válido antes de pesquisar."
     }
   ]
 }
