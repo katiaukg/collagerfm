@@ -19,7 +19,7 @@
 
   async function loadLocale(locale) {
     if (localeCache.has(locale)) return localeCache.get(locale);
-    const response = await fetch(`./locales/${locale}.json?v=20260830-1`, { cache: 'no-store' });
+    const response = await fetch(`./locales/${locale}.json?v=20260831-2`, { cache: 'no-store' });
     if (!response.ok) throw new Error(`Não foi possível carregar o idioma ${locale}.`);
     const messages = await response.json();
     localeCache.set(locale, messages);

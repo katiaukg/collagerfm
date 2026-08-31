@@ -429,25 +429,80 @@
   .history-list-search-row input::-webkit-search-cancel-button { filter:invert(1);opacity:.45;cursor:pointer; }
   .history-list-search-row button { min-width:96px;border:1px solid var(--red);border-radius:7px;background:var(--red);color:#fff;font:800 10px/1 inherit;cursor:pointer; }
   #history-list-search-status { min-height:14px;color:var(--muted);font-size:10px;line-height:1.4; }
-  #history-list-search-results { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px; }
-  .history-search-result { min-width:0;min-height:74px;padding:7px;display:grid;grid-template-columns:58px minmax(0,1fr) auto;grid-template-rows:auto auto;gap:4px 9px;align-items:center;border:1px solid var(--border);border-radius:7px;background:var(--surface2); }
+  .history-rule-builder {
+    display:grid;grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr);align-items:start;gap:10px;
+    padding-top:2px;
+  }
+  .history-rule-builder.single { grid-template-columns:minmax(0,1fr); }
+  .history-rule-builder.single .history-rule-builder-arrow,
+  .history-rule-builder.single #history-rule-target-slot { display:none; }
+  .history-rule-builder-arrow {
+    min-height:112px;display:grid;place-items:center;color:#777;font-size:20px;font-weight:900;
+  }
+  .history-rule-slot {
+    min-width:0;padding:10px;display:grid;gap:8px;border:1px solid #383838;border-radius:7px;background:#181818;
+  }
+  .history-rule-slot.has-selection { border-color:#646464; }
+  .history-rule-slot-label { color:#aaa;font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase; }
+  .history-rule-input-row { min-width:0;display:grid;grid-template-columns:minmax(0,1fr) 36px;gap:6px; }
+  .history-rule-input-row.title-entry { grid-template-columns:minmax(0,1fr); }
+  .history-rule-input-row input {
+    width:100%;min-width:0;min-height:34px;padding:0 10px;border:1px solid var(--border);border-radius:6px;
+    outline:none;background:#222;color:var(--text);font:500 11px/1.2 'Inter',sans-serif;
+  }
+  .history-rule-input-row input::placeholder { color:#707070;opacity:1; }
+  .history-rule-input-row input:focus { border-color:var(--red);box-shadow:0 0 0 1px #d5100738; }
+  .history-rule-search-btn {
+    width:36px;min-height:34px;display:grid;place-items:center;border:1px solid #444;border-radius:6px;
+    background:#252525;color:#ddd;cursor:pointer;
+  }
+  .history-rule-search-btn:hover { border-color:#666;color:#fff; }
+  .history-rule-search-btn:disabled { opacity:.45;cursor:wait; }
+  .history-rule-search-btn .ui-icon { width:14px;height:14px; }
+  .history-rule-selected {
+    min-width:0;min-height:58px;padding:6px;display:grid;grid-template-columns:46px minmax(0,1fr) 28px;
+    grid-template-rows:auto auto;gap:2px 8px;align-items:center;border:1px solid #4e4e4e;border-radius:6px;background:#232323;
+  }
+  .history-rule-selected:empty { display:none; }
+  .history-rule-selected strong,
+  .history-rule-selected span { min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+  .history-rule-selected strong { grid-column:2;font-size:11px;color:#fff; }
+  .history-rule-selected span { grid-column:2;font-size:9px;color:var(--muted); }
+  .history-rule-selected button {
+    grid-column:3;grid-row:1/3;width:28px;height:28px;border:1px solid #444;border-radius:5px;
+    background:#1b1b1b;color:#aaa;font:700 14px/1 inherit;cursor:pointer;
+  }
+  .history-rule-selected button:hover { border-color:#666;color:#fff; }
+  .history-rule-results { display:grid;gap:5px;max-height:210px;overflow-y:auto; }
+  .history-rule-result {
+    min-width:0;min-height:54px;padding:5px;display:grid;grid-template-columns:44px minmax(0,1fr) auto;
+    grid-template-rows:auto auto;gap:2px 8px;align-items:center;border-top:1px solid #303030;
+  }
+  .history-rule-result:first-child { border-top:0; }
+  .history-rule-result strong,
+  .history-rule-result span { min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+  .history-rule-result strong { grid-column:2;font-size:11px;color:var(--text); }
+  .history-rule-result span { grid-column:2;font-size:9px;color:var(--muted); }
+  .history-rule-result button {
+    grid-column:3;grid-row:1/3;min-height:30px;padding:0 9px;border:1px solid #555;border-radius:5px;
+    background:transparent;color:#ddd;font:800 9px/1 inherit;cursor:pointer;
+  }
+  .history-rule-result button:hover { border-color:#888;color:#fff; }
+  .history-rule-actions { display:flex;align-items:center;justify-content:flex-end;gap:10px; }
+  #history-rule-apply {
+    min-width:132px;min-height:34px;padding:0 13px;border:1px solid var(--red);border-radius:7px;
+    background:var(--red);color:#fff;font:800 10px/1 inherit;cursor:pointer;
+  }
+  #history-rule-apply:disabled { opacity:.38;cursor:not-allowed; }
+  #history-rule-builder-status { flex:1;min-width:0;color:var(--muted);font-size:10px;line-height:1.4; }
+  #history-rule-builder-status.error { color:#ff8b8b; }
+  #history-rule-builder-status.success { color:#79dd91; }
   .history-search-thumb { grid-column:1;grid-row:1/3;width:58px;height:58px;display:grid;place-items:center;overflow:hidden;border-radius:5px;background:#111;color:#444; }
   .history-search-thumb img,.history-search-thumb canvas { width:100%;height:100%;object-fit:cover;display:block; }
   .history-search-thumb svg { width:20px;height:20px; }
-  .history-search-result strong,.history-search-result span { overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-  .history-search-result strong { grid-column:2;font-size:12px;color:var(--text); }
-  .history-search-result span { grid-column:2;font-size:10px;color:var(--muted); }
-  .history-search-result button { grid-column:3;grid-row:1/3;min-height:32px;padding:0 10px;border:1px solid var(--red);border-radius:6px;background:transparent;color:#ff8585;font:800 9px/1 inherit;cursor:pointer; }
-  .history-search-selected { min-height:72px;padding:7px;display:grid;grid-template-columns:58px minmax(0,1fr);grid-template-rows:auto auto auto;gap:2px 10px;align-items:center;border:1px solid #a36b18;border-radius:7px;background:#2a2114;color:var(--text); }
-  .history-search-selected .history-search-thumb { grid-row:1/4; }
-  .history-search-selected strong { font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-  .history-search-selected span { font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-  .history-search-selected small { font-size:9px;color:#ffc36a; }
-  .history-search-merge-summary { min-height:76px;padding:8px;display:grid;grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr);gap:8px;align-items:center;border:1px solid #3f6f4a;border-radius:7px;background:#142219; }
-  .history-search-merge-party { min-width:0;display:grid;grid-template-columns:58px minmax(0,1fr);gap:9px;align-items:center; }
-  .history-search-merge-party .history-search-thumb { grid-column:1;grid-row:1; }
-  .history-search-merge-party strong { min-width:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-  .history-search-merge-arrow { color:#78d98c;font-size:18px;font-weight:900;text-align:center; }
+  .history-rule-result .history-search-thumb,
+  .history-rule-selected .history-search-thumb { width:44px;height:44px;grid-column:1;grid-row:1/3; }
+  .history-rule-selected .history-search-thumb { width:46px;height:46px; }
 
   /* Fontes de imagem (botões multi-seleção por tipo) */
   .source-toggle-group { display: none; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
@@ -1090,10 +1145,14 @@
     position: sticky; top: 50vh; transform: translateY(-50%);
     grid-area: status; z-index: 40; width: 100%; align-self: flex-start; justify-self: start;
     display: flex; flex-direction: column; align-items: flex-start; gap: 7px;
-    opacity: .2; transition: opacity .18s ease;
+    opacity: 1;
   }
-  #status-history-dock:hover { opacity: .5; }
-  #status-history-dock:focus-within { opacity: .8; }
+  #status-history-preview,
+  #status-history-open { opacity: .2; transition: opacity .18s ease; }
+  #status-history-dock:hover #status-history-preview,
+  #status-history-dock:hover #status-history-open { opacity: .5; }
+  #status-history-dock:focus-within #status-history-preview,
+  #status-history-dock:focus-within #status-history-open { opacity: .8; }
   #status-history-preview {
     width: 100%; max-height: min(38vh, 330px); overflow-y: auto;
     padding: 8px 9px; border: 1px solid #ffffff1c; border-radius: 6px;
@@ -1704,6 +1763,30 @@
     text-transform: uppercase; color: var(--muted);
     white-space: nowrap;
   }
+  #changed-titles-panel {
+    display:none;width:100%;min-width:0;margin-top:9px;padding-top:12px;
+    border-top:1px solid #ffffff18;
+  }
+  #changed-titles-panel.has-items { display:block; }
+  .changed-titles-panel-head {
+    display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px;
+  }
+  .changed-titles-panel-label {
+    min-width:0;display:flex;align-items:center;gap:6px;color:var(--muted);
+    font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  }
+  .changed-titles-panel-label .ui-icon { width:13px;height:13px;flex:0 0 13px; }
+  #changed-titles-preview { width:100%;min-width:0; }
+  .changed-title-preview-row {
+    display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:6px;
+    padding:7px 0;border-bottom:1px solid #ffffff12;color:#d7d7d7;font-size:10px;line-height:1.35;
+  }
+  .changed-title-preview-row:last-child { border-bottom:0; }
+  .changed-title-preview-row span:not(.changed-title-arrow) {
+    min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .changed-title-arrow { color:#ef6666;font-weight:800; }
+  .changed-title-preview-more { padding-top:5px;color:#777;font-size:9px; }
   .history-open-btn, .history-page-btn, .history-modal-close {
     border:1px solid var(--border);background:var(--surface);color:var(--muted);
     cursor:pointer;border-radius:5px;font-family:inherit;font-weight:700;
@@ -1739,6 +1822,26 @@
     scrollbar-gutter:stable;
   }
   #history-list-grid .deleted-tile, #history-list-grid .merge-card { width:100%;height:auto;aspect-ratio:1;align-self:start; }
+  #history-list-grid.changed-titles-list {
+    display:block;padding:8px 24px 20px;
+  }
+  .changed-title-list-row {
+    display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:14px;
+    min-height:58px;padding:11px 0;border-bottom:1px solid #ffffff18;
+  }
+  .changed-title-list-row:last-child { border-bottom:0; }
+  .changed-title-flow {
+    min-width:0;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:12px;
+  }
+  .changed-title-value { min-width:0;color:#e5e5e5;font-size:12px;line-height:1.4;overflow-wrap:anywhere; }
+  .changed-title-value.changed { color:#fff;font-weight:700; }
+  .changed-title-list-arrow { color:#ef6666;font-size:15px;font-weight:800; }
+  .changed-title-restore {
+    width:32px;height:30px;display:inline-flex;align-items:center;justify-content:center;
+    border:1px solid var(--border);border-radius:5px;background:var(--surface2);color:var(--muted);cursor:pointer;
+  }
+  .changed-title-restore:hover { border-color:#666;color:#fff; }
+  .changed-title-restore .ui-icon { width:14px;height:14px; }
   #fanart-picker-overlay { display:none;position:fixed;inset:0;background:#000000b8;z-index:1300;align-items:center;justify-content:center;padding:24px; }
   #fanart-picker-modal { width:min(920px,94vw);max-height:88vh;overflow:hidden;background:var(--surface);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column; }
   #fanart-picker-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:18px;padding:20px 24px 28px;overflow-y:auto;min-height:0; }
@@ -2191,9 +2294,10 @@
     max-width: none;
     align-self: start;
     justify-self: stretch;
-    opacity: .2;
+    opacity: 1;
   }
-  #status-history-dock:hover { opacity: .5; }
+  #status-history-dock:hover #status-history-preview,
+  #status-history-dock:hover #status-history-open { opacity: .5; }
   #status-history-preview { max-height: 14rem; }
 
   #history-panels {
@@ -2630,7 +2734,11 @@
     .mobile-preset-create-option svg { width:15px;height:15px; }
     .mobile-preset-quick-option .preset-option-name { font-size:inherit; }
 
-    #history-list-search-results { grid-template-columns:1fr; }
+    .history-list-action { padding:.65rem .75rem; }
+    .history-rule-builder { grid-template-columns:minmax(0,1fr); }
+    .history-rule-builder-arrow { min-height:24px;transform:rotate(90deg); }
+    .history-rule-actions { align-items:stretch;flex-direction:column; }
+    #history-rule-apply { width:100%; }
 
     /* As instrucoes de mouse/teclado nao ajudam no modal de quadro mobile. */
     #text-edit-overlay #paste-hint,
@@ -3175,7 +3283,9 @@
       overscroll-behavior: contain;
     }
     #mobile-history-host #history-panels { order: 1; }
-    #mobile-history-host #status-history-dock { order: 2; width: 100%; opacity: .8; }
+    #mobile-history-host #status-history-dock { order: 2; width: 100%; opacity: 1; }
+    #mobile-history-host #status-history-preview,
+    #mobile-history-host #status-history-open { opacity: .8; }
     #mobile-history-host #status-history-preview { max-height: 12rem; }
     #mobile-history-host #history-panels.has-items { grid-template-columns: minmax(0, 1fr); }
     #mobile-history-host .history-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -3185,6 +3295,8 @@
     #history-list-modal .history-filter-toggle button { flex: 1 1 50%; }
     #history-list-modal .history-type-filter button { flex-basis: 33.333%; }
     #history-list-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; padding: .625rem; }
+    #history-list-grid.changed-titles-list { display:block;padding:.25rem .75rem .75rem; }
+    .changed-title-flow { grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:.5rem; }
     body.mobile-menu-all-history #history-list-filter { display: none !important; }
 
     .source-btn.has-source-drag-handle::before { display: none; }
@@ -3596,6 +3708,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12a2 2 0 0 1 2 2v14l-8-4-8 4V5a2 2 0 0 1 2-2Z"/><path d="M8 7h8M8 11h5"/></svg>
         Gerenciar presets
       </button>
+      <button type="button" class="mobile-menu-item" id="mobile-changed-titles-list-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 15 4-8 4 8"/><path d="M4 13h6"/><circle cx="18" cy="12" r="3"/><path d="M21 9v6"/></svg>
+        Listagem de títulos alterados
+      </button>
       <button type="button" class="mobile-menu-item" id="mobile-deleted-list-btn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18v14H3z"/><path d="M8 3h8v3M8 11h8M8 15h5"/></svg>
         Listagem de excluídos
@@ -3706,6 +3822,7 @@
           <button type="button" class="desktop-menu-item" id="desktop-save-settings-btn" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12.2 2h-.4a2 2 0 0 0-2 2v.2a2 2 0 0 1-1 1.7l-.4.3a2 2 0 0 1-2 0l-.2-.1a2 2 0 0 0-2.7.7l-.2.4a2 2 0 0 0 .7 2.7l.2.1a2 2 0 0 1 1 1.7v.6a2 2 0 0 1-1 1.7l-.2.1a2 2 0 0 0-.7 2.7l.2.4a2 2 0 0 0 2.7.7l.2-.1a2 2 0 0 1 2 0l.4.3a2 2 0 0 1 1 1.7v.2a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.2a2 2 0 0 1 1-1.7l.4-.3a2 2 0 0 1 2 0l.2.1a2 2 0 0 0 2.7-.7l.2-.4a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.7v-.6a2 2 0 0 1 1-1.7l.2-.1a2 2 0 0 0 .7-2.7l-.2-.4a2 2 0 0 0-2.7-.7l-.2.1a2 2 0 0 1-2 0l-.4-.3a2 2 0 0 1-1-1.7V4a2 2 0 0 0-2-2Z"/><circle cx="12" cy="12" r="3"/></svg>Configurações de salvamento da collage</button>
           <div id="desktop-download-settings-host"></div>
           <button type="button" class="desktop-menu-item" id="desktop-manage-presets-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 3h12a2 2 0 0 1 2 2v14l-8-4-8 4V5a2 2 0 0 1 2-2Z"/><path d="M8 7h8M8 11h5"/></svg>Gerenciar presets</button>
+          <button type="button" class="desktop-menu-item" id="desktop-changed-titles-list-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 15 4-8 4 8"/><path d="M4 13h6"/><circle cx="18" cy="12" r="3"/><path d="M21 9v6"/></svg>Listagem de títulos alterados</button>
           <button type="button" class="desktop-menu-item" id="desktop-deleted-list-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18v14H3z"/><path d="M8 3h8v3M8 11h8M8 15h5"/></svg>Listagem de excluídos</button>
           <button type="button" class="desktop-menu-item" id="desktop-merged-list-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 7h11v11H8z"/><path d="M5 16H3V5h11v2"/><path d="m12 12 2 2 4-4"/></svg>Listagem de mesclados</button>
         </div>
@@ -5453,9 +5570,19 @@
 </aside>
 
 <main class="preview-area">
-  <aside id="status-history-dock" aria-label="Histórico de status">
+  <aside id="status-history-dock" aria-label="Console e títulos alterados">
     <div id="status-history-preview" aria-live="polite"></div>
     <button type="button" id="status-history-open" title="Abrir histórico completo" aria-label="Abrir histórico completo de status">&gt;_</button>
+    <section id="changed-titles-panel" aria-label="Títulos alterados">
+      <div class="changed-titles-panel-head">
+        <div class="changed-titles-panel-label">
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 15 4-8 4 8"/><path d="M4 13h6"/><circle cx="18" cy="12" r="3"/><path d="M21 9v6"/></svg>
+          <span>Títulos alterados <span id="changed-titles-count"></span></span>
+        </div>
+        <button class="history-open-btn" id="open-changed-titles-list" title="Abrir listagem de títulos alterados" aria-label="Abrir listagem de títulos alterados">↗</button>
+      </div>
+      <div id="changed-titles-preview"></div>
+    </section>
   </aside>
   <div class="preview-content">
   <div class="collage-center">
@@ -5567,7 +5694,7 @@
 </main>
 </div>
 
-<section id="mobile-history-sheet" aria-label="Excluídos, mesclados e histórico" aria-hidden="true">
+<section id="mobile-history-sheet" aria-label="Títulos alterados, excluídos, mesclados e histórico" aria-hidden="true">
   <div class="mobile-history-head">
     <strong>Histórico da collage</strong>
     <button type="button" class="mobile-icon-btn" id="mobile-history-close" aria-label="Fechar histórico" title="Fechar">
@@ -5589,7 +5716,7 @@
       <span>Salvar</span>
     </button>
   </div>
-  <button type="button" class="mobile-bottom-side" id="mobile-history-toggle" aria-label="Excluídos, mesclados e console" title="Excluídos, mesclados e console">
+  <button type="button" class="mobile-bottom-side" id="mobile-history-toggle" aria-label="Títulos alterados, excluídos, mesclados e console" title="Títulos alterados, excluídos, mesclados e console">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18v14H3z"/><path d="M8 3h8v3M8 11h8M8 15h5"/></svg>
   </button>
 </nav>
@@ -5611,13 +5738,37 @@
       </div>
       <button class="history-modal-close" id="history-list-close" aria-label="Fechar">×</button>
     </div>
-    <div class="history-list-action">
+    <div class="history-list-action" id="history-list-action">
       <div class="history-list-search-row">
-        <input type="search" id="history-list-search-input" placeholder="Pesquisar artista, álbum ou faixa..." autocomplete="off">
-        <button type="button" id="history-list-search-button">Pesquisar</button>
+        <input type="search" id="history-list-search-input" placeholder="Pesquisar na listagem..." autocomplete="off">
+        <button type="button" id="history-list-search-button">Filtrar</button>
       </div>
       <div id="history-list-search-status" aria-live="polite"></div>
-      <div id="history-list-search-results"></div>
+      <div class="history-rule-builder" id="history-rule-builder">
+        <section class="history-rule-slot" id="history-rule-source-slot">
+          <div class="history-rule-slot-label" id="history-rule-source-label">Origem</div>
+          <div class="history-rule-input-row">
+            <input type="search" id="history-rule-source-input" placeholder="Pesquisar item..." autocomplete="off">
+            <button type="button" class="history-rule-search-btn" id="history-rule-source-search" title="Pesquisar origem" aria-label="Pesquisar origem"></button>
+          </div>
+          <div class="history-rule-selected" id="history-rule-source-selected"></div>
+          <div class="history-rule-results" id="history-rule-source-results"></div>
+        </section>
+        <div class="history-rule-builder-arrow" aria-hidden="true">→</div>
+        <section class="history-rule-slot" id="history-rule-target-slot">
+          <div class="history-rule-slot-label" id="history-rule-target-label">Destino</div>
+          <div class="history-rule-input-row" id="history-rule-target-input-row">
+            <input type="search" id="history-rule-target-input" placeholder="Pesquisar destino..." autocomplete="off">
+            <button type="button" class="history-rule-search-btn" id="history-rule-target-search" title="Pesquisar destino" aria-label="Pesquisar destino"></button>
+          </div>
+          <div class="history-rule-selected" id="history-rule-target-selected"></div>
+          <div class="history-rule-results" id="history-rule-target-results"></div>
+        </section>
+      </div>
+      <div class="history-rule-actions">
+        <div id="history-rule-builder-status" aria-live="polite"></div>
+        <button type="button" id="history-rule-apply" disabled>Mesclar</button>
+      </div>
     </div>
     <div id="history-list-grid"></div>
   </div>
@@ -5958,7 +6109,7 @@
   </div>
 </div>
 
-<script src="./i18n.js?v=20260803-2"></script>
+<script src="./i18n.js?v=20260831-2"></script>
 <script>
 // ─────────────────────────────────────────────────────────────
 // CONFIG & STATE
@@ -7723,17 +7874,24 @@ function sanitizeCollageBehaviorRules(rules) {
       type: scope.type,
       deleted: Array.isArray(scope.deleted) ? scope.deleted.filter(entry => entry?.key) : [],
       merges: Array.isArray(scope.merges) ? scope.merges.filter(entry => entry?.source?.key && entry?.target?.key) : [],
+      titles: Array.isArray(scope.titles)
+        ? scope.titles.filter(entry => entry?.source?.key && typeof entry.changed === 'string')
+        : [],
     };
     clean.deleted.forEach(entry => { if (entry.item) entry.key = getBehaviorItemKey(entry.item, clean.type); });
     clean.merges.forEach(merge => {
       if (merge.source?.item) merge.source.key = getBehaviorItemKey(merge.source.item, clean.type);
       if (merge.target?.item) merge.target.key = getBehaviorItemKey(merge.target.item, clean.type);
     });
+    clean.titles.forEach(entry => {
+      if (entry.source?.item) entry.source.key = getBehaviorItemKey(entry.source.item, clean.type);
+    });
     clean.deleted.forEach(compactMemoryItemEntry);
     clean.merges.forEach(merge => {
       compactMemoryItemEntry(merge.source);
       compactMemoryItemEntry(merge.target);
     });
+    clean.titles.forEach(entry => compactMemoryItemEntry(entry.source));
     return clean;
   });
 }
@@ -7754,7 +7912,7 @@ function getBehaviorScope(context, create = false) {
   const type = context?.type || getDrawType();
   let scope = collageBehaviorRules.find(saved => saved.username === username && saved.type === type);
   if (!scope && create) {
-    scope = { username, type, deleted: [], merges: [] };
+    scope = { username, type, deleted: [], merges: [], titles: [] };
     collageBehaviorRules.push(scope);
   }
   return scope || null;
@@ -7765,6 +7923,7 @@ function getCombinedBehaviorRules(context) {
   const type = context?.type || getDrawType();
   const deleted = new Map();
   const merges = new Map();
+  const titles = new Map();
   const scopes = collageBehaviorRules.filter(scope => scope.type === type && (scope.username === '%user%' || scope.username === username));
   scopes.sort((a, b) => (a.username === username ? 1 : 0) - (b.username === username ? 1 : 0));
   scopes.forEach(scope => {
@@ -7776,8 +7935,9 @@ function getCombinedBehaviorRules(context) {
       deleted.delete(merge.source.key);
       merges.set(merge.source.key, merge);
     });
+    (scope.titles || []).forEach(entry => titles.set(entry.source.key, entry));
   });
-  return { deleted, merges };
+  return { deleted, merges, titles };
 }
 
 function makeBehaviorItemEntry(item, type) {
@@ -7805,6 +7965,31 @@ function rememberGlobalMerge(sourceItem, targetItem, context = activeCollageMemo
   scope.deleted = scope.deleted.filter(saved => saved.key !== source.key);
   scope.merges = scope.merges.filter(saved => saved.source.key !== source.key);
   scope.merges.push({ source, target });
+  persistCollageBehaviorRules();
+}
+
+function rememberGlobalTitleChange(item, changedTitle, context = activeCollageMemoryContext || getCollageMemoryContext()) {
+  if (!item) return;
+  const type = context.type || getDrawType();
+  const changed = String(changedTitle ?? '').trim();
+  const source = makeBehaviorItemEntry(item, type);
+  const scope = getBehaviorScope(context, true);
+  scope.titles = (scope.titles || []).filter(saved => saved.source.key !== source.key);
+  if (changed && changed !== String(item.name || '')) scope.titles.push({ source, changed });
+  persistCollageBehaviorRules();
+}
+
+function forgetGlobalTitleRuleByKey(key, context = activeCollageMemoryContext || getCollageMemoryContext()) {
+  if (!key) return;
+  const type = context.type || getDrawType();
+  const username = normalizeMemoryPart(context.username);
+  collageBehaviorRules.forEach(scope => {
+    if (scope.type !== type || (scope.username !== username && scope.username !== '%user%')) return;
+    scope.titles = (scope.titles || []).filter(saved => saved.source.key !== key);
+  });
+  collageBehaviorRules = collageBehaviorRules.filter(scope => (
+    scope.deleted.length || scope.merges.length || (scope.titles || []).length
+  ));
   persistCollageBehaviorRules();
 }
 
@@ -7841,7 +8026,9 @@ function forgetGlobalBehaviorByKey(key, context = activeCollageMemoryContext || 
     scope.deleted = scope.deleted.filter(saved => saved.key !== key);
     scope.merges = scope.merges.filter(saved => saved.source.key !== key);
   });
-  collageBehaviorRules = collageBehaviorRules.filter(scope => scope.deleted.length || scope.merges.length);
+  collageBehaviorRules = collageBehaviorRules.filter(scope => (
+    scope.deleted.length || scope.merges.length || (scope.titles || []).length
+  ));
   persistCollageBehaviorRules();
   forgetBehaviorFromSavedMemories(key, context);
 }
@@ -7876,7 +8063,9 @@ function migrateLegacyCollageBehaviorRules() {
       scope.merges.push({ source: JSON.parse(JSON.stringify(merge.source)), target: JSON.parse(JSON.stringify(merge.target)) });
     });
   });
-  collageBehaviorRules = sanitizeCollageBehaviorRules(collageBehaviorRules).filter(scope => scope.deleted.length || scope.merges.length);
+  collageBehaviorRules = sanitizeCollageBehaviorRules(collageBehaviorRules).filter(scope => (
+    scope.deleted.length || scope.merges.length || scope.titles.length
+  ));
   persistCollageBehaviorRules();
   try { localStorage.setItem(COLLAGE_BEHAVIOR_RULES_MIGRATION_KEY, '1'); } catch { /* sem persistência */ }
 }
@@ -7961,6 +8150,8 @@ function captureCurrentCollageMemory() {
 
   collageMemories[getCollageMemorySignature(context)] = memory;
   persistCollageMemories();
+  renderChangedTitlesPanel();
+  if (historyModalKind === 'renamed') renderHistoryModal();
   return memory;
 }
 
@@ -8027,6 +8218,13 @@ function applyGlobalCollageBehavior(context) {
     const idx = allFetchedItems.findIndex(item => getBehaviorItemKey(item, type) === saved.key);
     if (idx < 0 || mergeRecords[idx]) return;
     deletedPoolIndices.add(idx);
+    applied++;
+  });
+
+  rules.titles.forEach(saved => {
+    const idx = allFetchedItems.findIndex(item => getBehaviorItemKey(item, type) === saved.source.key);
+    if (idx < 0) return;
+    customTexts[idx] = { ...(customTexts[idx] || {}), main: saved.changed };
     applied++;
   });
 
@@ -9540,6 +9738,17 @@ function setArtistSubDefaultsForEffectiveType(effectiveType = getEffectiveType()
   updateCutModeExamples();
 }
 
+function restoreInheritedArtistTitleOpacity(previousType, nextType) {
+  if (nextType !== 'artists' || previousType === nextType || syncAlpha) return;
+  const alphaInput = document.getElementById('alpha-sub');
+  const alphaLabel = document.getElementById('val-alpha-sub');
+  const previousDefault = TEXT_TYPE_DEFAULTS[previousType]?.alpha?.sub;
+  const artistDefault = TEXT_TYPE_DEFAULTS.artists.alpha.sub;
+  if (!alphaInput || Number(alphaInput.value) !== Number(previousDefault)) return;
+  alphaInput.value = artistDefault;
+  if (alphaLabel) alphaLabel.textContent = `${artistDefault}%`;
+}
+
 // ─────────────────────────────────────────────────────────────
 // HEADER HEIGHT + FONT SLIDERS
 // ─────────────────────────────────────────────────────────────
@@ -10946,11 +11155,14 @@ document.getElementById('extend-pos-seg').addEventListener('click', e => {
 document.querySelectorAll('.type-btn').forEach(btn => {
   btn.addEventListener('click', e => {
     if (e.target.closest('.color-swatch') || e.target.classList.contains('swatch-input')) return;
+    const previousEffectiveType = getEffectiveType();
     document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentType = btn.dataset.type;
+    const nextEffectiveType = getEffectiveType();
     syncTypeSpecificPanels();
-    if (!currentItems.length) setArtistSubDefaultsForEffectiveType();
+    if (!currentItems.length) setArtistSubDefaultsForEffectiveType(nextEffectiveType);
+    else restoreInheritedArtistTitleOpacity(previousEffectiveType, nextEffectiveType);
     syncHeaderTypeInput();
     syncDependentSwatches();
     renderTileLineOrderControls();
@@ -10962,10 +11174,13 @@ document.querySelectorAll('.type-btn').forEach(btn => {
 const newSubBtns = { artists: document.getElementById('new-sub-artists'), albums: document.getElementById('new-sub-albums'), tracks: document.getElementById('new-sub-tracks') };
 Object.entries(newSubBtns).forEach(([type, btn]) => {
   btn.addEventListener('click', () => {
+    const previousEffectiveType = getEffectiveType();
     Object.values(newSubBtns).forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     newSubType = type;
-    if (!currentItems.length) setArtistSubDefaultsForEffectiveType();
+    const nextEffectiveType = getEffectiveType();
+    if (!currentItems.length) setArtistSubDefaultsForEffectiveType(nextEffectiveType);
+    else restoreInheritedArtistTitleOpacity(previousEffectiveType, nextEffectiveType);
     syncHeaderTypeInput();
     renderTileLineOrderControls();
     updateSourceGroupVisibility();
@@ -10978,10 +11193,13 @@ const specificSubBtns = { albums: document.getElementById('specific-sub-albums')
 Object.entries(specificSubBtns).forEach(([type, btn]) => {
   if (!btn) return;
   btn.addEventListener('click', () => {
+    const previousEffectiveType = getEffectiveType();
     Object.values(specificSubBtns).forEach(b => b?.classList.remove('active'));
     btn.classList.add('active');
     specificSubType = type;
-    if (!currentItems.length) setArtistSubDefaultsForEffectiveType();
+    const nextEffectiveType = getEffectiveType();
+    if (!currentItems.length) setArtistSubDefaultsForEffectiveType(nextEffectiveType);
+    else restoreInheritedArtistTitleOpacity(previousEffectiveType, nextEffectiveType);
     syncHeaderTypeInput();
     renderTileLineOrderControls();
     updateSourceGroupVisibility();
@@ -19824,6 +20042,7 @@ const UI_ICON_PATHS = {
   search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
   link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
   undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
+  text: '<path d="m3 15 4-8 4 8"/><path d="M4 13h6"/><circle cx="18" cy="12" r="3"/><path d="M21 9v6"/>',
 };
 
 function createUiIcon(name) {
@@ -20763,6 +20982,235 @@ function normalizeHistoryType(type) {
   return ['artists', 'albums', 'tracks'].includes(type) ? type : 'albums';
 }
 
+function makeChangedTitleEntry(item, value, type, source) {
+  if (!item || !value || !Object.prototype.hasOwnProperty.call(value, 'main')) return null;
+  const original = String(item.name || '');
+  const changed = String(value.main ?? '');
+  if (original === changed) return null;
+  return {
+    type: normalizeHistoryType(type),
+    itemKey: source?.behaviorKey || getBehaviorItemKey(item, type),
+    original,
+    changed,
+    sources: source ? [source] : [],
+  };
+}
+
+function addChangedTitleEntry(entries, entry) {
+  if (!entry) return;
+  const key = JSON.stringify([entry.type, entry.itemKey, entry.original, entry.changed]);
+  const existing = entries.get(key);
+  if (!existing) {
+    entries.set(key, entry);
+    return;
+  }
+  entry.sources.forEach(source => {
+    const sourceKey = `${source.kind}|${source.memorySignature || ''}|${source.itemKey || ''}|${source.poolIdx ?? ''}`;
+    if (!existing.sources.some(saved => (
+      `${saved.kind}|${saved.memorySignature || ''}|${saved.itemKey || ''}|${saved.poolIdx ?? ''}` === sourceKey
+    ))) existing.sources.push(source);
+  });
+}
+
+function addMemoryChangedTitles(entries, memory, memorySignature, type) {
+  if (!memory || normalizeHistoryType(memory.context?.type) !== type) return;
+  (memory.texts || []).forEach(saved => {
+    const entry = makeChangedTitleEntry(saved?.item, saved?.value, type, {
+      kind: 'memory',
+      memorySignature,
+      itemKey: saved?.key || getMemoryItemKey(saved?.item, type),
+    });
+    addChangedTitleEntry(entries, entry);
+  });
+}
+
+function addCurrentChangedTitles(entries, type) {
+  const context = activeCollageMemoryContext || getCollageMemoryContext();
+  if (!allFetchedItems.length || normalizeHistoryType(context.type) !== type) return;
+  Object.entries(customTexts).forEach(([poolIndex, value]) => {
+    const poolIdx = Number(poolIndex);
+    const item = allFetchedItems[poolIdx];
+    if (!item) return;
+    addChangedTitleEntry(entries, makeChangedTitleEntry(item, value, type, {
+      kind: 'current',
+      poolIdx,
+      behaviorKey: getBehaviorItemKey(item, type),
+    }));
+  });
+}
+
+function addRuleChangedTitles(entries, type) {
+  const context = getHistoryContextForType(type);
+  const rules = getCombinedBehaviorRules(context);
+  rules.titles.forEach(saved => {
+    addChangedTitleEntry(entries, makeChangedTitleEntry(saved.source?.item, { main: saved.changed }, type, {
+      kind: 'rule',
+      itemKey: saved.source?.key,
+      behaviorKey: saved.source?.key,
+    }));
+  });
+}
+
+function getChangedTitleEntries(type, { allPeriods = false } = {}) {
+  const normalizedType = normalizeHistoryType(type);
+  const entries = new Map();
+  const base = historyModalBaseContext || activeCollageMemoryContext || getCollageMemoryContext();
+  const username = normalizeMemoryPart(base.username);
+
+  if (allPeriods) {
+    Object.entries(collageMemories || {}).forEach(([signature, memory]) => {
+      const memoryUsername = normalizeMemoryPart(memory?.context?.username);
+      if (memoryUsername !== username && memoryUsername !== '%user%') return;
+      addMemoryChangedTitles(entries, memory, signature, normalizedType);
+    });
+    addCurrentChangedTitles(entries, normalizedType);
+    addRuleChangedTitles(entries, normalizedType);
+  } else {
+    const currentContext = activeCollageMemoryContext || getCollageMemoryContext();
+    if (normalizeHistoryType(currentContext.type) === normalizedType) {
+      addCurrentChangedTitles(entries, normalizedType);
+    } else {
+      const context = getHistoryContextForType(normalizedType);
+      const signatures = [
+        getCollageMemorySignature(context),
+        getCollageMemorySignature({ ...context, username: '%user%' }),
+      ];
+      signatures.some(signature => {
+        const memory = collageMemories[signature];
+        if (!memory) return false;
+        addMemoryChangedTitles(entries, memory, signature, normalizedType);
+        return true;
+      });
+    }
+    addRuleChangedTitles(entries, normalizedType);
+  }
+
+  return Array.from(entries.values()).sort((a, b) => (
+    a.original.localeCompare(b.original, 'pt-BR', { sensitivity: 'base' })
+    || a.changed.localeCompare(b.changed, 'pt-BR', { sensitivity: 'base' })
+  ));
+}
+
+function changedTitleDisplayValue(value) {
+  return value === '' ? uiText('(sem título)') : value;
+}
+
+function createChangedTitlePreviewRow(entry) {
+  const row = document.createElement('div');
+  row.className = 'changed-title-preview-row';
+  const original = document.createElement('span');
+  original.textContent = changedTitleDisplayValue(entry.original);
+  original.title = original.textContent;
+  const arrow = document.createElement('span');
+  arrow.className = 'changed-title-arrow';
+  arrow.textContent = '→';
+  const changed = document.createElement('span');
+  changed.textContent = changedTitleDisplayValue(entry.changed);
+  changed.title = changed.textContent;
+  row.append(original, arrow, changed);
+  return row;
+}
+
+function renderChangedTitlesPanel() {
+  const panel = document.getElementById('changed-titles-panel');
+  const preview = document.getElementById('changed-titles-preview');
+  const count = document.getElementById('changed-titles-count');
+  if (!panel || !preview || !count) return;
+  const context = activeCollageMemoryContext || getCollageMemoryContext();
+  const entries = isTemporalCollageRendered()
+    ? []
+    : getChangedTitleEntries(normalizeHistoryType(context.type));
+  panel.classList.toggle('has-items', entries.length > 0);
+  count.textContent = entries.length ? `(${entries.length})` : '';
+  preview.replaceChildren(...entries.slice(0, 5).map(createChangedTitlePreviewRow));
+  if (entries.length > 5) {
+    const more = document.createElement('div');
+    more.className = 'changed-title-preview-more';
+    more.textContent = `+${entries.length - 5} ${uiText('título(s)')}`;
+    preview.appendChild(more);
+  }
+}
+
+async function restoreChangedTitleEntry(entry) {
+  entry.sources.filter(source => source.kind === 'rule').forEach(source => {
+    forgetGlobalTitleRuleByKey(source.itemKey || entry.itemKey, getHistoryContextForType(entry.type));
+  });
+
+  const removeMainOverride = value => {
+    const next = { ...(value || {}) };
+    delete next.main;
+    return Object.keys(next).some(key => next[key] !== undefined) ? next : null;
+  };
+  let memoryChanged = false;
+  entry.sources.filter(source => source.kind === 'memory').forEach(source => {
+    const memory = collageMemories[source.memorySignature];
+    if (!memory) return;
+    memory.texts = (memory.texts || []).flatMap(saved => {
+      if (saved?.key !== source.itemKey || String(saved?.value?.main ?? '') !== entry.changed) return [saved];
+      memoryChanged = true;
+      const nextValue = removeMainOverride(saved.value);
+      return nextValue ? [{ ...saved, value: nextValue }] : [];
+    });
+  });
+  if (memoryChanged) persistCollageMemories();
+
+  let currentChanged = false;
+  Object.entries(customTexts).forEach(([poolIndex, value]) => {
+    const poolIdx = Number(poolIndex);
+    const item = allFetchedItems[poolIdx];
+    if (!item || getBehaviorItemKey(item, entry.type) !== entry.itemKey) return;
+    if (String(value?.main ?? '') !== entry.changed) return;
+    const nextValue = removeMainOverride(value);
+    if (nextValue) customTexts[poolIdx] = nextValue;
+    else delete customTexts[poolIdx];
+    currentChanged = true;
+  });
+
+  if (currentChanged && currentItems.length) {
+    const { cols, rows } = getDrawGrid();
+    await drawCollage(currentItems, getDrawType(), cols, rows, headerLabelText, currentApiKey, getDrawAccentOverride());
+    scheduleDownloadRefresh();
+    captureCurrentCollageMemory();
+  } else {
+    renderChangedTitlesPanel();
+    if (historyModalKind === 'renamed') renderHistoryModal();
+  }
+  recordTimelineAction(`Título restaurado: ${entry.original || 'sem título'}.`);
+  triggerHapticFeedback('short');
+}
+
+function createChangedTitleListRow(entry) {
+  const row = document.createElement('div');
+  row.className = 'changed-title-list-row';
+  const flow = document.createElement('div');
+  flow.className = 'changed-title-flow';
+  const original = document.createElement('div');
+  original.className = 'changed-title-value';
+  original.textContent = changedTitleDisplayValue(entry.original);
+  const arrow = document.createElement('div');
+  arrow.className = 'changed-title-list-arrow';
+  arrow.textContent = '→';
+  const changed = document.createElement('div');
+  changed.className = 'changed-title-value changed';
+  changed.textContent = changedTitleDisplayValue(entry.changed);
+  flow.append(original, arrow, changed);
+
+  const restore = document.createElement('button');
+  restore.type = 'button';
+  restore.className = 'changed-title-restore';
+  restore.title = uiText('Restaurar título');
+  restore.setAttribute('aria-label', restore.title);
+  restore.appendChild(createUiIcon('undo'));
+  restore.addEventListener('click', async () => {
+    if (restore.disabled) return;
+    restore.disabled = true;
+    try { await restoreChangedTitleEntry(entry); }
+    finally { restore.disabled = false; }
+  });
+  row.append(flow, restore);
+  return row;
+}
+
 function getHistoryContextForType(type) {
   const base = historyModalBaseContext || activeCollageMemoryContext || getCollageMemoryContext();
   const normalizedType = normalizeHistoryType(type);
@@ -21042,16 +21490,34 @@ function renderHistoryPage(kind, indices, hasGlobalRules = false) {
 }
 
 const historyRuleSearchCache = new Map();
-let historySearchMergeSource = null;
+let historyModalListQuery = '';
+let historyRuleBuilderRequest = 0;
+const historyRuleBuilderState = { source: null, target: null };
 
-function resetHistoryRuleSearch() {
-  historySearchMergeSource = null;
+function resetHistoryRuleSearch({ clearFilter = true } = {}) {
+  historyRuleBuilderRequest++;
+  historyRuleBuilderState.source = null;
+  historyRuleBuilderState.target = null;
   const input = document.getElementById('history-list-search-input');
-  const results = document.getElementById('history-list-search-results');
   const status = document.getElementById('history-list-search-status');
-  if (input) input.value = '';
-  if (results) results.innerHTML = '';
+  if (clearFilter) {
+    historyModalListQuery = '';
+    if (input) input.value = '';
+  }
   if (status) status.textContent = '';
+  ['source', 'target'].forEach(side => {
+    const field = document.getElementById(`history-rule-${side}-input`);
+    const selected = document.getElementById(`history-rule-${side}-selected`);
+    const results = document.getElementById(`history-rule-${side}-results`);
+    if (field) field.value = '';
+    if (selected) selected.replaceChildren();
+    if (results) results.replaceChildren();
+  });
+  const builderStatus = document.getElementById('history-rule-builder-status');
+  if (builderStatus) {
+    builderStatus.textContent = '';
+    builderStatus.className = '';
+  }
 }
 
 function historySearchItemText(item, type) {
@@ -21105,49 +21571,11 @@ function attachHistorySearchThumb(host, item, type) {
   return thumb;
 }
 
-function setHistoryRuleSearchStatus(message = '') {
-  const status = document.getElementById('history-list-search-status');
+function setHistoryRuleBuilderStatus(message = '', tone = '') {
+  const status = document.getElementById('history-rule-builder-status');
   if (!status) return;
-  status.replaceChildren();
-  if (historyModalKind === 'merged' && historySearchMergeSource) {
-    const selected = document.createElement('div');
-    selected.className = 'history-search-selected';
-    attachHistorySearchThumb(selected, historySearchMergeSource, historyModalType);
-    const name = document.createElement('strong');
-    name.textContent = historySearchMergeSource.name || '?';
-    const metadata = document.createElement('span');
-    metadata.textContent = getHistorySearchMetadata(historySearchMergeSource, historyModalType);
-    const hint = document.createElement('small');
-    hint.textContent = message || uiText('Agora pesquise e escolha o destino.');
-    selected.append(name, metadata, hint);
-    status.appendChild(selected);
-    return;
-  }
   status.textContent = message;
-}
-
-function setHistoryMergeCompletedStatus(sourceItem, targetItem) {
-  const status = document.getElementById('history-list-search-status');
-  if (!status) return;
-  status.replaceChildren();
-  const summary = document.createElement('div');
-  summary.className = 'history-search-merge-summary';
-  [sourceItem, targetItem].forEach((item, index) => {
-    if (index) {
-      const arrow = document.createElement('div');
-      arrow.className = 'history-search-merge-arrow';
-      arrow.textContent = '→';
-      summary.appendChild(arrow);
-    }
-    const party = document.createElement('div');
-    party.className = 'history-search-merge-party';
-    attachHistorySearchThumb(party, item, historyModalType);
-    const name = document.createElement('strong');
-    name.textContent = item?.name || '?';
-    party.appendChild(name);
-    summary.appendChild(party);
-  });
-  status.appendChild(summary);
+  status.className = tone;
 }
 
 async function getHistoryRuleSearchCandidates() {
@@ -21185,97 +21613,217 @@ async function redrawAfterHistoryRule(context) {
   captureCurrentCollageMemory();
 }
 
-function renderHistoryRuleSearchResults(items) {
-  const results = document.getElementById('history-list-search-results');
+function renderHistoryRuleSelection(side) {
+  const item = historyRuleBuilderState[side];
+  const selected = document.getElementById(`history-rule-${side}-selected`);
+  const slot = document.getElementById(`history-rule-${side}-slot`);
+  if (!selected || !slot) return;
+  selected.replaceChildren();
+  slot.classList.toggle('has-selection', !!item);
+  if (!item) return;
+  attachHistorySearchThumb(selected, item, historyModalType);
+  const name = document.createElement('strong');
+  name.textContent = item.name || '?';
+  const metadata = document.createElement('span');
+  metadata.textContent = getHistorySearchMetadata(item, historyModalType);
+  const clear = document.createElement('button');
+  clear.type = 'button';
+  clear.textContent = '×';
+  clear.title = uiText('Limpar seleção');
+  clear.setAttribute('aria-label', clear.title);
+  clear.addEventListener('click', () => {
+    historyRuleBuilderState[side] = null;
+    const input = document.getElementById(`history-rule-${side}-input`);
+    const results = document.getElementById(`history-rule-${side}-results`);
+    if (input) input.value = '';
+    if (results) results.replaceChildren();
+    renderHistoryRuleBuilder();
+    input?.focus();
+  });
+  selected.append(name, metadata, clear);
+}
+
+function renderHistoryRuleBuilder() {
+  const builder = document.getElementById('history-rule-builder');
+  const sourceLabel = document.getElementById('history-rule-source-label');
+  const targetLabel = document.getElementById('history-rule-target-label');
+  const sourceInput = document.getElementById('history-rule-source-input');
+  const targetInput = document.getElementById('history-rule-target-input');
+  const targetInputRow = document.getElementById('history-rule-target-input-row');
+  const sourceSearch = document.getElementById('history-rule-source-search');
+  const targetSearch = document.getElementById('history-rule-target-search');
+  const apply = document.getElementById('history-rule-apply');
+  if (!builder || !historyModalKind) return;
+
+  const deleted = historyModalKind === 'deleted';
+  const renamed = historyModalKind === 'renamed';
+  builder.classList.toggle('single', deleted);
+  sourceLabel.textContent = uiText(deleted ? 'Item para excluir' : renamed ? 'Título original' : 'Origem');
+  targetLabel.textContent = uiText(renamed ? 'Novo título' : 'Destino');
+  sourceInput.placeholder = uiText('Pesquisar item...');
+  sourceSearch.title = uiText(deleted ? 'Pesquisar item' : 'Pesquisar origem');
+  sourceSearch.setAttribute('aria-label', sourceSearch.title);
+  targetInput.type = renamed ? 'text' : 'search';
+  targetInput.placeholder = uiText(renamed ? 'Digite o novo título...' : 'Pesquisar destino...');
+  targetInputRow.classList.toggle('title-entry', renamed);
+  targetSearch.hidden = renamed;
+  targetSearch.style.display = renamed ? 'none' : '';
+  targetSearch.title = uiText('Pesquisar destino');
+  targetSearch.setAttribute('aria-label', targetSearch.title);
+  document.getElementById('history-rule-target-selected').style.display = renamed ? 'none' : '';
+  document.getElementById('history-rule-target-results').style.display = renamed ? 'none' : '';
+  apply.textContent = uiText(deleted ? 'Excluir' : renamed ? 'Salvar título' : 'Mesclar');
+
+  ['source', 'target'].forEach(side => {
+    const button = document.getElementById(`history-rule-${side}-search`);
+    if (button && !button.firstChild) button.appendChild(createUiIcon('search'));
+  });
+  renderHistoryRuleSelection('source');
+  if (!renamed) renderHistoryRuleSelection('target');
+
+  const sourceReady = !!historyRuleBuilderState.source;
+  const targetReady = renamed
+    ? !!targetInput.value.trim()
+    : deleted || !!historyRuleBuilderState.target;
+  const distinct = deleted || renamed || !sourceReady || !historyRuleBuilderState.target
+    || getBehaviorItemKey(historyRuleBuilderState.source, historyModalType)
+      !== getBehaviorItemKey(historyRuleBuilderState.target, historyModalType);
+  apply.disabled = !(sourceReady && targetReady && distinct);
+}
+
+function renderHistoryRuleBuilderResults(side, items) {
+  const results = document.getElementById(`history-rule-${side}-results`);
   if (!results) return;
-  results.innerHTML = '';
-  items.slice(0, 30).forEach(item => {
-    const card = document.createElement('div');
-    card.className = 'history-search-result';
-    attachHistorySearchThumb(card, item, historyModalType);
+  results.replaceChildren();
+  items.slice(0, 20).forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'history-rule-result';
+    attachHistorySearchThumb(row, item, historyModalType);
     const name = document.createElement('strong');
     name.textContent = item.name || '?';
     const metadata = document.createElement('span');
     metadata.textContent = getHistorySearchMetadata(item, historyModalType);
-    const action = document.createElement('button');
-    action.type = 'button';
-    action.textContent = uiText(historyModalKind === 'deleted'
-      ? 'Excluir'
-      : historySearchMergeSource ? 'Mesclar' : 'Origem');
-    action.addEventListener('click', async () => {
-      if (action.disabled) return;
-      action.disabled = true;
-      const context = getHistoryContextForType(historyModalType);
-      if (historyModalKind === 'deleted') {
-        rememberGlobalDeletion(item, context);
-        await redrawAfterHistoryRule(context);
-        setHistoryRuleSearchStatus(uiText('Item adicionado à lista de excluídos.'));
-        const deletedKey = getBehaviorItemKey(item, context.type);
-        renderHistoryRuleSearchResults(items.filter(candidate => (
-          getBehaviorItemKey(candidate, context.type) !== deletedKey
-        )));
-        return;
+    const select = document.createElement('button');
+    select.type = 'button';
+    select.textContent = uiText('Selecionar');
+    select.addEventListener('click', () => {
+      historyRuleBuilderState[side] = item;
+      const input = document.getElementById(`history-rule-${side}-input`);
+      if (input) input.value = item.name || '';
+      results.replaceChildren();
+      renderHistoryRuleBuilder();
+      setHistoryRuleBuilderStatus(uiText('Item selecionado.'));
+      if (historyModalKind === 'renamed' && side === 'source') {
+        document.getElementById('history-rule-target-input')?.focus();
       }
-      if (!historySearchMergeSource) {
-        historySearchMergeSource = item;
-        const input = document.getElementById('history-list-search-input');
-        const currentResults = document.getElementById('history-list-search-results');
-        setHistoryRuleSearchStatus(uiText('Agora pesquise e escolha o destino.'));
-        if (input) input.value = '';
-        if (currentResults) currentResults.innerHTML = '';
-        input?.focus();
-        return;
-      }
-      if (getBehaviorItemKey(historySearchMergeSource, context.type) === getBehaviorItemKey(item, context.type)) {
-        action.disabled = false;
-        return;
-      }
-      const completedSource = historySearchMergeSource;
-      rememberGlobalMerge(completedSource, item, context);
-      historySearchMergeSource = null;
-      await redrawAfterHistoryRule(context);
-      setHistoryMergeCompletedStatus(completedSource, item);
-      renderHistoryRuleSearchResults(items);
     });
-    card.append(name, metadata, action);
-    results.appendChild(card);
+    row.append(name, metadata, select);
+    results.appendChild(row);
   });
 }
 
-async function runHistoryRuleSearch() {
-  if (!historyModalKind) return;
-  const input = document.getElementById('history-list-search-input');
-  const button = document.getElementById('history-list-search-button');
-  const query = normalizeSearchText(input.value);
+async function runHistoryRuleBuilderSearch(side) {
+  if (!historyModalKind || (side === 'target' && historyModalKind !== 'merged')) return;
+  const input = document.getElementById(`history-rule-${side}-input`);
+  const button = document.getElementById(`history-rule-${side}-search`);
+  const query = normalizeSearchText(input?.value || '');
   if (!query) {
-    setHistoryRuleSearchStatus(uiText('Digite um nome para pesquisar.'));
+    setHistoryRuleBuilderStatus(uiText('Digite um nome para pesquisar.'), 'error');
     return;
   }
+  const request = ++historyRuleBuilderRequest;
   button.disabled = true;
-  setHistoryRuleSearchStatus(uiText('Pesquisando...'));
+  setHistoryRuleBuilderStatus(uiText('Pesquisando...'));
   try {
     const candidates = await getHistoryRuleSearchCandidates();
-    const matches = candidates.filter(item => normalizeSearchText(historySearchItemText(item, historyModalType)).includes(query));
-    renderHistoryRuleSearchResults(matches);
-    setHistoryRuleSearchStatus(matches.length
+    if (request !== historyRuleBuilderRequest) return;
+    const opposite = historyRuleBuilderState[side === 'source' ? 'target' : 'source'];
+    const oppositeKey = opposite ? getBehaviorItemKey(opposite, historyModalType) : '';
+    const matches = candidates.filter(item => (
+      getBehaviorItemKey(item, historyModalType) !== oppositeKey
+      && normalizeSearchText(historySearchItemText(item, historyModalType)).includes(query)
+    ));
+    renderHistoryRuleBuilderResults(side, matches);
+    setHistoryRuleBuilderStatus(matches.length
       ? `${matches.length} ${uiText('resultado(s) encontrado(s).')}`
-      : uiText('Nenhum resultado encontrado.'));
+      : uiText('Nenhum resultado encontrado.'), matches.length ? '' : 'error');
   } catch (error) {
-    setHistoryRuleSearchStatus(error?.message || uiText('Não foi possível pesquisar.'));
+    if (request === historyRuleBuilderRequest) {
+      setHistoryRuleBuilderStatus(error?.message || uiText('Não foi possível pesquisar.'), 'error');
+    }
   } finally {
     button.disabled = false;
   }
+}
+
+async function applyHistoryRuleBuilder() {
+  if (!historyModalKind) return;
+  const apply = document.getElementById('history-rule-apply');
+  const source = historyRuleBuilderState.source;
+  const target = historyRuleBuilderState.target;
+  const context = getHistoryContextForType(historyModalType);
+  const newTitle = document.getElementById('history-rule-target-input')?.value.trim() || '';
+  if (!source) {
+    setHistoryRuleBuilderStatus(uiText('Selecione um item para continuar.'), 'error');
+    return;
+  }
+  if (historyModalKind === 'merged' && !target) {
+    setHistoryRuleBuilderStatus(uiText('Selecione o destino da mesclagem.'), 'error');
+    return;
+  }
+  if (historyModalKind === 'renamed' && (!newTitle || newTitle === String(source.name || ''))) {
+    setHistoryRuleBuilderStatus(uiText('Digite um novo título diferente do original.'), 'error');
+    return;
+  }
+  apply.disabled = true;
+  try {
+    let successMessage = '';
+    if (historyModalKind === 'deleted') {
+      rememberGlobalDeletion(source, context);
+      successMessage = uiText('Item adicionado à lista de excluídos.');
+    } else if (historyModalKind === 'merged') {
+      rememberGlobalMerge(source, target, context);
+      successMessage = uiText('Mesclagem salva.');
+    } else {
+      rememberGlobalTitleChange(source, newTitle, context);
+      successMessage = uiText('Título alterado com sucesso.');
+    }
+    await redrawAfterHistoryRule(context);
+    resetHistoryRuleSearch({ clearFilter: false });
+    renderHistoryRuleBuilder();
+    renderHistoryModal();
+    setHistoryRuleBuilderStatus(successMessage, 'success');
+  } catch (error) {
+    setHistoryRuleBuilderStatus(error?.message || uiText('Não foi possível salvar a alteração.'), 'error');
+    renderHistoryRuleBuilder();
+  }
+}
+
+function getHistorySavedSearchText(saved, kind, type) {
+  if (kind === 'renamed') return [saved.original, saved.changed].filter(Boolean).join(' ');
+  const source = kind === 'merged' ? saved?.source?.item : saved?.item;
+  const target = kind === 'merged' ? saved?.target?.item : null;
+  return [historySearchItemText(source, type), historySearchItemText(target, type)].filter(Boolean).join(' ');
 }
 
 function renderHistoryModal() {
   if (!historyModalKind) return;
   const grid = document.getElementById('history-list-grid');
   grid.innerHTML = '';
+  const renamed = historyModalKind === 'renamed';
+  grid.classList.toggle('changed-titles-list', renamed);
   const currentContext = historyModalBaseContext || activeCollageMemoryContext || getCollageMemoryContext();
   const context = getHistoryContextForType(historyModalType);
   const allPeriods = historyModalUsesAllPeriods();
   if (allPeriods) historyModalFilter = 'all';
-  if (historyModalFilter === 'all') {
+  const savedItems = [];
+  if (renamed) {
+    getChangedTitleEntries(historyModalType, { allPeriods: historyModalFilter === 'all' })
+      .forEach(entry => savedItems.push({
+        searchText: getHistorySavedSearchText(entry, 'renamed', historyModalType),
+        render: () => createChangedTitleListRow(entry),
+      }));
+  } else if (historyModalFilter === 'all') {
     const rules = getCombinedBehaviorRules(context);
     const entries = Array.from(historyModalKind === 'merged' ? rules.merges.values() : rules.deleted.values())
       .sort((a, b) => {
@@ -21284,33 +21832,56 @@ function renderHistoryModal() {
         return String(itemA?.name || '').localeCompare(String(itemB?.name || ''), 'pt-BR', { sensitivity: 'base' });
       });
     entries.forEach(saved => {
-      const card = createBehaviorHistoryCard(saved, historyModalKind, context.type, context);
-      if (card) grid.appendChild(card);
+      savedItems.push({
+        searchText: getHistorySavedSearchText(saved, historyModalKind, historyModalType),
+        render: () => createBehaviorHistoryCard(saved, historyModalKind, context.type, context),
+      });
     });
   } else {
     if (normalizeHistoryType(currentContext.type) === historyModalType) {
       getHistoryIndices(historyModalKind).forEach(poolIdx => {
-        const card = createHistoryCard(poolIdx, historyModalKind);
-        if (card) grid.appendChild(card);
+        const source = allFetchedItems[poolIdx];
+        const target = historyModalKind === 'merged' ? allFetchedItems[mergeRecords[poolIdx]?.targetPoolIdx] : null;
+        savedItems.push({
+          searchText: [historySearchItemText(source, historyModalType), historySearchItemText(target, historyModalType)].filter(Boolean).join(' '),
+          render: () => createHistoryCard(poolIdx, historyModalKind),
+        });
       });
     } else {
       getSavedPeriodHistory(historyModalKind, historyModalType).forEach(saved => {
-        const card = createBehaviorHistoryCard(saved, historyModalKind, context.type, context);
-        if (card) grid.appendChild(card);
+        savedItems.push({
+          searchText: getHistorySavedSearchText(saved, historyModalKind, historyModalType),
+          render: () => createBehaviorHistoryCard(saved, historyModalKind, context.type, context),
+        });
       });
     }
   }
+  const visibleItems = historyModalListQuery
+    ? savedItems.filter(entry => normalizeSearchText(entry.searchText).includes(historyModalListQuery))
+    : savedItems;
+  visibleItems.forEach(entry => {
+    const element = entry.render();
+    if (element) grid.appendChild(element);
+  });
   if (!grid.children.length) {
     const empty = document.createElement('div');
     empty.style.cssText = 'grid-column:1/-1;padding:28px 12px;text-align:center;color:var(--muted);font-size:12px;';
-    empty.textContent = uiText(historyModalFilter === 'all'
-      ? 'Nenhuma regra global salva.'
-      : 'Nenhum item deste período.');
+    empty.textContent = historyModalListQuery
+      ? uiText('Nenhum item salvo corresponde à pesquisa.')
+      : uiText(renamed
+        ? historyModalFilter === 'all'
+          ? 'Nenhum título alterado salvo.'
+          : 'Nenhum título foi alterado neste período.'
+        : historyModalFilter === 'all'
+          ? 'Nenhuma regra global salva.'
+          : 'Nenhum item deste período.');
     grid.appendChild(empty);
   }
-  document.getElementById('history-list-title').textContent = uiText(historyModalKind === 'merged'
-    ? 'Listagem de mesclados'
-    : 'Listagem de excluídos');
+  document.getElementById('history-list-title').textContent = uiText(renamed
+    ? 'Listagem de títulos alterados'
+    : historyModalKind === 'merged'
+      ? 'Listagem de mesclados'
+      : 'Listagem de excluídos');
   document.querySelectorAll('#history-list-filter button').forEach(button => {
     button.classList.toggle('active', button.dataset.filter === historyModalFilter);
   });
@@ -21321,9 +21892,19 @@ function renderHistoryModal() {
   periodFilter.hidden = allPeriods;
   periodFilter.style.display = allPeriods ? 'none' : '';
   const searchInput = document.getElementById('history-list-search-input');
-  searchInput.placeholder = uiText(historyModalKind === 'merged'
-    ? historySearchMergeSource ? 'Pesquisar destino para mesclar...' : 'Pesquisar origem para mesclar...'
-    : 'Pesquisar para excluir...');
+  searchInput.placeholder = uiText(renamed
+    ? 'Pesquisar nos títulos alterados...'
+    : historyModalKind === 'merged'
+      ? 'Pesquisar nos itens mesclados...'
+      : 'Pesquisar nos itens excluídos...');
+  document.getElementById('history-list-search-button').textContent = uiText('Filtrar');
+  const searchStatus = document.getElementById('history-list-search-status');
+  searchStatus.textContent = historyModalListQuery
+    ? uiText(savedItems.length === 1
+      ? `Mostrando ${visibleItems.length} de ${savedItems.length} item salvo.`
+      : `Mostrando ${visibleItems.length} de ${savedItems.length} itens salvos.`)
+    : '';
+  renderHistoryRuleBuilder();
 }
 
 function openHistoryModal(kind, options = {}) {
@@ -21337,6 +21918,7 @@ function openHistoryModal(kind, options = {}) {
   };
   historyModalType = normalizeHistoryType(context.type);
   historyModalFilter = historyModalSource === 'menu' || context.period === 'overall' ? 'all' : 'period';
+  resetHistoryRuleSearch();
   renderHistoryModal();
   if (historyModalKind) document.getElementById('history-list-overlay').style.display = 'flex';
 }
@@ -21348,12 +21930,17 @@ function closeHistoryModal() {
   const periodFilter = document.getElementById('history-list-filter');
   periodFilter.hidden = false;
   periodFilter.style.display = '';
+  const searchAction = document.getElementById('history-list-action');
+  searchAction.hidden = false;
+  searchAction.style.display = '';
+  document.getElementById('history-list-grid').classList.remove('changed-titles-list');
   document.body.classList.remove('mobile-menu-all-history');
   document.getElementById('history-list-overlay').style.display = 'none';
 }
 
 function renderDeletedPanel() {
   const historyPanels = document.getElementById('history-panels');
+  renderChangedTitlesPanel();
   if (isTemporalCollageRendered()) {
     historyPanels.classList.remove('has-items');
     if (historyModalKind) closeHistoryModal();
@@ -21389,6 +21976,7 @@ document.getElementById('deleted-prev').addEventListener('click', () => { delete
 document.getElementById('deleted-next').addEventListener('click', () => { deletedHistoryPage++; renderDeletedPanel(); });
 document.getElementById('merged-prev').addEventListener('click', () => { mergedHistoryPage--; renderDeletedPanel(); });
 document.getElementById('merged-next').addEventListener('click', () => { mergedHistoryPage++; renderDeletedPanel(); });
+document.getElementById('open-changed-titles-list').addEventListener('click', () => openHistoryModal('renamed'));
 document.getElementById('open-deleted-list').addEventListener('click', () => openHistoryModal('deleted'));
 document.getElementById('open-merged-list').addEventListener('click', () => openHistoryModal('merged'));
 document.getElementById('history-list-close').addEventListener('click', closeHistoryModal);
@@ -21396,6 +21984,7 @@ document.getElementById('history-list-filter').addEventListener('click', event =
   const button = event.target.closest('button[data-filter]');
   if (!button || !historyModalKind) return;
   historyModalFilter = button.dataset.filter === 'all' ? 'all' : 'period';
+  resetHistoryRuleSearch({ clearFilter: false });
   renderHistoryModal();
 });
 document.getElementById('history-list-type-filter').addEventListener('click', event => {
@@ -21405,12 +21994,41 @@ document.getElementById('history-list-type-filter').addEventListener('click', ev
   resetHistoryRuleSearch();
   renderHistoryModal();
 });
-document.getElementById('history-list-search-button').addEventListener('click', runHistoryRuleSearch);
+function applyHistoryListFilter() {
+  if (!historyModalKind) return;
+  historyModalListQuery = normalizeSearchText(document.getElementById('history-list-search-input')?.value || '');
+  renderHistoryModal();
+}
+document.getElementById('history-list-search-button').addEventListener('click', applyHistoryListFilter);
+document.getElementById('history-list-search-input').addEventListener('input', applyHistoryListFilter);
 document.getElementById('history-list-search-input').addEventListener('keydown', event => {
-  if (event.key === 'Enter') { event.preventDefault(); runHistoryRuleSearch(); }
+  if (event.key === 'Enter') { event.preventDefault(); applyHistoryListFilter(); }
 });
+['source', 'target'].forEach(side => {
+  document.getElementById(`history-rule-${side}-search`).addEventListener('click', () => runHistoryRuleBuilderSearch(side));
+  document.getElementById(`history-rule-${side}-input`).addEventListener('keydown', event => {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    if (side === 'target' && historyModalKind === 'renamed') applyHistoryRuleBuilder();
+    else runHistoryRuleBuilderSearch(side);
+  });
+  document.getElementById(`history-rule-${side}-input`).addEventListener('input', event => {
+    if (side === 'target' && historyModalKind === 'renamed') {
+      renderHistoryRuleBuilder();
+      return;
+    }
+    const selected = historyRuleBuilderState[side];
+    if (selected && normalizeSearchText(event.target.value) !== normalizeSearchText(selected.name || '')) {
+      historyRuleBuilderState[side] = null;
+      document.getElementById(`history-rule-${side}-selected`).replaceChildren();
+      renderHistoryRuleBuilder();
+    }
+  });
+});
+document.getElementById('history-rule-apply').addEventListener('click', applyHistoryRuleBuilder);
 document.getElementById('history-list-overlay').addEventListener('click', e => { if (e.target.id === 'history-list-overlay') closeHistoryModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && historyModalKind) closeHistoryModal(); });
+document.addEventListener('collager:language-changed', () => { if (historyModalKind) renderHistoryModal(); });
 
 // Executa a exclusão em si: congela a imagem (pro painel de Excluídos),
 // marca o poolIdx como excluído, limpa overrides de imagem/texto e recalcula
@@ -25085,13 +25703,18 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
     function openAllHistoryList(kind) {
       closeMobileDrawer();
       body.classList.add('mobile-menu-all-history');
-      openHistoryModal(kind === 'merged' ? 'merged' : 'deleted', {
+      openHistoryModal(['renamed', 'merged'].includes(kind) ? kind : 'deleted', {
         allowGlobalHistory: true,
         source: 'menu',
       });
     }
+    document.getElementById('mobile-changed-titles-list-btn').addEventListener('click', () => openAllHistoryList('renamed'));
     document.getElementById('mobile-deleted-list-btn').addEventListener('click', () => openAllHistoryList('deleted'));
     document.getElementById('mobile-merged-list-btn').addEventListener('click', () => openAllHistoryList('merged'));
+    document.getElementById('desktop-changed-titles-list-btn')?.addEventListener('click', () => {
+      closeDesktopMenu();
+      openAllHistoryList('renamed');
+    });
     document.getElementById('desktop-deleted-list-btn')?.addEventListener('click', () => {
       closeDesktopMenu();
       openAllHistoryList('deleted');
