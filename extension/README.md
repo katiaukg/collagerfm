@@ -34,6 +34,15 @@ de trocar automaticamente a aba atual.
 Depois de atualizar os arquivos desta pasta, recarregue a extensao na pagina de
 extensoes do navegador e recarregue o collager.fm.
 
+Para gerar os pacotes de publicacao do Chrome e do Firefox, execute:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\build-release.ps1
+```
+
+Os ZIPs prontos ficam em `dist`. Consulte `PUBLISHING.md` para o envio inicial
+e para futuras atualizacoes.
+
 ## Chrome e Edge
 
 1. Abra `chrome://extensions` ou `edge://extensions`.

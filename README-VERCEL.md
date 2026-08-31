@@ -14,7 +14,7 @@ O site e a Function do Last.fm podem ser publicados juntos no mesmo projeto Verc
 
 O endereco `/` abre `lastfm-collage.html`, e o navegador usa automaticamente a Function `/api/lastfm`.
 
-O Shared Secret nao e usado nas consultas de leitura, mas e necessario para autorizar edicoes e exclusoes de scrobbles. Ele permanece somente no servidor.
+O Shared Secret nao e usado nas consultas de leitura, mas e necessario para autorizar curtidas, remocoes de curtidas, novos scrobbles e atualizacoes de tocando agora. Ele permanece somente no servidor. Edicao e exclusao de scrobbles e gerenciamento de obsessoes continuam sendo feitos pela extensao, pois nao existem na API publica do Last.fm.
 
 ## Protecao da chave do Last.fm
 

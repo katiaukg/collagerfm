@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en-US">
 <head>
 <meta charset="UTF-8">
@@ -661,7 +661,7 @@
   }
   .qbtn:hover { border-color: #555; color: var(--text); }
   .qbtn.active { border-color: #aaa; color: var(--text); }
-  
+
   /* ── RED SLASH TOGGLE (Período e Modo de Imagem) ── */
   .red-slash-toggle {
     display: inline-flex; align-items: center; gap: 0;
@@ -1999,6 +1999,73 @@
   button, input, select, label { touch-action: manipulation; }
   img, canvas, svg { max-width: 100%; }
 
+  .tile-config-summary {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    min-width: 0;
+  }
+  .tile-config-cover {
+    position: relative;
+    width: 7rem;
+    aspect-ratio: 1;
+    align-self: center;
+    overflow: hidden;
+    flex: 0 0 auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface2, #151515);
+    cursor: pointer;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .tile-config-cover-column {
+    width: 7rem;
+    display: flex;
+    flex-direction: column;
+    align-self: center;
+    gap: .375rem;
+  }
+  .tile-config-cover:hover,
+  .tile-config-cover:focus-within {
+    border-color: #ffffff66;
+    box-shadow: 0 0 0 2px #ffffff12;
+  }
+  .tile-config-cover::before {
+    content: '\266a';
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: #ffffff2e;
+    font: 700 2rem/1 Inter, Arial, sans-serif;
+  }
+  .tile-config-cover.has-image::before { display: none; }
+  .tile-config-cover-media {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+  .tile-config-cover img {
+    position: relative;
+    z-index: 1;
+    display: none;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+  }
+  .tile-config-cover.has-image img { display: block; }
+  .tile-config-summary #tile-text-fields { min-width: 0; }
+  .tile-config-summary #tile-text-fields .field,
+  .tile-config-summary #tile-text-fields input { min-width: 0; }
+  #text-edit-overlay.image-drag-active {
+    background: #000000c7 !important;
+  }
+  #text-edit-overlay.image-drag-active #text-edit-modal-box {
+    border-color: #ffffff8a !important;
+    box-shadow: 0 0 0 3px #ffffff14, 0 18px 50px #000b;
+  }
+
   /* Celular: controles em cima e preview abaixo, sem largura fixa. */
   .app {
     display: flex;
@@ -2270,7 +2337,33 @@
     #history-list-modal,
     #fanart-picker-modal { width: min(92vw, 57.5rem) !important; }
     #status-console-modal { width: min(92vw, 48.75rem) !important; height: min(42.5rem, 82dvh); }
-    #text-edit-modal-box { width: min(24rem, 92vw) !important; }
+    #text-edit-modal-box { width: min(27rem, 92vw) !important; }
+    .tile-config-summary {
+      display: grid;
+      grid-template-columns: 8.75rem minmax(0, 1fr);
+      align-items: stretch;
+      gap: .875rem;
+    }
+    .tile-config-cover {
+      width: 8.75rem;
+      align-self: stretch;
+    }
+    .tile-config-cover-column {
+      width: 8.75rem;
+      align-self: start;
+    }
+    .tile-config-summary #tile-text-fields {
+      height: 8.75rem;
+      justify-content: space-between;
+      gap: .375rem !important;
+    }
+    .tile-config-summary #tile-text-fields .field { gap: .2rem !important; }
+    .tile-config-summary #tile-text-fields input {
+      height: 1.75rem;
+      min-height: 1.75rem;
+      padding-block: .25rem;
+    }
+    .tile-config-summary #tile-text-fields .section-label { line-height: 1; }
     .compact-dialog { width: min(24.375rem, 92vw) !important; }
     #history-list-grid,
     #fanart-picker-grid { grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); }
@@ -3746,6 +3839,9 @@
           <button class="new-sub-btn active" id="specific-sub-albums" style="flex:1;text-align:center;"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="2"/></svg>ÁLBUNS</button>
           <button class="new-sub-btn" id="specific-sub-tracks" style="flex:1;text-align:center;"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>FAIXAS</button>
         </div>
+      </div>
+      <div style="margin-top:10px;">
+        <span class="section-label" style="display:block;margin-bottom:6px;">Tipo de collage - editor</span>
         <div class="type-special-row">
           <button class="type-btn" data-type="recent" title="Os scrobbles mais recentes da conta">
             <span class="type-btn-label"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>RECENTES</span>
@@ -4748,8 +4844,8 @@
         <div class="specific-results" id="track-action-search-results"></div>
       </div>
     </div>
-	
-	<div class="divider"></div>
+
+    <div class="divider"></div>
 
     <!-- Títulos: linhas, corte, fonte automática -->
     <div id="title-text-options-section">
@@ -4786,14 +4882,14 @@
         <div>
           <span class="section-label" style="margin-bottom:5px;display:block;">Modo de corte</span>
           <div class="red-slash-toggle" id="cut-mode-wrap" style="align-items: stretch;">
-            
+
             <button class="cut-opt active" data-mode="ellipsis" style="display:flex; flex-direction:column; justify-content:center; align-items:center; padding:8px 4px; line-height:1.2;">
               <span style="font-size:12px;">Reticências</span>
               <span id="cut-example-ellipsis" style="font-size:9px;font-weight:400;opacity:0.75;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:clip;">Never Gonna Give...</span>
             </button>
-            
+
             <span class="slash-sep" style="display:flex; align-items:center;">/</span>
-            
+
             <button class="cut-opt" data-mode="hard" style="display:flex; flex-direction:column; justify-content:center; align-items:center; padding:8px 4px; line-height:1.2;">
               <span style="font-size:12px;">Corte seco</span>
               <span id="cut-example-hard" style="font-size:9px;font-weight:400;opacity:0.75;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:clip;">Never Gonna Give Yo</span>
@@ -5677,32 +5773,34 @@
       <button type="button" id="edit-text-close" aria-label="Fechar configurações do quadro" title="Fechar" style="width:30px;height:30px;display:grid;place-items:center;padding:0;border:1px solid var(--border);border-radius:6px;background:var(--surface2,#1a1a1a);color:var(--muted);font:700 17px/1 Inter,Arial,sans-serif;cursor:pointer;">×</button>
     </div>
 
-    <div id="tile-text-fields" style="display:flex;flex-direction:column;gap:14px;">
-      <div class="field" style="display:flex;flex-direction:column;gap:6px;" id="edit-text-main-wrap">
-        <span class="section-label" id="edit-text-main-label" style="margin-bottom:0;">Faixa</span>
-        <input type="text" id="edit-text-main" placeholder="nome da música/artista/álbum...">
+    <div class="tile-config-summary">
+      <div class="tile-config-cover-column">
+        <label id="tile-config-cover" class="tile-config-cover" aria-label="Escolher imagem para o quadro" title="Clique para escolher uma imagem">
+          <span id="tile-config-cover-media" class="tile-config-cover-media" aria-hidden="true"></span>
+          <input type="file" id="modal-image-input" accept="image/*" style="display:none;">
+        </label>
+        <button type="button" id="modal-paste-btn" style="width:100%;padding:7px 9px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--border);border-radius:7px;background:var(--surface2,#1a1a1a);color:var(--muted);font-family:inherit;font-size:12px;cursor:pointer;" title="Colar imagem (Ctrl+V)"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>Colar</button>
       </div>
 
-      <div class="field" style="display:none;flex-direction:column;gap:6px;" id="edit-text-album-wrap">
-        <span class="section-label" style="margin-bottom:0;">Álbum</span>
-        <input type="text" id="edit-text-album" placeholder="nome do álbum...">
-      </div>
+      <div id="tile-text-fields" style="display:flex;flex-direction:column;gap:14px;">
+        <div class="field" style="display:flex;flex-direction:column;gap:6px;" id="edit-text-main-wrap">
+          <span class="section-label" id="edit-text-main-label" style="margin-bottom:0;">Faixa</span>
+          <input type="text" id="edit-text-main" placeholder="nome da música">
+        </div>
 
-      <div class="field" style="display:flex;flex-direction:column;gap:6px;" id="edit-text-sub-wrap">
-        <span class="section-label" style="margin-bottom:0;">Artista</span>
-        <input type="text" id="edit-text-sub" placeholder="nome do artista...">
+        <div class="field" style="display:none;flex-direction:column;gap:6px;" id="edit-text-album-wrap">
+          <span class="section-label" style="margin-bottom:0;">Álbum</span>
+          <input type="text" id="edit-text-album" placeholder="nome do álbum...">
+        </div>
+
+        <div class="field" style="display:flex;flex-direction:column;gap:6px;" id="edit-text-sub-wrap">
+          <span class="section-label" style="margin-bottom:0;">Artista</span>
+          <input type="text" id="edit-text-sub" placeholder="nome do artista...">
+        </div>
       </div>
     </div>
 
     <div id="tile-image-section" style="display:flex;flex-direction:column;gap:6px;">
-      <span class="section-label" style="margin-bottom:0;">Inserir imagem</span>
-      <div style="display:flex;gap:6px;">
-        <label style="flex:1;display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface2,#1a1a1a);">
-          <span class="icon-text" style="font-size:13px;color:var(--muted);"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 14h12l3 3-3 3H6a3 3 0 0 1 0-6Z"/><path d="M3 17V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v6"/></svg>Escolher imagem...</span>
-          <input type="file" id="modal-image-input" accept="image/*" style="display:none;">
-        </label>
-        <button type="button" id="modal-paste-btn" style="flex:0 0 auto;padding:8px 12px;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:8px;background:var(--surface2,#1a1a1a);color:var(--muted);font-family:inherit;font-size:13px;cursor:pointer;" title="Colar imagem (Ctrl+V)"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>Colar</button>
-      </div>
       <div id="mobile-paste-target" contenteditable="true" role="textbox" aria-label="Cole a imagem copiada aqui" data-placeholder="Abra a área de transferência do teclado e toque na imagem copiada." hidden style="min-height:42px;padding:10px;border:1px dashed #555;border-radius:8px;background:#151515;color:var(--muted);font-size:11px;line-height:1.35;outline:none;"></div>
       <div id="paste-hint" style="font-size:10px;color:var(--muted);line-height:1.4;">Arraste, escolha ou cole uma imagem. Com Pasta local ativa, ela será salva na pasta; fora dela, permanecerá somente nesta sessão.</div>
       <button type="button" id="fanart-picker-btn" style="display:none;width:100%;padding:9px 10px;border:1px solid #ef444466;border-radius:8px;background:#ef444410;color:#ff8b8b;font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;">LISTAGEM DA FANART.TV</button>
@@ -5718,7 +5816,7 @@
     </div>
     <div id="recent-metadata-actions" style="display:none;flex-direction:column;gap:10px;padding:11px;border:1px solid #22c55e44;border-radius:8px;background:#22c55e09;">
       <div style="display:flex;align-items:center;gap:8px;">
-        <button type="button" id="recent-track-love" class="extension-dependent-action" style="flex:1;padding:10px;border:1px solid #f89bad88;border-radius:8px;background:#f89bad16;color:#ffc1ce;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">CURTIR FAIXA</button>
+        <button type="button" id="recent-track-love" style="flex:1;padding:10px;border:1px solid #f89bad88;border-radius:8px;background:#f89bad16;color:#ffc1ce;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">CURTIR FAIXA</button>
         <button type="button" id="recent-track-obsession" class="extension-dependent-action" style="flex:1;padding:10px;border:1px solid #c281ee88;border-radius:8px;background:#c281ee18;color:#deb8fa;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">TORNAR OBSESSÃO</button>
       </div>
       <button type="button" id="recent-metadata-save" class="extension-dependent-action" style="width:100%;padding:10px;border:1px solid #22c55e88;border-radius:8px;background:#123d24;color:#8af0ad;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">SALVAR</button>
@@ -5751,13 +5849,25 @@
     </div>
     <div id="track-obsession-actions" style="display:none;flex-direction:column;gap:8px;padding:11px;border:1px solid #c281ee55;border-radius:8px;background:#c281ee0d;">
       <div style="display:flex;align-items:center;gap:8px;">
-        <button type="button" id="edit-track-love" class="extension-dependent-action" style="flex:1;padding:10px;border:1px solid #f89bad88;border-radius:8px;background:#f89bad16;color:#ffc1ce;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">CURTIR FAIXA</button>
+        <button type="button" id="edit-track-love" style="flex:1;padding:10px;border:1px solid #f89bad88;border-radius:8px;background:#f89bad16;color:#ffc1ce;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">CURTIR FAIXA</button>
         <button type="button" id="edit-track-obsession" class="extension-dependent-action" style="flex:1;padding:10px;border:1px solid #c281ee88;border-radius:8px;background:#c281ee18;color:#deb8fa;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">TORNAR OBSESSÃO</button>
       </div>
       <div id="track-obsession-status" aria-live="polite" style="display:none;color:var(--muted);font-size:10.5px;line-height:1.4;"></div>
     </div>
+    <div id="lastfm-official-track-actions" style="display:none;flex-direction:column;gap:8px;padding:11px;border:1px solid #d5100755;border-radius:8px;background:#d510070b;">
+      <span class="section-label" style="margin-bottom:0;">Atividade no Last.fm</span>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button type="button" id="edit-track-scrobble" style="min-width:0;padding:9px 8px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid #d5100788;border-radius:8px;background:#d5100718;color:#ff8a84;font-family:inherit;font-size:10.5px;font-weight:800;cursor:pointer;line-height:1.2;">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg><span>ADICIONAR SCROBBLE</span>
+        </button>
+        <button type="button" id="edit-track-now-playing" style="min-width:0;padding:9px 8px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid #5ca8ff88;border-radius:8px;background:#5ca8ff14;color:#8ec5ff;font-family:inherit;font-size:10.5px;font-weight:800;cursor:pointer;line-height:1.2;">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7Z"/></svg><span>TOCANDO AGORA</span>
+        </button>
+      </div>
+      <div id="lastfm-official-track-status" aria-live="polite" style="display:none;color:var(--muted);font-size:10.5px;line-height:1.4;"></div>
+    </div>
     <div id="temporal-profile-access" style="display:none;flex-direction:column;gap:7px;padding:11px;border:1px solid #d5100744;border-radius:8px;background:#d5100708;">
-      <button type="button" id="recent-lastfm-authorize" class="extension-dependent-action" style="display:none;width:100%;padding:9px;border:1px solid #d5100788;border-radius:8px;background:#d5100718;color:#ff8a84;font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;">AUTORIZAR LAST.FM</button>
+      <button type="button" id="recent-lastfm-authorize" style="display:none;width:100%;padding:9px;border:1px solid #d5100788;border-radius:8px;background:#d5100718;color:#ff8a84;font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;">AUTORIZAR LAST.FM</button>
       <a id="recent-extension-download" href="https://github.com/katiaukg/collagerfm/tree/main/extension" target="_blank" rel="noopener" style="display:none;width:100%;box-sizing:border-box;padding:9px;border:1px solid #ffb86b88;border-radius:8px;background:#ffb86b12;color:#ffb86b;font-family:inherit;font-size:11px;font-weight:800;text-align:center;text-decoration:none;">BAIXAR EXTENSÃO</a>
       <div id="recent-extension-status" aria-live="polite" style="color:#ffb86b;font-size:10.5px;line-height:1.4;">Verificando extensão...</div>
     </div>
@@ -5767,15 +5877,15 @@
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
         ABRIR NO LAST.FM ESSA OBSESSÃO
       </button>
-      <button type="button" id="edit-lastfm-link" style="width:100%;padding:9px 10px;display:flex;align-items:center;justify-content:center;gap:7px;border:1px solid #ffffff24;border-radius:8px;background:#ffffff08;color:var(--text);font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;">
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
-        ABRIR NO LAST.FM NESTE PERÍODO
-      </button>
       <div style="display:flex;gap:8px;">
         <button type="button" id="edit-text-reset" style="flex:1;padding:10px;border-radius:9px;border:1.5px solid var(--border);background:transparent;color:var(--text);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">Restaurar Texto</button>
         <button type="button" id="edit-image-reset" style="flex:1;padding:10px;border-radius:9px;border:1.5px solid var(--border);background:transparent;color:var(--text);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">Restaurar Imagem</button>
       </div>
       <div id="restore-hint" class="icon-text" style="font-size:10px;color:var(--muted);line-height:1.4;align-items:flex-start;"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.69.66-1.24 1.16-1.75A6 6 0 1 0 7.75 12.25c.48.48.97 1.05 1.16 1.75"/></svg><span>Com o mouse sobre o quadro: <strong>pressione T</strong> para restaurar o texto e <strong>R</strong> para restaurar a imagem.</span></div>
+      <button type="button" id="edit-lastfm-link" style="width:100%;padding:9px 10px;display:flex;align-items:center;justify-content:center;gap:7px;border:1px solid #ffffff24;border-radius:8px;background:#ffffff08;color:var(--text);font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+        ABRIR NO LAST.FM NESTE PERÍODO
+      </button>
     </div>
     <button type="button" id="edit-text-save" class="gen-btn" style="width:100%;">SALVAR</button>
     <button type="button" id="edit-tile-delete" style="width:100%;padding:10px;border-radius:9px;border:1.5px solid #7f1d1d;background:transparent;color:#ef4444;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">EXCLUIR</button>
@@ -13408,6 +13518,9 @@ async function loadRecentImagesProgressively(type, apikey) {
       if (error.message === 'cancelled' || myGen !== prefetchGen) return;
       poolImageCache.set(index, null);
     }
+    if (activeClickItem === item && textEditOverlay.style.display === 'flex') {
+      syncTileConfigCover(item, index);
+    }
 
     if (visible) {
       visibleLoaded++;
@@ -13540,6 +13653,9 @@ async function loadRecentImageIndices(indices, apikey, liveGeneration) {
       } catch (_) {
         if (liveGeneration !== recentLiveGeneration) return;
         poolImageCache.set(index, null);
+      }
+      if (activeClickItem === item && textEditOverlay.style.display === 'flex') {
+        syncTileConfigCover(item, index);
       }
       redrawIfReady();
     }
@@ -17862,13 +17978,14 @@ async function applyCustomImageToItem(targetItem, img, fileOrBlob, explicitRef =
 // Com a pasta ativa, o arquivo é salvo nela e a memória guarda só a referência.
 function applyModalImage(file) {
   if (!file || activeClickIndex === null || !activeClickItem) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    const img = new Image();
-    img.onload = () => commitModalImageElement(img, file);
-    img.src = ev.target.result;
+  const blobUrl = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = async () => {
+    const applied = await commitModalImageElement(img, file);
+    if (!applied) URL.revokeObjectURL(blobUrl);
   };
-  reader.readAsDataURL(file);
+  img.onerror = () => URL.revokeObjectURL(blobUrl);
+  img.src = blobUrl;
 }
 
 async function commitModalImageElement(img, fileOrBlob = null) {
@@ -17876,7 +17993,8 @@ async function commitModalImageElement(img, fileOrBlob = null) {
   const targetItem = activeClickItem;
   if (currentItems.indexOf(targetItem) === -1) return false;
   if (!(await applyCustomImageToItem(targetItem, img, fileOrBlob, { kind: 'session' }))) return false;
-  closeTextEditModal();
+  const poolIdx = allFetchedItems.indexOf(targetItem);
+  syncTileConfigCover(targetItem, poolIdx);
   const cols = parseInt(document.getElementById('cols').value);
   const rows = parseInt(document.getElementById('rows').value);
   await drawCollage(currentItems, getDrawType(), cols, rows, headerLabelText, currentApiKey, getDrawAccentOverride());
@@ -18076,6 +18194,8 @@ const editTextAlbum   = document.getElementById('edit-text-album');
 const editTextAlbumWrap = document.getElementById('edit-text-album-wrap');
 const editTextSub     = document.getElementById('edit-text-sub');
 const editTextSubWrap = document.getElementById('edit-text-sub-wrap');
+const tileConfigCover = document.getElementById('tile-config-cover');
+const tileConfigCoverMedia = document.getElementById('tile-config-cover-media');
 const tileImageSection = document.getElementById('tile-image-section');
 const tileMergeActions = document.getElementById('tile-merge-actions');
 const recentMetadataActions = document.getElementById('recent-metadata-actions');
@@ -18106,6 +18226,10 @@ const trackObsessionActions = document.getElementById('track-obsession-actions')
 const trackLoveButton = document.getElementById('edit-track-love');
 const trackObsessionButton = document.getElementById('edit-track-obsession');
 const trackObsessionStatus = document.getElementById('track-obsession-status');
+const lastfmOfficialTrackActions = document.getElementById('lastfm-official-track-actions');
+const officialTrackScrobble = document.getElementById('edit-track-scrobble');
+const officialTrackNowPlaying = document.getElementById('edit-track-now-playing');
+const officialTrackStatus = document.getElementById('lastfm-official-track-status');
 const lastfmWriteAccountState = document.getElementById('lastfm-write-account-state');
 const lastfmWriteAccountMessage = document.getElementById('lastfm-write-account-message');
 const lastfmChangeAccount = document.getElementById('lastfm-change-account');
@@ -18114,6 +18238,86 @@ const editLastfmLinkBtn = document.getElementById('edit-lastfm-link');
 const fanartPickerOverlay = document.getElementById('fanart-picker-overlay');
 const fanartPickerGrid = document.getElementById('fanart-picker-grid');
 const fanartPickerStatus = document.getElementById('fanart-picker-status');
+let tileModalImageDragDepth = 0;
+
+function modalDragHasFile(transfer) {
+  return [...(transfer?.items || [])].some(item => item.kind === 'file')
+    || [...(transfer?.types || [])].includes('Files');
+}
+
+textEditOverlay.addEventListener('dragenter', event => {
+  if (textEditOverlay.style.display !== 'flex' || !modalDragHasFile(event.dataTransfer)) return;
+  event.preventDefault();
+  event.stopPropagation();
+  tileModalImageDragDepth++;
+  textEditOverlay.classList.add('image-drag-active');
+});
+
+textEditOverlay.addEventListener('dragover', event => {
+  if (textEditOverlay.style.display !== 'flex' || !modalDragHasFile(event.dataTransfer)) return;
+  event.preventDefault();
+  event.stopPropagation();
+  event.dataTransfer.dropEffect = 'copy';
+  textEditOverlay.classList.add('image-drag-active');
+});
+
+textEditOverlay.addEventListener('dragleave', event => {
+  if (!modalDragHasFile(event.dataTransfer)) return;
+  tileModalImageDragDepth = Math.max(0, tileModalImageDragDepth - 1);
+  if (!tileModalImageDragDepth) textEditOverlay.classList.remove('image-drag-active');
+});
+
+textEditOverlay.addEventListener('drop', event => {
+  if (textEditOverlay.style.display !== 'flex') return;
+  const hasFile = modalDragHasFile(event.dataTransfer);
+  if (!hasFile) return;
+  const file = imageFileFromTransfer(event.dataTransfer);
+  tileModalImageDragDepth = 0;
+  textEditOverlay.classList.remove('image-drag-active');
+  event.preventDefault();
+  event.stopPropagation();
+  if (!file) {
+    showPasteHint('O arquivo arrastado não é uma imagem.', true);
+    return;
+  }
+  applyModalImage(file);
+});
+
+function syncTileConfigCover(item, poolIdx) {
+  const image = customImages[poolIdx] || poolImageCache.get(poolIdx);
+  tileConfigCover.classList.remove('has-image');
+  tileConfigCoverMedia.replaceChildren();
+  if (!image) return;
+
+  // O mesmo HTMLImageElement usado pelo canvas é colocado no modal. Assim,
+  // preview e quadro compartilham o mesmo blob/URL e nunca divergem.
+  const displayedImage = image instanceof HTMLImageElement ? image : new Image();
+  displayedImage.alt = '';
+  tileConfigCoverMedia.replaceChildren(displayedImage);
+
+  const showImage = () => {
+    if (activeClickItem === item && tileConfigCoverMedia.contains(displayedImage)) {
+      tileConfigCover.classList.add('has-image');
+    }
+  };
+  const hideImage = () => {
+    if (activeClickItem === item && tileConfigCoverMedia.contains(displayedImage)) {
+      tileConfigCover.classList.remove('has-image');
+    }
+  };
+
+  if (!(image instanceof HTMLImageElement)) {
+    displayedImage.addEventListener('load', showImage, { once: true });
+    displayedImage.addEventListener('error', hideImage, { once: true });
+    displayedImage.src = typeof image === 'string' ? image : (image?.currentSrc || image?.src || '');
+  }
+  if (displayedImage.complete && displayedImage.naturalWidth) {
+    tileConfigCover.classList.add('has-image');
+  } else if (image instanceof HTMLImageElement) {
+    displayedImage.addEventListener('load', showImage, { once: true });
+    displayedImage.addEventListener('error', hideImage, { once: true });
+  }
+}
 
 function syncTileConfigTextFields(type, temporalMetadataMode = false) {
   if (temporalMetadataMode) {
@@ -18174,14 +18378,16 @@ function openTextEditModal(index) {
   } else {
     editTextSub.value = override.sub !== undefined ? override.sub : originalSub;
   }
+  syncTileConfigCover(item, itemPoolIdx);
   const recentMode = isRecentCollageRendered();
   const lovedMode = isLovedCollageRendered();
   const obsessionsMode = isObsessionsCollageRendered();
   const temporalMode = isTemporalCollageRendered();
-  const readOnlyMetadata = obsessionsMode;
+  const readOnlyMetadata = temporalMode;
   syncTileConfigTextFields(effectiveType, temporalMode);
   [editTextMain, editTextAlbum, editTextSub].forEach(input => {
     input.readOnly = readOnlyMetadata;
+    input.setAttribute('aria-readonly', readOnlyMetadata ? 'true' : 'false');
     input.style.opacity = readOnlyMetadata ? '.72' : '';
     input.style.cursor = readOnlyMetadata ? 'default' : '';
   });
@@ -18189,9 +18395,12 @@ function openTextEditModal(index) {
   tileMergeActions.style.display = temporalMode ? 'none' : 'flex';
   document.getElementById('edit-tile-delete').style.display = temporalMode ? 'none' : '';
   document.getElementById('edit-text-save').style.display = temporalMode ? 'none' : '';
+  document.getElementById('edit-text-reset').style.display = temporalMode ? 'none' : '';
   recentMetadataActions.style.display = recentMode ? 'flex' : 'none';
   lovedMetadataActions.style.display = lovedMode ? 'flex' : 'none';
   obsessionActions.style.display = obsessionsMode ? 'flex' : 'none';
+  recentMetadataSave.style.display = recentMode ? 'none' : '';
+  lovedMetadataSave.style.display = lovedMode ? 'none' : '';
   if (temporalMode) syncTemporalAuthorizePlacement();
   syncTemporalProfileAccessVisibility(temporalMode);
   const renderedMode = getRenderedQueryState()?.mode || currentType;
@@ -18200,6 +18409,11 @@ function openTextEditModal(index) {
   const canSetObsession = renderedMode === 'tracks'
     || (obsessionsMode && !isLatestObsession);
   trackObsessionActions.style.display = canSetObsession ? 'flex' : 'none';
+  lastfmOfficialTrackActions.style.display = effectiveType === 'tracks' ? 'flex' : 'none';
+  officialTrackScrobble.disabled = false;
+  officialTrackNowPlaying.disabled = false;
+  officialTrackStatus.style.display = 'none';
+  officialTrackStatus.textContent = '';
   trackLoveButton.style.display = renderedMode === 'tracks' ? '' : 'none';
   trackLoveButton.textContent = item._loved ? 'CURTIDA' : 'CURTIR FAIXA';
   trackLoveButton.disabled = Boolean(item._loved);
@@ -18260,6 +18474,8 @@ function openTextEditModal(index) {
 
 function closeTextEditModal() {
   textEditOverlay.style.display = 'none';
+  tileModalImageDragDepth = 0;
+  textEditOverlay.classList.remove('image-drag-active');
   if (mobilePasteTarget) {
     mobilePasteTarget.replaceChildren();
     mobilePasteTarget.hidden = true;
@@ -18297,6 +18513,12 @@ function setTrackObsessionActionStatus(message, error = false) {
   trackObsessionStatus.style.display = message ? '' : 'none';
   trackObsessionStatus.style.color = error ? '#ff8b8b' : 'var(--muted)';
   trackObsessionStatus.textContent = message || '';
+}
+
+function setOfficialTrackStatus(message, error = false) {
+  officialTrackStatus.style.display = message ? '' : 'none';
+  officialTrackStatus.style.color = error ? '#ff8b8b' : 'var(--muted)';
+  officialTrackStatus.textContent = message || '';
 }
 
 obsessionLastfmLinkButton.addEventListener('click', () => {
@@ -18349,11 +18571,11 @@ function syncRecentExtensionDependentControls() {
   });
 
   const itemUnavailable = Boolean(activeClickItem?._nowPlaying || activeClickItem?._lastfmDeleted);
-  recentMetadataSave.disabled = !extensionReady || itemUnavailable;
+  recentMetadataSave.disabled = true;
   recentScrobbleDelete.disabled = !extensionReady || itemUnavailable;
-  recentTrackLove.disabled = !extensionReady || Boolean(activeClickItem?._loved);
+  recentTrackLove.disabled = Boolean(activeClickItem?._loved);
   recentTrackObsession.disabled = !extensionReady;
-  recentLastfmAuthorize.disabled = !extensionReady || !recentLastfmAuthState.configured;
+  recentLastfmAuthorize.disabled = !recentLastfmAuthState.configured;
 }
 
 function updateRecentExtensionStatus() {
@@ -18366,7 +18588,7 @@ function updateRecentExtensionStatus() {
   recentExtensionStatus.style.color = '#ffb86b';
   recentExtensionStatus.innerHTML = collagerLastfmExtensionAvailable
     ? ''
-    : 'Extensão não detectada.';
+    : 'Extensão não detectada. Exclusão, edição e obsessão continuam exigindo a extensão.';
   syncRecentExtensionDependentControls();
   syncTemporalProfileAccessVisibility();
 }
@@ -19296,17 +19518,15 @@ async function refreshRecentMetadataAuthUi() {
   try {
     const status = await getLastfmWriteAuthStatus();
     applyRecentMetadataAuthState(status);
-    if (collagerLastfmExtensionAvailable && status.connected && !activeClickItem?._nowPlaying) {
+    if (status.connected && !activeClickItem?._nowPlaying) {
       setActiveTemporalStatus(`Conta ${status.username} autorizada para edição.`);
-    } else if (collagerLastfmExtensionAvailable && !status.connected && !activeClickItem?._nowPlaying) {
-      setActiveTemporalStatus(lastfmAuthorizationRequiredMessage(status), true);
-    } else if (!collagerLastfmExtensionAvailable && !activeClickItem?._nowPlaying) {
-      setActiveTemporalStatus('');
+    } else if (!status.connected && !activeClickItem?._nowPlaying) {
+      setActiveTemporalStatus(lastfmAuthorizationRequiredMessage(status), !status.configured);
     }
   } catch (error) {
     applyRecentMetadataAuthState({ configured: false, connected: false });
     recentLastfmAuthorize.style.display = '';
-    setActiveTemporalStatus(collagerLastfmExtensionAvailable ? error.message : '', true);
+    setActiveTemporalStatus(error.message, true);
   }
 }
 
@@ -21512,6 +21732,9 @@ function activeTrackActionData(item = activeClickItem) {
   return {
     name: String(item?.name || '').trim(),
     artist: String(item?.artist?.name || item?.artist?.['#text'] || '').trim(),
+    album: String(item?.albumName || item?.album?.title || item?.album?.['#text'] || '').trim(),
+    albumArtist: String(item?.albumArtist || item?.album?.artist || '').trim(),
+    duration: Math.max(0, Math.floor(Number(item?.duration || 0))),
     username: String(
       getRenderedQueryState()?.username
         || document.getElementById('username')?.value
@@ -21519,6 +21742,73 @@ function activeTrackActionData(item = activeClickItem) {
     ).trim(),
   };
 }
+
+officialTrackScrobble.addEventListener('click', async () => {
+  const item = activeClickItem;
+  if (!item || lastfmOfficialTrackActions.style.display === 'none') return;
+  const track = activeTrackActionData(item);
+  if (!track.name || !track.artist) {
+    setOfficialTrackStatus('Não foi possível identificar faixa e artista.', true);
+    return;
+  }
+  if (!window.confirm(`Adicionar agora um scrobble de "${track.name}" por ${track.artist}?`)) {
+    setOfficialTrackStatus('Novo scrobble cancelado.');
+    return;
+  }
+
+  officialTrackScrobble.disabled = true;
+  setOfficialTrackStatus('Adicionando scrobble no Last.fm...');
+  try {
+    const result = await sendLastfmWrite({
+      action: 'scrobble',
+      artist: track.artist,
+      track: track.name,
+      album: track.album,
+      albumArtist: track.albumArtist,
+      duration: track.duration,
+      timestamp: Math.floor(Date.now() / 1000),
+    });
+    item._lastfmScrobbledAt = Number(result.timestamp || Math.floor(Date.now() / 1000));
+    setOfficialTrackStatus('Scrobble adicionado ao Last.fm.');
+    appendStatusHistoryEntry(`Scrobble adicionado: ${track.artist} — ${track.name}.`);
+    triggerHapticFeedback('medium');
+  } catch (error) {
+    setOfficialTrackStatus(error.message, true);
+  } finally {
+    officialTrackScrobble.disabled = false;
+  }
+});
+
+officialTrackNowPlaying.addEventListener('click', async () => {
+  const item = activeClickItem;
+  if (!item || lastfmOfficialTrackActions.style.display === 'none') return;
+  const track = activeTrackActionData(item);
+  if (!track.name || !track.artist) {
+    setOfficialTrackStatus('Não foi possível identificar faixa e artista.', true);
+    return;
+  }
+
+  officialTrackNowPlaying.disabled = true;
+  setOfficialTrackStatus('Atualizando tocando agora no Last.fm...');
+  try {
+    await sendLastfmWrite({
+      action: 'nowPlaying',
+      artist: track.artist,
+      track: track.name,
+      album: track.album,
+      albumArtist: track.albumArtist,
+      duration: track.duration,
+    });
+    item._lastfmNowPlayingAt = Date.now();
+    setOfficialTrackStatus('Tocando agora atualizado no Last.fm.');
+    appendStatusHistoryEntry(`Tocando agora atualizado: ${track.artist} — ${track.name}.`);
+    triggerHapticFeedback('short');
+  } catch (error) {
+    setOfficialTrackStatus(error.message, true);
+  } finally {
+    officialTrackNowPlaying.disabled = false;
+  }
+});
 
 recentTrackLove.addEventListener('click', async () => {
   const item = activeClickItem;
@@ -21938,6 +22228,7 @@ function appendStatusHistoryEntry(message, error=false, options={}) {
     error: Boolean(error),
     icon: options.icon || '',
     snapshot: options.snapshot || null,
+    timelineParentId: options.timelineParentId ?? null,
     timeLabel: now.toLocaleTimeString('pt-BR', {
       hour: '2-digit', minute: '2-digit', second: '2-digit'
     })
@@ -21963,7 +22254,26 @@ function appendStatusHistoryEntry(message, error=false, options={}) {
 
 function recordTimelineAction(message) {
   if (window.__collagerTimelineRestoring) return;
-  appendStatusHistoryEntry(message, false, { snapshot: captureTimelineSnapshot() });
+  const timelineParentId = window.__collagerTimelineActiveId ?? null;
+  appendStatusHistoryEntry(message, false, {
+    snapshot: captureTimelineSnapshot(),
+    timelineParentId,
+  });
+}
+
+function getPreviousTimelineEntry() {
+  const entries = getStatusHistoryEntries().filter(entry => entry.snapshot);
+  if (!entries.length) return null;
+  const activeId = Number(window.__collagerTimelineActiveId) || 0;
+  const activeIndex = entries.findIndex(entry => entry.id === activeId);
+  const activeEntry = activeIndex >= 0 ? entries[activeIndex] : entries.at(-1);
+  if (!activeEntry) return null;
+
+  if (activeEntry.timelineParentId) {
+    return entries.find(entry => entry.id === activeEntry.timelineParentId) || null;
+  }
+  const fallbackIndex = activeIndex >= 0 ? activeIndex - 1 : entries.length - 2;
+  return fallbackIndex >= 0 ? entries[fallbackIndex] : null;
 }
 
 async function restoreStatusHistoryEntry(entry) {
@@ -22037,6 +22347,72 @@ async function restoreStatusHistoryEntry(entry) {
     updateTimelineRestoreButtons();
   }
 }
+
+let timelineUndoInProgress = false;
+
+function tileModalHasPendingTextEdit(target) {
+  if (!target || ![editTextMain, editTextAlbum, editTextSub].includes(target)) return false;
+  if (target.readOnly || !activeClickItem) return false;
+  const poolIdx = allFetchedItems.indexOf(activeClickItem);
+  if (poolIdx < 0) return false;
+  const override = customTexts[poolIdx] || {};
+  const type = getDrawType();
+  const originalAlbum = activeClickItem.albumName
+    || activeClickItem.album?.title
+    || activeClickItem.album?.['#text']
+    || '';
+  const expected = new Map([
+    [editTextMain, override.main !== undefined ? override.main : (activeClickItem.name || '')],
+    [editTextAlbum, type === 'tracks'
+      ? (override.album !== undefined ? override.album : originalAlbum)
+      : ''],
+    [editTextSub, type === 'artists'
+      ? ''
+      : (override.sub !== undefined ? override.sub : (activeClickItem.artist?.name || ''))],
+  ]);
+  return target.value !== expected.get(target);
+}
+
+async function undoPreviousTimelinePoint(reopenItem = null) {
+  if (timelineUndoInProgress || window.__collagerTimelineRestoring) return false;
+  const previousEntry = getPreviousTimelineEntry();
+  if (!previousEntry) return false;
+  timelineUndoInProgress = true;
+  try {
+    await restoreStatusHistoryEntry(previousEntry);
+    if (reopenItem && currentItems.includes(reopenItem)) {
+      const restoredIndex = currentItems.indexOf(reopenItem);
+      openTextEditModal(restoredIndex);
+    }
+    return true;
+  } finally {
+    timelineUndoInProgress = false;
+  }
+}
+
+document.addEventListener('keydown', event => {
+  if (!(event.ctrlKey || event.metaKey)
+      || event.altKey
+      || event.shiftKey
+      || event.key.toLowerCase() !== 'z') return;
+
+  const modalOpen = textEditOverlay.style.display === 'flex';
+  const hoveringTile = !modalOpen && Boolean(lastHoveredHit);
+  if (!modalOpen && !hoveringTile) return;
+
+  const editableTarget = event.target instanceof HTMLElement
+    && (event.target.matches('input:not([type="file"]), textarea') || event.target.isContentEditable);
+  if (modalOpen && editableTarget) {
+    // Primeiro preserva o desfazer nativo enquanto há texto ainda não salvo.
+    if (![editTextMain, editTextAlbum, editTextSub].includes(event.target)
+        || tileModalHasPendingTextEdit(event.target)) return;
+  }
+
+  if (!getPreviousTimelineEntry()) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  undoPreviousTimelinePoint(modalOpen ? activeClickItem : null);
+}, true);
 
 function renderStatusConsole() {
   const log = document.getElementById('status-console-log');
@@ -25208,6 +25584,3 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
 </script>
 </body>
 </html>
-
-
-

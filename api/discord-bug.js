@@ -93,9 +93,10 @@ module.exports = async function handler(request, response) {
   const body = request.body && typeof request.body === 'object' ? request.body : {};
   const title = String(body.title || '').trim();
   const details = String(body.details || '').trim();
+  const requester = String(body.requester || '').trim();
   const page = String(body.page || '').trim().slice(0, 1000);
   if (String(body.website || '').trim()) return sendJson(response, 200, { ok: true });
-  if (!title || !details || title.length > 100 || details.length > 1800) {
+  if (!title || !details || title.length > 100 || details.length > 1800 || requester.length > 80) {
     return sendJson(response, 400, { error: 'Invalid bug report.' });
   }
 
@@ -104,7 +105,9 @@ module.exports = async function handler(request, response) {
       return sendJson(response, 429, { error: 'Too many reports. Please try again later.' });
     }
 
-    const fields = page ? [{ name: 'Page', value: page }] : [];
+    const fields = [];
+    if (requester) fields.push({ name: 'Requested by', value: requester, inline: true });
+    if (page) fields.push({ name: 'Page', value: page });
     const discordResponse = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages`, {
       method: 'POST',
       headers: {

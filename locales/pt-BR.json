@@ -46,6 +46,7 @@
     "Salvar configuração atual como preset": "Salvar configuração atual como preset",
     "Substituir o preset selecionado": "Substituir o preset selecionado",
     "Tipo de Collage": "Tipo de Collage",
+    "Tipo de collage - editor": "Tipo de collage - editor",
     "ARTISTAS": "ARTISTAS",
     "ÁLBUNS": "ÁLBUNS",
     "FAIXAS": "FAIXAS",
@@ -360,7 +361,7 @@
     "Negrito na fonte do número": "Negrito na fonte do número",
     "Nenhuma pasta selecionada.": "Nenhuma pasta selecionada.",
     "No modo interativo, o primeiro toque revela os textos e o segundo abre o item no Last.fm.": "No modo interativo, o primeiro toque revela os textos e o segundo abre o item no Last.fm.",
-    "nome da música/artista/álbum...": "nome da música/artista/álbum...",
+    "nome da música": "nome da música",
     "nome do álbum...": "nome do álbum...",
     "nome do artista...": "nome do artista...",
     "Nome do preset...": "Nome do preset...",
@@ -632,7 +633,17 @@
     "Enviando comando à extensão...": "Enviando comando à extensão...",
     "Não foi possível tentar novamente.": "Não foi possível tentar novamente.",
     "Imagem alterada": "Imagem alterada",
-    "Contagem de scrobbles": "Contagem de scrobbles"
+    "Contagem de scrobbles": "Contagem de scrobbles",
+    "Atividade no Last.fm": "Atividade no Last.fm",
+    "ADICIONAR SCROBBLE": "ADICIONAR SCROBBLE",
+    "TOCANDO AGORA": "TOCANDO AGORA",
+    "Extensão não detectada. Exclusão, edição e obsessão continuam exigindo a extensão.": "Extensão não detectada. Exclusão, edição e obsessão continuam exigindo a extensão.",
+    "Não foi possível identificar faixa e artista.": "Não foi possível identificar faixa e artista.",
+    "Novo scrobble cancelado.": "Novo scrobble cancelado.",
+    "Adicionando scrobble no Last.fm...": "Adicionando scrobble no Last.fm...",
+    "Scrobble adicionado ao Last.fm.": "Scrobble adicionado ao Last.fm.",
+    "Atualizando tocando agora no Last.fm...": "Atualizando tocando agora no Last.fm...",
+    "Tocando agora atualizado no Last.fm.": "Tocando agora atualizado no Last.fm."
   },
   "patterns": [
     {
@@ -694,6 +705,18 @@
     {
       "source": "Novo scrobble: {item}.",
       "target": "Novo scrobble: {item}."
+    },
+    {
+      "source": "Adicionar agora um scrobble de \"{track}\" por {artist}?",
+      "target": "Adicionar agora um scrobble de \"{track}\" por {artist}?"
+    },
+    {
+      "source": "Scrobble adicionado: {item}.",
+      "target": "Scrobble adicionado: {item}."
+    },
+    {
+      "source": "Tocando agora atualizado: {item}.",
+      "target": "Tocando agora atualizado: {item}."
     },
     {
       "source": "Buscando {type} do período...",

@@ -46,6 +46,7 @@
     "Salvar configuração atual como preset": "Save current settings as preset",
     "Substituir o preset selecionado": "Replace selected preset",
     "Tipo de Collage": "Collage Type",
+    "Tipo de collage - editor": "Collage type - editor",
     "ARTISTAS": "ARTISTS",
     "ÁLBUNS": "ALBUMS",
     "FAIXAS": "TRACKS",
@@ -362,7 +363,7 @@
     "Nenhuma pasta selecionada.": "No folder selected.",
     "Neste período": "This period",
     "No modo interativo, o primeiro toque revela os textos e o segundo abre o item no Last.fm.": "In interactive mode, the first tap reveals the text and the second opens the item on Last.fm.",
-    "nome da música/artista/álbum...": "track/artist/album name...",
+    "nome da música": "track name",
     "nome do álbum...": "album name...",
     "nome do artista...": "artist name...",
     "Nome do preset...": "Preset name...",
@@ -643,7 +644,17 @@
     "Ação concluída com sucesso.": "Action completed successfully.",
     "Não foi possível tentar novamente.": "Could not try again.",
     "Imagem alterada": "Image changed",
-    "Contagem de scrobbles": "Scrobble count"
+    "Contagem de scrobbles": "Scrobble count",
+    "Atividade no Last.fm": "Last.fm activity",
+    "ADICIONAR SCROBBLE": "ADD SCROBBLE",
+    "TOCANDO AGORA": "NOW PLAYING",
+    "Extensão não detectada. Exclusão, edição e obsessão continuam exigindo a extensão.": "Extension not detected. Deleting, editing, and obsessions still require the extension.",
+    "Não foi possível identificar faixa e artista.": "Could not identify the track and artist.",
+    "Novo scrobble cancelado.": "New scrobble canceled.",
+    "Adicionando scrobble no Last.fm...": "Adding scrobble to Last.fm...",
+    "Scrobble adicionado ao Last.fm.": "Scrobble added to Last.fm.",
+    "Atualizando tocando agora no Last.fm...": "Updating now playing on Last.fm...",
+    "Tocando agora atualizado no Last.fm.": "Now playing updated on Last.fm."
   },
   "patterns": [
     {
@@ -705,6 +716,18 @@
     {
       "source": "Novo scrobble: {item}.",
       "target": "New scrobble: {item}."
+    },
+    {
+      "source": "Adicionar agora um scrobble de \"{track}\" por {artist}?",
+      "target": "Add a scrobble of \"{track}\" by {artist} now?"
+    },
+    {
+      "source": "Scrobble adicionado: {item}.",
+      "target": "Scrobble added: {item}."
+    },
+    {
+      "source": "Tocando agora atualizado: {item}.",
+      "target": "Now playing updated: {item}."
     },
     {
       "source": "Buscando {type} do período...",
