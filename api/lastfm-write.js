@@ -1,7 +1,8 @@
 'use strict';
 
-const { callLastfmWrite, readSession } = require('./_lastfm-session');
+const { callLastfmWrite, readSession, setSessionCookie } = require('./_lastfm-session');
 const MAX_REPLACEMENT_AGE_SECONDS = 14 * 24 * 60 * 60;
+const SCROBBLE_COOLDOWN_MS = 30000;
 
 function bodyOf(request) {
   if (request.body && typeof request.body === 'object') return request.body;
@@ -107,12 +108,22 @@ module.exports = async function handler(request, response) {
       const duration = optionalPositiveInteger(body.duration, 24 * 60 * 60);
       const timestamp = scrobbleTimestamp(body.timestamp);
       if (!artist || !track) throw new Error('Informe faixa e artista para adicionar o scrobble.');
+      const remainingMs = Math.max(0, SCROBBLE_COOLDOWN_MS - (Date.now() - Number(session.lastScrobbleAt || 0)));
+      if (remainingMs > 0) {
+        const error = new Error(`Aguarde ${Math.ceil(remainingMs / 1000)}s para scrobblar novamente.`);
+        error.statusCode = 429;
+        error.code = 'scrobble_cooldown';
+        error.retryAfterMs = remainingMs;
+        throw error;
+      }
       const params = { method: 'track.scrobble', artist, track, timestamp, sk: session.key };
       if (album) params.album = album;
       if (albumArtist) params.albumArtist = albumArtist;
       if (duration) params.duration = String(duration);
       const payload = await callLastfmWrite(params);
       assertAcceptedScrobble(payload, 'O Last.fm não aceitou o novo scrobble.');
+      const acceptedAt = Date.now();
+      setSessionCookie(request, response, { ...session, lastScrobbleAt: acceptedAt });
       return send(response, 200, {
         scrobbled: true,
         username: session.name,
@@ -120,26 +131,7 @@ module.exports = async function handler(request, response) {
         track,
         album,
         timestamp: Number(timestamp),
-      });
-    }
-    if (body.action === 'nowPlaying') {
-      const artist = cleanMetadata(body.artist);
-      const track = cleanMetadata(body.track);
-      const album = cleanMetadata(body.album);
-      const albumArtist = cleanMetadata(body.albumArtist);
-      const duration = optionalPositiveInteger(body.duration, 24 * 60 * 60);
-      if (!artist || !track) throw new Error('Informe faixa e artista para atualizar o tocando agora.');
-      const params = { method: 'track.updateNowPlaying', artist, track, sk: session.key };
-      if (album) params.album = album;
-      if (albumArtist) params.albumArtist = albumArtist;
-      if (duration) params.duration = String(duration);
-      await callLastfmWrite(params);
-      return send(response, 200, {
-        nowPlaying: true,
-        username: session.name,
-        artist,
-        track,
-        album,
+        cooldownUntil: acceptedAt + SCROBBLE_COOLDOWN_MS,
       });
     }
     if (body.action === 'delete') {
@@ -200,6 +192,7 @@ module.exports = async function handler(request, response) {
     return send(response, error.statusCode || 502, {
       error: error.message,
       code: error.code || 0,
+      retryAfterMs: Math.max(0, Number(error.retryAfterMs) || 0),
     });
   }
 };

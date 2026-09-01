@@ -2103,16 +2103,17 @@
   img, canvas, svg { max-width: 100%; }
 
   .tile-config-summary {
-    display: flex;
-    flex-direction: column;
-    gap: .75rem;
+    display: grid;
+    grid-template-columns: 7rem minmax(0, 1fr);
+    align-items: start;
+    gap: .625rem;
     min-width: 0;
   }
   .tile-config-cover {
     position: relative;
-    width: 7rem;
+    width: 100%;
     aspect-ratio: 1;
-    align-self: center;
+    align-self: stretch;
     overflow: hidden;
     flex: 0 0 auto;
     border: 1px solid var(--border);
@@ -2125,8 +2126,8 @@
     width: 7rem;
     display: flex;
     flex-direction: column;
-    align-self: center;
-    gap: .375rem;
+    align-self: start;
+    gap: .3rem;
   }
   .tile-config-cover:hover,
   .tile-config-cover:focus-within {
@@ -2158,9 +2159,49 @@
     pointer-events: none;
   }
   .tile-config-cover.has-image img { display: block; }
-  .tile-config-summary #tile-text-fields { min-width: 0; }
+  .tile-config-summary #tile-text-fields {
+    min-width: 0;
+    gap: .5rem !important;
+  }
+  .tile-config-summary #tile-text-fields .field { gap: .2rem !important; }
+  .tile-config-summary #tile-text-fields .section-label { line-height: 1; }
   .tile-config-summary #tile-text-fields .field,
   .tile-config-summary #tile-text-fields input { min-width: 0; }
+  #text-edit-modal-box {
+    padding: 1rem !important;
+    gap: .625rem !important;
+  }
+  #tile-config-view { gap: .625rem !important; }
+  #tile-config-header { min-height: 2.5rem; }
+  #tile-config-title { font-size: .8125rem !important; line-height: 1.1; }
+  #edit-text-close {
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+    flex: 0 0 2.5rem;
+    font-size: 1.35rem !important;
+  }
+  #recent-scrobble-actions-row,
+  #official-track-scrobble-home {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .5rem;
+  }
+  #official-track-scrobble-home { grid-template-columns: minmax(0, 1fr); }
+  #edit-track-scrobble,
+  #edit-scrobble-delete { min-width: 0; }
+  #obsession-note-input {
+    width: 100%;
+    min-height: 7rem;
+    resize: vertical;
+    padding: .75rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface2, #1a1a1a);
+    color: var(--text);
+    font: 400 .75rem/1.45 Inter, Arial, sans-serif;
+    outline: none;
+  }
+  #obsession-note-input:focus { border-color: #c281eeaa; box-shadow: 0 0 0 2px #c281ee18; }
   #text-edit-overlay.image-drag-active {
     background: #000000c7 !important;
   }
@@ -5916,12 +5957,12 @@
 
 <!-- Modal de edição de texto (título / artista) -->
 <div id="text-edit-overlay" style="display:none;position:fixed;inset:0;background:#000000a0;z-index:1000;align-items:center;justify-content:center;">
-  <div id="text-edit-modal-box" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;width:320px;max-width:90vw;max-height:88vh;overflow-y:auto;display:flex;flex-direction:column;gap:14px;transition:width .15s;">
+  <div id="text-edit-modal-box" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;width:320px;max-width:90vw;max-height:88vh;overflow-y:auto;display:flex;flex-direction:column;gap:10px;transition:width .15s;">
 
-  <div id="tile-config-view" style="display:flex;flex-direction:column;gap:14px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-      <div style="font-size:14px;font-weight:700;color:var(--text);">CONFIGURAÇÕES DO QUADRO</div>
-      <button type="button" id="edit-text-close" aria-label="Fechar configurações do quadro" title="Fechar" style="width:30px;height:30px;display:grid;place-items:center;padding:0;border:1px solid var(--border);border-radius:6px;background:var(--surface2,#1a1a1a);color:var(--muted);font:700 17px/1 Inter,Arial,sans-serif;cursor:pointer;">×</button>
+  <div id="tile-config-view" style="display:flex;flex-direction:column;gap:10px;">
+    <div id="tile-config-header" style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+      <div id="tile-config-title" style="font-size:13px;font-weight:700;color:var(--text);">CONFIGURAÇÕES DO QUADRO</div>
+      <button type="button" id="edit-text-close" aria-label="Fechar configurações do quadro" title="Fechar" style="width:40px;height:40px;display:grid;place-items:center;padding:0;border:1px solid var(--border);border-radius:6px;background:var(--surface2,#1a1a1a);color:var(--muted);font:700 21px/1 Inter,Arial,sans-serif;cursor:pointer;">×</button>
     </div>
 
     <div class="tile-config-summary">
@@ -5979,7 +6020,9 @@
         <span>Apagar scrobble com metadata antigo</span>
         <input type="checkbox" id="recent-metadata-replace" checked style="width:16px;height:16px;accent-color:#22c55e;">
       </label>
-      <button type="button" id="edit-scrobble-delete" class="extension-dependent-action" style="width:100%;padding:10px;border:1px solid #ef444488;border-radius:8px;background:#3f1518;color:#ff9b9b;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">EXCLUIR SCROBBLE</button>
+      <div id="recent-scrobble-actions-row">
+        <button type="button" id="edit-scrobble-delete" class="extension-dependent-action" style="width:100%;padding:10px 7px;border:1px solid #ef444488;border-radius:8px;background:#3f1518;color:#ff9b9b;font-family:inherit;font-size:10.5px;font-weight:800;cursor:pointer;line-height:1.2;">EXCLUIR SCROBBLE</button>
+      </div>
       <label class="recent-extension-metadata-option" style="display:none;align-items:center;justify-content:space-between;gap:10px;color:var(--text);font-size:11px;line-height:1.35;cursor:pointer;">
         <span>Apagar scrobbles contendo mesmo metadata</span>
         <input type="checkbox" id="recent-metadata-delete-future" style="width:16px;height:16px;flex:0 0 16px;accent-color:#ef4444;">
@@ -5989,13 +6032,13 @@
     <div id="loved-metadata-actions" style="display:none;flex-direction:column;gap:9px;padding:11px;border:1px solid #f89bad66;border-radius:8px;background:#f89bad0d;">
       <div style="display:flex;align-items:center;gap:8px;">
         <button type="button" id="loved-metadata-save" style="flex:1;padding:10px;border:1px solid #22c55e88;border-radius:8px;background:#123d24;color:#8af0ad;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">SALVAR</button>
-        <button type="button" id="loved-track-obsession" style="flex:1;padding:10px;border:1px solid #c281ee88;border-radius:8px;background:#c281ee18;color:#deb8fa;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">TORNAR OBSESSÃO</button>
+        <button type="button" id="loved-track-obsession" class="extension-dependent-action" style="flex:1;padding:10px;border:1px solid #c281ee88;border-radius:8px;background:#c281ee18;color:#deb8fa;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">TORNAR OBSESSÃO</button>
       </div>
       <button type="button" id="loved-track-remove" style="width:100%;padding:10px;border:1px solid #ef444488;border-radius:8px;background:#3f1518;color:#ff9b9b;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">REMOVER DAS CURTIDAS</button>
       <div id="loved-metadata-status" aria-live="polite" style="display:none;color:var(--muted);font-size:10.5px;line-height:1.4;"></div>
     </div>
     <div id="obsession-actions" style="display:none;flex-direction:column;gap:8px;padding:11px;border:1px solid #c281ee55;border-radius:8px;background:#c281ee0d;">
-      <button type="button" id="edit-obsession-delete" style="width:100%;padding:10px;border:1px solid #ef444488;border-radius:8px;background:#3f1518;color:#ff9b9b;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">EXCLUIR OBSESSÃO</button>
+      <button type="button" id="edit-obsession-delete" class="extension-dependent-action" style="width:100%;padding:10px;border:1px solid #ef444488;border-radius:8px;background:#3f1518;color:#ff9b9b;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">EXCLUIR OBSESSÃO</button>
       <div id="obsession-action-status" aria-live="polite" style="display:none;color:var(--muted);font-size:10.5px;line-height:1.4;"></div>
     </div>
     <div id="track-obsession-actions" style="display:none;flex-direction:column;gap:8px;padding:11px;border:1px solid #c281ee55;border-radius:8px;background:#c281ee0d;">
@@ -6006,13 +6049,9 @@
       <div id="track-obsession-status" aria-live="polite" style="display:none;color:var(--muted);font-size:10.5px;line-height:1.4;"></div>
     </div>
     <div id="lastfm-official-track-actions" style="display:none;flex-direction:column;gap:8px;padding:11px;border:1px solid #d5100755;border-radius:8px;background:#d510070b;">
-      <span class="section-label" style="margin-bottom:0;">Atividade no Last.fm</span>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <button type="button" id="edit-track-scrobble" style="min-width:0;padding:9px 8px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid #d5100788;border-radius:8px;background:#d5100718;color:#ff8a84;font-family:inherit;font-size:10.5px;font-weight:800;cursor:pointer;line-height:1.2;">
-          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg><span>ADICIONAR SCROBBLE</span>
-        </button>
-        <button type="button" id="edit-track-now-playing" style="min-width:0;padding:9px 8px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid #5ca8ff88;border-radius:8px;background:#5ca8ff14;color:#8ec5ff;font-family:inherit;font-size:10.5px;font-weight:800;cursor:pointer;line-height:1.2;">
-          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7Z"/></svg><span>TOCANDO AGORA</span>
+      <div id="official-track-scrobble-home">
+        <button type="button" id="edit-track-scrobble" style="width:100%;min-width:0;padding:10px 7px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid #d5100788;border-radius:8px;background:#d5100718;color:#ff8a84;font-family:inherit;font-size:10.5px;font-weight:800;cursor:pointer;line-height:1.2;">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 12 3 3 5-6"/><circle cx="12" cy="12" r="9"/></svg><span>SCROBBLAR NOVAMENTE</span>
         </button>
       </div>
       <div id="lastfm-official-track-status" aria-live="polite" style="display:none;color:var(--muted);font-size:10.5px;line-height:1.4;"></div>
@@ -6075,6 +6114,23 @@
   </div>
 </div>
 
+<!-- Texto exibido junto da obsessão no perfil do Last.fm. -->
+<div id="obsession-note-overlay" class="compact-dialog-overlay" style="display:none;position:fixed;inset:0;background:#000000b8;z-index:1200;align-items:center;justify-content:center;">
+  <div id="obsession-note-dialog" class="compact-dialog" role="dialog" aria-modal="true" aria-labelledby="obsession-note-title" style="background:var(--surface);border:1px solid #c281ee66;border-radius:10px;padding:16px;width:360px;max-width:90vw;display:flex;flex-direction:column;gap:10px;box-shadow:0 18px 50px #000b;">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+      <div id="obsession-note-title" style="font-size:13px;font-weight:800;color:var(--text);">TORNAR OBSESSÃO</div>
+      <button type="button" id="obsession-note-close" aria-label="Fechar texto da obsessão" title="Fechar" style="width:36px;height:36px;display:grid;place-items:center;padding:0;border:1px solid var(--border);border-radius:6px;background:var(--surface2,#1a1a1a);color:var(--muted);font:700 20px/1 Inter,Arial,sans-serif;cursor:pointer;">×</button>
+    </div>
+    <div id="obsession-note-track" style="min-width:0;color:var(--muted);font-size:11px;font-weight:700;line-height:1.4;overflow-wrap:anywhere;"></div>
+    <label for="obsession-note-input" class="section-label" style="margin-bottom:-4px;">TEXTO DA OBSESSÃO</label>
+    <textarea id="obsession-note-input" maxlength="1000" placeholder="O que você achou desta música?"></textarea>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <button type="button" id="obsession-note-cancel" style="padding:10px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--muted);font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;">CANCELAR</button>
+      <button type="button" id="obsession-note-confirm" style="padding:10px;border:1px solid #c281ee88;border-radius:8px;background:#c281ee18;color:#deb8fa;font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;">CONFIRMAR OBSESSÃO</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal de confirmação de mesclagem via arraste (drag & drop entre tiles) -->
 <div id="merge-confirm-overlay" style="display:none;position:fixed;inset:0;background:#000000a0;z-index:1100;align-items:center;justify-content:center;">
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;width:340px;max-width:90vw;display:flex;flex-direction:column;gap:16px;">
@@ -6109,7 +6165,7 @@
   </div>
 </div>
 
-<script src="./i18n.js?v=20260831-2"></script>
+<script src="./i18n.js?v=20260901-1"></script>
 <script>
 // ─────────────────────────────────────────────────────────────
 // CONFIG & STATE
@@ -11494,11 +11550,18 @@ async function searchLastfmTracks(query, apikey) {
 }
 
 async function setTrackAsObsession(track, username) {
+  const reason = await requestObsessionNote(track);
+  if (reason === null) {
+    const error = new Error('Obsessão cancelada.');
+    error.code = 'ACTION_CANCELED';
+    throw error;
+  }
   await requireCollagerLastfmExtension();
   return collagerExtensionRequest('setObsession', {
     username,
     artist: track.artist,
     track: track.name,
+    reason,
   });
 }
 
@@ -11560,7 +11623,10 @@ if (trackActionSearchInput && trackActionSearchResults) {
       appendStatusHistoryEntry(message);
       triggerHapticFeedback('medium');
     } catch (error) {
-      setTrackActionSearchStatus(error.message || 'O Last.fm não concluiu a operação.', true);
+      setTrackActionSearchStatus(
+        error.message || 'O Last.fm não concluiu a operação.',
+        error.code !== 'ACTION_CANCELED'
+      );
     } finally {
       trackActionSearchResults.style.pointerEvents = '';
     }
@@ -18422,6 +18488,7 @@ const recentMetadataFuture = document.getElementById('recent-metadata-future');
 const recentMetadataDeleteFuture = document.getElementById('recent-metadata-delete-future');
 const recentMetadataReplace = document.getElementById('recent-metadata-replace');
 const recentMetadataSave = document.getElementById('recent-metadata-save');
+const recentScrobbleActionsRow = document.getElementById('recent-scrobble-actions-row');
 const recentScrobbleDelete = document.getElementById('edit-scrobble-delete');
 const recentTrackLove = document.getElementById('recent-track-love');
 const recentTrackObsession = document.getElementById('recent-track-obsession');
@@ -18445,9 +18512,15 @@ const trackLoveButton = document.getElementById('edit-track-love');
 const trackObsessionButton = document.getElementById('edit-track-obsession');
 const trackObsessionStatus = document.getElementById('track-obsession-status');
 const lastfmOfficialTrackActions = document.getElementById('lastfm-official-track-actions');
+const officialTrackScrobbleHome = document.getElementById('official-track-scrobble-home');
 const officialTrackScrobble = document.getElementById('edit-track-scrobble');
-const officialTrackNowPlaying = document.getElementById('edit-track-now-playing');
 const officialTrackStatus = document.getElementById('lastfm-official-track-status');
+const obsessionNoteOverlay = document.getElementById('obsession-note-overlay');
+const obsessionNoteTrack = document.getElementById('obsession-note-track');
+const obsessionNoteInput = document.getElementById('obsession-note-input');
+const obsessionNoteClose = document.getElementById('obsession-note-close');
+const obsessionNoteCancel = document.getElementById('obsession-note-cancel');
+const obsessionNoteConfirm = document.getElementById('obsession-note-confirm');
 const lastfmWriteAccountState = document.getElementById('lastfm-write-account-state');
 const lastfmWriteAccountMessage = document.getElementById('lastfm-write-account-message');
 const lastfmChangeAccount = document.getElementById('lastfm-change-account');
@@ -18457,6 +18530,84 @@ const fanartPickerOverlay = document.getElementById('fanart-picker-overlay');
 const fanartPickerGrid = document.getElementById('fanart-picker-grid');
 const fanartPickerStatus = document.getElementById('fanart-picker-status');
 let tileModalImageDragDepth = 0;
+let pendingObsessionNoteResolve = null;
+let officialTrackScrobbleBusy = false;
+let officialTrackScrobbleCooldownTimer = null;
+const LASTFM_SCROBBLE_COOLDOWN_MS = 30000;
+const LASTFM_SCROBBLE_COOLDOWN_KEY = 'collagerfm-lastfm-scrobble-cooldown-until';
+
+function syncOfficialTrackActionPlacement(recentMode = isRecentCollageRendered()) {
+  const host = recentMode ? recentScrobbleActionsRow : officialTrackScrobbleHome;
+  if (!host || officialTrackScrobble.parentElement === host) return;
+  if (recentMode) host.insertBefore(officialTrackScrobble, recentScrobbleDelete);
+  else host.appendChild(officialTrackScrobble);
+}
+
+function readScrobbleCooldownUntil() {
+  try {
+    const value = Number(localStorage.getItem(LASTFM_SCROBBLE_COOLDOWN_KEY) || 0);
+    return Number.isFinite(value) ? value : 0;
+  } catch (_) {
+    return 0;
+  }
+}
+
+function setScrobbleCooldown(durationMs = LASTFM_SCROBBLE_COOLDOWN_MS) {
+  const until = Date.now() + Math.max(0, Number(durationMs) || 0);
+  try { localStorage.setItem(LASTFM_SCROBBLE_COOLDOWN_KEY, String(until)); } catch (_) {}
+  syncOfficialTrackScrobbleCooldown();
+}
+
+function syncOfficialTrackScrobbleCooldown() {
+  clearTimeout(officialTrackScrobbleCooldownTimer);
+  const remainingMs = Math.max(0, readScrobbleCooldownUntil() - Date.now());
+  const remainingSeconds = Math.ceil(remainingMs / 1000);
+  const label = officialTrackScrobble.querySelector('span');
+  const sourceLabel = remainingSeconds
+    ? `SCROBBLAR NOVAMENTE (${remainingSeconds}s)`
+    : 'SCROBBLAR NOVAMENTE';
+  if (label) label.textContent = sourceLabel;
+  officialTrackScrobble.disabled = officialTrackScrobbleBusy || remainingMs > 0;
+  officialTrackScrobble.title = remainingSeconds
+    ? `Aguarde ${remainingSeconds}s para scrobblar novamente.`
+    : '';
+  if (remainingMs > 0) {
+    officialTrackScrobbleCooldownTimer = setTimeout(
+      syncOfficialTrackScrobbleCooldown,
+      Math.min(1000, remainingMs + 20)
+    );
+  }
+}
+
+window.addEventListener('storage', event => {
+  if (event.key === LASTFM_SCROBBLE_COOLDOWN_KEY) syncOfficialTrackScrobbleCooldown();
+});
+
+function closeObsessionNoteDialog(note = null) {
+  obsessionNoteOverlay.style.display = 'none';
+  const resolve = pendingObsessionNoteResolve;
+  pendingObsessionNoteResolve = null;
+  if (resolve) resolve(note);
+}
+
+function requestObsessionNote(track) {
+  if (pendingObsessionNoteResolve) closeObsessionNoteDialog(null);
+  obsessionNoteTrack.textContent = `${track.artist} — ${track.name}`;
+  obsessionNoteInput.value = '';
+  obsessionNoteOverlay.style.display = 'flex';
+  setTimeout(() => obsessionNoteInput.focus(), 0);
+  return new Promise(resolve => { pendingObsessionNoteResolve = resolve; });
+}
+
+obsessionNoteClose.addEventListener('click', () => closeObsessionNoteDialog(null));
+obsessionNoteCancel.addEventListener('click', () => closeObsessionNoteDialog(null));
+obsessionNoteConfirm.addEventListener('click', () => closeObsessionNoteDialog(obsessionNoteInput.value.trim()));
+document.addEventListener('keydown', event => {
+  if (event.key !== 'Escape' || obsessionNoteOverlay.style.display !== 'flex') return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  closeObsessionNoteDialog(null);
+}, true);
 
 function modalDragHasFile(transfer) {
   return [...(transfer?.items || [])].some(item => item.kind === 'file')
@@ -18627,16 +18778,16 @@ function openTextEditModal(index) {
   const canSetObsession = renderedMode === 'tracks'
     || (obsessionsMode && !isLatestObsession);
   trackObsessionActions.style.display = canSetObsession ? 'flex' : 'none';
-  lastfmOfficialTrackActions.style.display = effectiveType === 'tracks' ? 'flex' : 'none';
-  officialTrackScrobble.disabled = false;
-  officialTrackNowPlaying.disabled = false;
+  syncOfficialTrackActionPlacement(recentMode);
+  lastfmOfficialTrackActions.style.display = effectiveType === 'tracks' && !recentMode ? 'flex' : 'none';
+  syncOfficialTrackScrobbleCooldown();
   officialTrackStatus.style.display = 'none';
   officialTrackStatus.textContent = '';
   trackLoveButton.style.display = renderedMode === 'tracks' ? '' : 'none';
   trackLoveButton.textContent = item._loved ? 'CURTIDA' : 'CURTIR FAIXA';
   trackLoveButton.disabled = Boolean(item._loved);
   trackObsessionButton.textContent = obsessionsMode ? 'TORNAR OBSESSÃO NOVAMENTE' : 'TORNAR OBSESSÃO';
-  trackObsessionButton.disabled = false;
+  trackObsessionButton.disabled = !collagerLastfmExtensionAvailable;
   trackObsessionStatus.style.display = 'none';
   trackObsessionStatus.textContent = '';
   const savedMetadataRule = getRecentMetadataRule(item);
@@ -18652,9 +18803,9 @@ function openTextEditModal(index) {
   recentScrobbleDelete.textContent = item._lastfmDeleted ? 'SCROBBLE EXCLUÍDO' : 'EXCLUIR SCROBBLE';
   recentTrackLove.disabled = Boolean(item._loved);
   recentTrackLove.textContent = item._loved ? 'CURTIDA' : 'CURTIR FAIXA';
-  recentTrackObsession.disabled = false;
+  recentTrackObsession.disabled = !collagerLastfmExtensionAvailable;
   lovedMetadataSave.disabled = false;
-  lovedTrackObsession.disabled = false;
+  lovedTrackObsession.disabled = !collagerLastfmExtensionAvailable;
   lovedTrackRemove.disabled = Boolean(item._unloved);
   lovedTrackRemove.textContent = item._unloved ? 'REMOVIDA DAS CURTIDAS' : 'REMOVER DAS CURTIDAS';
   lovedMetadataStatus.style.display = 'none';
@@ -18676,7 +18827,7 @@ function openTextEditModal(index) {
   obsessionLastfmLinkButton.disabled = !obsessionUrl;
   obsessionLastfmLinkButton.style.opacity = obsessionUrl ? '1' : '.45';
   obsessionLastfmLinkButton.dataset.url = obsessionUrl;
-  obsessionDeleteButton.disabled = Boolean(item._obsessionDeleted || !obsessionUrl);
+  obsessionDeleteButton.disabled = Boolean(item._obsessionDeleted || !obsessionUrl || !collagerLastfmExtensionAvailable);
   obsessionDeleteButton.textContent = item._obsessionDeleted ? 'OBSESSÃO EXCLUÍDA' : 'EXCLUIR OBSESSÃO';
   obsessionActionStatus.style.display = 'none';
   obsessionActionStatus.textContent = '';
@@ -18734,9 +18885,10 @@ function setTrackObsessionActionStatus(message, error = false) {
 }
 
 function setOfficialTrackStatus(message, error = false) {
-  officialTrackStatus.style.display = message ? '' : 'none';
-  officialTrackStatus.style.color = error ? '#ff8b8b' : 'var(--muted)';
-  officialTrackStatus.textContent = message || '';
+  const status = isRecentCollageRendered() ? recentMetadataStatus : officialTrackStatus;
+  status.style.display = message ? '' : 'none';
+  status.style.color = error ? '#ff8b8b' : 'var(--muted)';
+  status.textContent = message || '';
 }
 
 obsessionLastfmLinkButton.addEventListener('click', () => {
@@ -18793,6 +18945,11 @@ function syncRecentExtensionDependentControls() {
   recentScrobbleDelete.disabled = !extensionReady || itemUnavailable;
   recentTrackLove.disabled = Boolean(activeClickItem?._loved);
   recentTrackObsession.disabled = !extensionReady;
+  lovedTrackObsession.disabled = !extensionReady;
+  trackObsessionButton.disabled = !extensionReady;
+  obsessionDeleteButton.disabled = !extensionReady
+    || Boolean(activeClickItem?._obsessionDeleted)
+    || !getObsessionLastfmUrl(activeClickItem);
   recentLastfmAuthorize.disabled = !recentLastfmAuthState.configured;
 }
 
@@ -18806,7 +18963,7 @@ function updateRecentExtensionStatus() {
   recentExtensionStatus.style.color = '#ffb86b';
   recentExtensionStatus.innerHTML = collagerLastfmExtensionAvailable
     ? ''
-    : 'Extensão não detectada. Exclusão, edição e obsessão continuam exigindo a extensão.';
+    : 'Sem extensão: curtir e scrobblar novamente. Exclusão, edição e obsessão exigem a extensão.';
   syncRecentExtensionDependentControls();
   syncTemporalProfileAccessVisibility();
 }
@@ -22363,19 +22520,27 @@ function activeTrackActionData(item = activeClickItem) {
 
 officialTrackScrobble.addEventListener('click', async () => {
   const item = activeClickItem;
-  if (!item || lastfmOfficialTrackActions.style.display === 'none') return;
+  if (!item || getDrawType() !== 'tracks') return;
+  const remainingSeconds = Math.ceil(Math.max(0, readScrobbleCooldownUntil() - Date.now()) / 1000);
+  if (remainingSeconds) {
+    setOfficialTrackStatus(`Aguarde ${remainingSeconds}s para scrobblar novamente.`, true);
+    syncOfficialTrackScrobbleCooldown();
+    return;
+  }
   const track = activeTrackActionData(item);
   if (!track.name || !track.artist) {
     setOfficialTrackStatus('Não foi possível identificar faixa e artista.', true);
     return;
   }
-  if (!window.confirm(`Adicionar agora um scrobble de "${track.name}" por ${track.artist}?`)) {
+  const confirmation = `Scrobblar novamente "${track.name}" por ${track.artist}?`;
+  if (!window.confirm(window.t?.(confirmation) || confirmation)) {
     setOfficialTrackStatus('Novo scrobble cancelado.');
     return;
   }
 
-  officialTrackScrobble.disabled = true;
-  setOfficialTrackStatus('Adicionando scrobble no Last.fm...');
+  officialTrackScrobbleBusy = true;
+  syncOfficialTrackScrobbleCooldown();
+  setOfficialTrackStatus('Scrobblando novamente no Last.fm...');
   try {
     const result = await sendLastfmWrite({
       action: 'scrobble',
@@ -22387,44 +22552,16 @@ officialTrackScrobble.addEventListener('click', async () => {
       timestamp: Math.floor(Date.now() / 1000),
     });
     item._lastfmScrobbledAt = Number(result.timestamp || Math.floor(Date.now() / 1000));
-    setOfficialTrackStatus('Scrobble adicionado ao Last.fm.');
-    appendStatusHistoryEntry(`Scrobble adicionado: ${track.artist} — ${track.name}.`);
+    setScrobbleCooldown(LASTFM_SCROBBLE_COOLDOWN_MS);
+    setOfficialTrackStatus('Faixa scrobblada novamente no Last.fm.');
+    appendStatusHistoryEntry(`Faixa scrobblada novamente: ${track.artist} — ${track.name}.`);
     triggerHapticFeedback('medium');
   } catch (error) {
+    if (Number(error.details?.retryAfterMs) > 0) setScrobbleCooldown(error.details.retryAfterMs);
     setOfficialTrackStatus(error.message, true);
   } finally {
-    officialTrackScrobble.disabled = false;
-  }
-});
-
-officialTrackNowPlaying.addEventListener('click', async () => {
-  const item = activeClickItem;
-  if (!item || lastfmOfficialTrackActions.style.display === 'none') return;
-  const track = activeTrackActionData(item);
-  if (!track.name || !track.artist) {
-    setOfficialTrackStatus('Não foi possível identificar faixa e artista.', true);
-    return;
-  }
-
-  officialTrackNowPlaying.disabled = true;
-  setOfficialTrackStatus('Atualizando tocando agora no Last.fm...');
-  try {
-    await sendLastfmWrite({
-      action: 'nowPlaying',
-      artist: track.artist,
-      track: track.name,
-      album: track.album,
-      albumArtist: track.albumArtist,
-      duration: track.duration,
-    });
-    item._lastfmNowPlayingAt = Date.now();
-    setOfficialTrackStatus('Tocando agora atualizado no Last.fm.');
-    appendStatusHistoryEntry(`Tocando agora atualizado: ${track.artist} — ${track.name}.`);
-    triggerHapticFeedback('short');
-  } catch (error) {
-    setOfficialTrackStatus(error.message, true);
-  } finally {
-    officialTrackNowPlaying.disabled = false;
+    officialTrackScrobbleBusy = false;
+    syncOfficialTrackScrobbleCooldown();
   }
 });
 
@@ -22468,7 +22605,7 @@ recentTrackObsession.addEventListener('click', async () => {
     appendStatusHistoryEntry(`Faixa definida como obsessão: ${track.artist} — ${track.name}.`);
     triggerHapticFeedback('medium');
   } catch (error) {
-    setRecentMetadataStatus(error.message, true);
+    setRecentMetadataStatus(error.message, error.code !== 'ACTION_CANCELED');
   } finally {
     recentTrackObsession.disabled = false;
   }
@@ -22543,7 +22680,7 @@ lovedTrackObsession.addEventListener('click', async () => {
     appendStatusHistoryEntry(`Curtida definida como obsessão: ${track.artist} — ${track.name}.`);
     triggerHapticFeedback('medium');
   } catch (error) {
-    setLovedMetadataStatus(error.message, true);
+    setLovedMetadataStatus(error.message, error.code !== 'ACTION_CANCELED');
   } finally {
     lovedTrackObsession.disabled = false;
   }
@@ -22657,7 +22794,7 @@ trackObsessionButton.addEventListener('click', async () => {
     appendStatusHistoryEntry(`${message} ${track.artist} — ${track.name}.`);
     triggerHapticFeedback('medium');
   } catch (error) {
-    setTrackObsessionActionStatus(error.message, true);
+    setTrackObsessionActionStatus(error.message, error.code !== 'ACTION_CANCELED');
   } finally {
     trackObsessionButton.disabled = false;
   }

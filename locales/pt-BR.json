@@ -671,16 +671,20 @@
     "Não foi possível tentar novamente.": "Não foi possível tentar novamente.",
     "Imagem alterada": "Imagem alterada",
     "Contagem de scrobbles": "Contagem de scrobbles",
-    "Atividade no Last.fm": "Atividade no Last.fm",
-    "ADICIONAR SCROBBLE": "ADICIONAR SCROBBLE",
-    "TOCANDO AGORA": "TOCANDO AGORA",
-    "Extensão não detectada. Exclusão, edição e obsessão continuam exigindo a extensão.": "Extensão não detectada. Exclusão, edição e obsessão continuam exigindo a extensão.",
+    "SCROBBLAR NOVAMENTE": "SCROBBLAR NOVAMENTE",
+    "Sem extensão: curtir e scrobblar novamente. Exclusão, edição e obsessão exigem a extensão.": "Sem extensão: curtir e scrobblar novamente. Exclusão, edição e obsessão exigem a extensão.",
     "Não foi possível identificar faixa e artista.": "Não foi possível identificar faixa e artista.",
     "Novo scrobble cancelado.": "Novo scrobble cancelado.",
-    "Adicionando scrobble no Last.fm...": "Adicionando scrobble no Last.fm...",
-    "Scrobble adicionado ao Last.fm.": "Scrobble adicionado ao Last.fm.",
-    "Atualizando tocando agora no Last.fm...": "Atualizando tocando agora no Last.fm...",
-    "Tocando agora atualizado no Last.fm.": "Tocando agora atualizado no Last.fm."
+    "Scrobblando novamente no Last.fm...": "Scrobblando novamente no Last.fm...",
+    "Faixa scrobblada novamente no Last.fm.": "Faixa scrobblada novamente no Last.fm.",
+    "Fechar texto da obsessão": "Fechar texto da obsessão",
+    "TEXTO DA OBSESSÃO": "TEXTO DA OBSESSÃO",
+    "O que você achou desta música?": "O que você achou desta música?",
+    "CONFIRMAR OBSESSÃO": "CONFIRMAR OBSESSÃO",
+    "Obsessão cancelada.": "Obsessão cancelada.",
+    "Escolher imagem para o quadro": "Escolher imagem para o quadro",
+    "Clique para escolher uma imagem": "Clique para escolher uma imagem",
+    "A escrita no Last.fm ainda não está configurada no servidor. Configure LASTFM_API_KEY e LASTFM_API_SECRET.": "A escrita no Last.fm ainda não está configurada no servidor. Configure LASTFM_API_KEY e LASTFM_API_SECRET."
   },
   "patterns": [
     {
@@ -720,6 +724,18 @@
       "target": "Aguardando Last.fm — posição {position} da fila."
     },
     {
+      "source": "SCROBBLAR NOVAMENTE ({count}s)",
+      "target": "SCROBBLAR NOVAMENTE ({count}s)"
+    },
+    {
+      "source": "Aguarde {count}s para scrobblar novamente.",
+      "target": "Aguarde {count}s para scrobblar novamente."
+    },
+    {
+      "source": "Scrobblar novamente \"{track}\" por {artist}?",
+      "target": "Scrobblar novamente \"{track}\" por {artist}?"
+    },
+    {
       "source": "Buscando scrobbles recentes... página {page}/{total}",
       "target": "Buscando scrobbles recentes... página {page}/{total}"
     },
@@ -744,16 +760,8 @@
       "target": "Novo scrobble: {item}."
     },
     {
-      "source": "Adicionar agora um scrobble de \"{track}\" por {artist}?",
-      "target": "Adicionar agora um scrobble de \"{track}\" por {artist}?"
-    },
-    {
-      "source": "Scrobble adicionado: {item}.",
-      "target": "Scrobble adicionado: {item}."
-    },
-    {
-      "source": "Tocando agora atualizado: {item}.",
-      "target": "Tocando agora atualizado: {item}."
+      "source": "Faixa scrobblada novamente: {item}.",
+      "target": "Faixa scrobblada novamente: {item}."
     },
     {
       "source": "Buscando {type} do período...",

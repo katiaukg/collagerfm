@@ -57,10 +57,11 @@ function validateTrackActionPayload(payload) {
   const username = clean(payload?.username, 100);
   const artist = clean(payload?.artist);
   const track = clean(payload?.track);
+  const reason = clean(payload?.reason, 1000);
   if (!username || !artist || !track) {
     throw new Error('Informe usuario, artista e faixa para definir a obsessao.');
   }
-  return { username, artist, track };
+  return { username, artist, track, reason };
 }
 
 function waitForTab(tabId, timeoutMs = 20000) {

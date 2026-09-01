@@ -29,7 +29,14 @@ function sessionSignature(payload, secret) {
 }
 
 function encodeSession(session, secret) {
-  const payload = Buffer.from(JSON.stringify({ key: session.key, name: session.name, issuedAt: Date.now() })).toString('base64url');
+  const contents = {
+    key: session.key,
+    name: session.name,
+    issuedAt: Number(session.issuedAt) || Date.now(),
+  };
+  const lastScrobbleAt = Math.floor(Number(session.lastScrobbleAt));
+  if (Number.isFinite(lastScrobbleAt) && lastScrobbleAt > 0) contents.lastScrobbleAt = lastScrobbleAt;
+  const payload = Buffer.from(JSON.stringify(contents)).toString('base64url');
   return `${payload}.${sessionSignature(payload, secret)}`;
 }
 

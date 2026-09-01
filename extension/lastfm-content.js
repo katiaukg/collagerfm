@@ -320,6 +320,7 @@ if (!globalThis.__collagerLastfmContentInstalled) {
     const username = String(payload?.username || '').trim();
     const artist = String(payload?.artist || '').trim();
     const track = String(payload?.track || '').trim();
+    const reason = String(payload?.reason || '').trim().slice(0, 1000);
     if (!username || !artist || !track) return { ok: false, error: 'Dados da faixa invalidos.' };
     const csrf = cookieValue('csrftoken') || await csrfToken(username);
     if (!csrf) {
@@ -335,7 +336,7 @@ if (!globalThis.__collagerLastfmContentInstalled) {
       csrfmiddlewaretoken: csrf,
       artist_name: artist,
       name: track,
-      reason: '',
+      reason,
       ajax: '1',
     });
     const profilePath = `/user/${encodeLastfmPath(username)}`;
