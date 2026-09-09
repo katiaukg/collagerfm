@@ -630,6 +630,11 @@
   }
   #lastfm-change-account:hover { border-color: #ffffff40; background: #ffffff0e; }
   #lastfm-change-account:disabled { opacity: .55; cursor: wait; }
+  .lastfm-username-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 19px; margin-bottom: 8px; }
+  .lastfm-username-heading > .section-label,
+  #mobile-quick-account .lastfm-username-heading > label { margin: 0; }
+  .lastfm-pro-badge { display: inline-flex; align-items: center; flex-shrink: 0; padding: 3px 6px; border: 1px solid #e460604d; border-radius: 4px; background: #e460601a; color: #ffaaaa; font-size: 10px; font-weight: 700; line-height: 1.2; letter-spacing: 0; }
+  .lastfm-pro-badge[hidden] { display: none !important; }
 
   /* Cards de resultado da "Mesclar pesquisando artista" — imitam a cara de um tile */
   .merge-search-card {
@@ -737,6 +742,14 @@
   .red-slash-toggle .slash-sep {
     color: var(--border); font-size: 13px; flex-shrink: 0; user-select: none; margin: 0 2px;
   }
+  #editor-date-order button { font-size: 10px; padding-inline: 3px; }
+  .editor-date-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+  .editor-date-heading > .section-label { margin: 0; line-height: 1; flex-shrink: 0; }
+  #editor-year-format { width: min(210px, 62%); flex-shrink: 1; }
+  #editor-year-format button { font-size: 9px; padding: 5px 2px; }
+  #editor-date-options > .section-label { margin-bottom: 4px; line-height: 1; }
+  #editor-date-options > .red-slash-toggle + .section-label { margin-top: 7px; }
+  #editor-month-format { margin-top: 4px; }
 
   /* Sub-seletor do modo Novos — não conflita com .qbtn */
   .new-sub-btn {
@@ -3825,7 +3838,10 @@
           </button>
           <div class="desktop-account-slot" id="desktop-account-lastfm-slot">
             <div id="desktop-menu-username-box">
-              <span class="section-label">Usuário Last.fm</span>
+              <div class="lastfm-username-heading">
+                <span class="section-label">Usuário Last.fm</span>
+                <span class="lastfm-pro-badge" hidden title="Assinatura Pro confirmada pelo Last.fm">Last.fm Pro</span>
+              </div>
               <input id="desktop-menu-username" type="text" placeholder="seu usuário..." autocomplete="off" spellcheck="false" list="username-history">
             </div>
           </div>
@@ -3903,12 +3919,18 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
     </button>
     <div id="mobile-quick-account" aria-hidden="true">
-      <label for="mobile-quick-username">Usuário Last.fm</label>
+      <div class="lastfm-username-heading">
+        <label for="mobile-quick-username">Usuário Last.fm</label>
+        <span class="lastfm-pro-badge" hidden title="Assinatura Pro confirmada pelo Last.fm">Last.fm Pro</span>
+      </div>
       <input id="mobile-quick-username" type="text" placeholder="seu usuário..." autocomplete="username" autocapitalize="none" spellcheck="false" enterkeyhint="done">
     </div>
 
     <div id="lastfm-username-box">
-      <span class="section-label">Usuário Last.fm</span>
+      <div class="lastfm-username-heading">
+        <span class="section-label">Usuário Last.fm</span>
+        <span class="lastfm-pro-badge" hidden title="Assinatura Pro confirmada pelo Last.fm">Last.fm Pro</span>
+      </div>
       <input id="username" type="text" placeholder="seu usuário..." autocomplete="off" spellcheck="false" list="username-history">
       <datalist id="username-history"></datalist>
     </div>
@@ -4022,6 +4044,26 @@
         </div>
       </div>
 
+      <div id="editor-date-options" style="display:none;margin-top:10px;gap:0;flex-direction:column;">
+        <div class="editor-date-heading">
+          <span class="section-label">Formato da data</span>
+          <div class="red-slash-toggle" id="editor-year-format" role="group" aria-label="Formato do ano">
+            <button type="button" class="active" data-year="2-digit">AA</button><span class="slash-sep">/</span>
+            <button type="button" data-year="numeric">AAAA</button><span class="slash-sep">/</span>
+            <button type="button" data-year="off">Desativado</button>
+          </div>
+        </div>
+        <div class="red-slash-toggle" id="editor-date-order" role="group" aria-label="Formato da data">
+          <button type="button" class="active" data-order="ymd" data-i18n-skip>AA-MM-DD</button><span class="slash-sep">/</span>
+          <button type="button" data-order="dmy" data-i18n-skip>DD-MM-AA</button><span class="slash-sep">/</span>
+          <button type="button" data-order="mdy" data-i18n-skip>MM-DD-AA</button>
+        </div>
+        <div class="red-slash-toggle" id="editor-month-format" role="group" aria-label="Formato do mês">
+          <button type="button" data-month="long">Mês por extenso</button><span class="slash-sep">/</span>
+          <button type="button" data-month="short">Mês abreviado</button><span class="slash-sep">/</span>
+          <button type="button" class="active" data-month="numeric">Mês em números</button>
+        </div>
+      </div>
       <div id="specific-artists-panel" style="display:none;margin-top:8px;">
         <span class="section-label" style="margin-bottom:5px;display:block;">Pesquisar artistas</span>
         <input id="specific-artist-search" type="text" placeholder="Digite um artista..." autocomplete="off">
@@ -4815,7 +4857,10 @@
 
           <div>
             <span class="section-label" style="margin-bottom:5px;display:block;">Texto 1</span>
-            <input id="scrobbles-label-input" type="text" placeholder="scrobbles" value="scrobbles"
+            <div class="red-slash-toggle" id="count-label-presets" style="margin-bottom:6px;">
+              <button type="button" class="active" data-label="plays">Toques</button><span class="slash-sep">/</span><button type="button" data-label="scrobbles">Scrobbles</button>
+            </div>
+            <input id="scrobbles-label-input" type="text" placeholder="plays" value="plays"
               style="width:100%;box-sizing:border-box;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--text);font-family:inherit;font-size:12px;outline:none;">
           </div>
 
@@ -6050,7 +6095,7 @@
     </div>
     <div id="lastfm-official-track-actions" style="display:none;flex-direction:column;gap:8px;padding:11px;border:1px solid #d5100755;border-radius:8px;background:#d510070b;">
       <div id="official-track-scrobble-home">
-        <button type="button" id="edit-track-scrobble" style="width:100%;min-width:0;padding:10px 7px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid #d5100788;border-radius:8px;background:#d5100718;color:#ff8a84;font-family:inherit;font-size:10.5px;font-weight:800;cursor:pointer;line-height:1.2;">
+        <button type="button" id="edit-track-scrobble" style="width:100%;min-width:0;padding:10px 7px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid #f59e0b88;border-radius:8px;background:#f59e0b18;color:#ffb86b;font-family:inherit;font-size:10.5px;font-weight:800;cursor:pointer;line-height:1.2;">
           <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 12 3 3 5-6"/><circle cx="12" cy="12" r="9"/></svg><span>SCROBBLAR NOVAMENTE</span>
         </button>
       </div>
@@ -6165,7 +6210,7 @@
   </div>
 </div>
 
-<script src="./i18n.js?v=20260901-1"></script>
+<script src="./i18n.js?v=20260907-2"></script>
 <script>
 // ─────────────────────────────────────────────────────────────
 // CONFIG & STATE
@@ -6861,7 +6906,7 @@ const DEFAULTS = {
   albumFontBold: false,
   subFontBold: false,  // artista/sub usa peso 500 (semi-bold) por padrão, não negrito cheio
   playsFontBold: true,
-  scrobblesLabel: 'scrobbles',
+  scrobblesLabel: 'plays',
   numberPos: 'left', // posição do número de scrobbles em relação ao(s) texto(s): left/center/right
   scrobblesLabel2: '', // "Texto 2" — só usado quando numberPos === 'center'
   showRank: false,
@@ -11092,8 +11137,67 @@ headerInteractiveGridChk?.addEventListener('change', () => {
 document.getElementById('scrobbles-label-input').addEventListener('input', e => {
   const val = e.target.value.trim();
   scrobblesLabel = val.length ? val : DEFAULTS.scrobblesLabel;
+  syncCountLabelPresets(false);
   redrawIfReady();
 });
+
+function displayCountLabel() {
+  return /^(plays|toques)$/i.test(scrobblesLabel)
+    ? (document.documentElement.lang.startsWith('pt') ? 'toques' : 'plays')
+    : scrobblesLabel;
+}
+function syncCountLabelPresets(updateInput = true) {
+  const selected = /^(plays|toques)$/i.test(scrobblesLabel) ? 'plays' : scrobblesLabel;
+  document.querySelectorAll('#count-label-presets button').forEach(button => {
+    button.classList.toggle('active', button.dataset.label === selected);
+  });
+  if (updateInput) document.getElementById('scrobbles-label-input').value = displayCountLabel();
+}
+document.getElementById('count-label-presets').addEventListener('click', event => {
+  const button = event.target.closest('button[data-label]');
+  if (!button) return;
+  scrobblesLabel = button.dataset.label;
+  syncCountLabelPresets();
+  redrawIfReady();
+});
+
+function syncEditorDateOrderOptions() {
+  const year = document.querySelector('#editor-year-format button.active')?.dataset.year || '2-digit';
+  const isPortuguese = (window.collagerI18n?.locale || document.documentElement.lang || 'en-US').startsWith('pt');
+  const yearToken = year === 'numeric' ? (isPortuguese ? 'AAAA' : 'YYYY') : (isPortuguese ? 'AA' : 'YY');
+  const buttons = Object.fromEntries(Array.from(document.querySelectorAll('#editor-date-order button')).map(button => [button.dataset.order, button]));
+  const firstSeparator = buttons.ymd?.nextElementSibling;
+  const yearDisabled = year === 'off';
+
+  if (buttons.ymd) {
+    buttons.ymd.hidden = yearDisabled;
+    buttons.ymd.textContent = `${yearToken}-MM-DD`;
+  }
+  if (firstSeparator) firstSeparator.hidden = yearDisabled;
+  if (buttons.dmy) buttons.dmy.textContent = yearDisabled ? 'DD-MM' : `DD-MM-${yearToken}`;
+  if (buttons.mdy) buttons.mdy.textContent = yearDisabled ? 'MM-DD' : `MM-DD-${yearToken}`;
+
+  if (yearDisabled && buttons.ymd?.classList.contains('active')) {
+    buttons.ymd.classList.remove('active');
+    buttons.mdy?.classList.add('active');
+  }
+}
+
+['editor-date-order', 'editor-year-format', 'editor-month-format'].forEach(id => {
+  document.getElementById(id).addEventListener('click', event => {
+    const button = event.target.closest('button');
+    if (!button) return;
+    document.querySelectorAll(`#${id} button`).forEach(candidate => candidate.classList.toggle('active', candidate === button));
+    if (id === 'editor-year-format') syncEditorDateOrderOptions();
+    redrawIfReady();
+  });
+});
+document.addEventListener('collager:language-changed', () => {
+  syncCountLabelPresets();
+  syncEditorDateOrderOptions();
+  redrawIfReady();
+});
+window.collagerI18n?.ready?.then(syncEditorDateOrderOptions);
 
 document.getElementById('scrobbles-label2-input').addEventListener('input', e => {
   scrobblesLabel2 = e.target.value.trim();
@@ -11273,6 +11377,7 @@ function syncTypeSpecificPanels() {
   const specificPanel = document.getElementById('specific-artists-panel');
   const trackActionPanel = document.getElementById('track-action-search-panel');
   const temporalMode = isTemporalCollageType();
+  document.getElementById('editor-date-options').style.display = temporalMode ? 'flex' : 'none';
   if (newSubRow) newSubRow.style.display = currentType === 'new_artists' ? 'flex' : 'none';
   if (specificSubRow) specificSubRow.style.display = currentType === 'specific_artists' ? 'flex' : 'none';
   if (specificPanel) specificPanel.style.display = currentType === 'specific_artists' ? '' : 'none';
@@ -12093,6 +12198,10 @@ function resetType() {
   currentType = DEFAULTS.type;
   specificSubType = DEFAULTS.specificSubType;
   document.querySelectorAll('.type-btn').forEach(b => b.classList.toggle('active', b.dataset.type === DEFAULTS.type));
+  document.querySelectorAll('#editor-date-order button').forEach(button => button.classList.toggle('active', button.dataset.order === 'ymd'));
+  document.querySelectorAll('#editor-year-format button').forEach(button => button.classList.toggle('active', button.dataset.year === '2-digit'));
+  document.querySelectorAll('#editor-month-format button').forEach(button => button.classList.toggle('active', button.dataset.month === 'numeric'));
+  syncEditorDateOrderOptions();
   Object.entries(specificSubBtns).forEach(([type, btn]) => btn?.classList.toggle('active', type === specificSubType));
   Object.entries(DEFAULTS.colors).forEach(([type, c]) => {
     COLORS[type] = c;
@@ -12314,6 +12423,7 @@ function resetVisual() {
   // Nome do "scrobbles" (Texto 1) + posição do número + Texto 2
   scrobblesLabel = DEFAULTS.scrobblesLabel;
   document.getElementById('scrobbles-label-input').value = DEFAULTS.scrobblesLabel;
+  syncCountLabelPresets();
   scrobblesLabel2 = DEFAULTS.scrobblesLabel2;
   document.getElementById('scrobbles-label2-input').value = DEFAULTS.scrobblesLabel2;
   tileLineOrder = cloneTileLineDefaults();
@@ -12622,26 +12732,67 @@ async function apiFetch(params, options = {}) {
   throw lastErr;
 }
 
-const canonicalLastfmUsernameCache = new Map();
+const lastfmProfileCache = new Map();
+const lastfmProfileRequests = new Map();
+const LASTFM_PROFILE_CACHE_TTL = 5 * 60 * 1000;
 let canonicalLastfmUsername = '';
+let lastfmProfileLookupTimer = 0;
+
+function syncLastfmProBadges() {
+  const username = document.getElementById('username').value.trim().toLowerCase();
+  const profile = lastfmProfileCache.get(username);
+  const isPro = profile?.pro === true && profile.expiresAt > Date.now();
+  document.querySelectorAll('.lastfm-pro-badge').forEach(badge => { badge.hidden = !isPro; });
+}
+
+async function fetchLastfmProfile(username, apikey) {
+  const typedUsername = String(username || '').trim();
+  if (!typedUsername) return null;
+  const cacheKey = typedUsername.toLowerCase();
+  const cached = lastfmProfileCache.get(cacheKey);
+  if (cached?.expiresAt > Date.now()) return cached;
+  if (lastfmProfileRequests.has(cacheKey)) return lastfmProfileRequests.get(cacheKey);
+
+  const request = (async () => {
+    const data = await apiFetch({ method: 'user.getInfo', user: typedUsername, api_key: apikey }, { silentQueue: true });
+    if (!data?.user?.name) throw new Error('Resposta de perfil inválida.');
+    const profile = {
+      name: String(data.user.name).trim(),
+      pro: String(data.user.subscriber) === '1',
+      expiresAt: Date.now() + LASTFM_PROFILE_CACHE_TTL,
+    };
+    lastfmProfileCache.set(cacheKey, profile);
+    lastfmProfileCache.set(profile.name.toLowerCase(), profile);
+    return profile;
+  })().finally(() => {
+    lastfmProfileRequests.delete(cacheKey);
+    // Read the current input so a delayed reply never marks another account as Pro.
+    syncLastfmProBadges();
+  });
+  lastfmProfileRequests.set(cacheKey, request);
+  return request;
+}
+
+function scheduleLastfmProfileLookup() {
+  clearTimeout(lastfmProfileLookupTimer);
+  syncLastfmProBadges();
+  const username = document.getElementById('username').value.trim();
+  if (!username) return;
+  lastfmProfileLookupTimer = setTimeout(() => {
+    fetchLastfmProfile(username, document.getElementById('apikey').value.trim()).catch(() => {
+      syncLastfmProBadges();
+    });
+  }, 650);
+}
 
 async function resolveCanonicalLastfmUsername(username, apikey) {
   const typedUsername = String(username || '').trim();
   if (!typedUsername) return '';
-  const cacheKey = typedUsername.toLocaleLowerCase();
-  if (canonicalLastfmUsernameCache.has(cacheKey)) {
-    return canonicalLastfmUsernameCache.get(cacheKey);
-  }
 
   try {
-    const data = await apiFetch({
-      method: 'user.getInfo',
-      user: typedUsername,
-      api_key: apikey,
-    });
-    const canonical = String(data?.user?.name || typedUsername).trim() || typedUsername;
-    canonicalLastfmUsernameCache.set(cacheKey, canonical);
-    return canonical;
+    const profile = await fetchLastfmProfile(typedUsername, apikey);
+    syncLastfmProBadges();
+    return profile.name;
   } catch {
     // A geração continua normalmente; apenas o link usa o texto digitado.
     return typedUsername;
@@ -12662,14 +12813,31 @@ function capitalizePtMonth(value) {
   return text ? text.charAt(0).toLocaleUpperCase('pt-BR') + text.slice(1) : '';
 }
 
-function formatRecentScrobbleDate(timestampSeconds) {
-  const date = new Date(Number(timestampSeconds) * 1000);
+function formatEditorDate(date, includeTime = false, utc = false) {
   if (!Number.isFinite(date.getTime())) return '';
-  const parts = new Intl.DateTimeFormat('pt-BR', {
-    day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit', hour12: false,
+  const locale = window.collagerI18n?.locale || document.documentElement.lang || 'en-US';
+  const monthFormat = document.querySelector('#editor-month-format button.active')?.dataset.month || 'numeric';
+  const month = monthFormat === 'numeric' ? '2-digit' : monthFormat;
+  const year = document.querySelector('#editor-year-format button.active')?.dataset.year || '2-digit';
+  const order = document.querySelector('#editor-date-order button.active')?.dataset.order || 'ymd';
+  const parts = new Intl.DateTimeFormat(locale, {
+    day: '2-digit', month, ...(year === 'off' ? {} : { year }),
+    ...(utc ? { timeZone: 'UTC' } : {}),
+    ...(includeTime ? { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' } : {}),
   }).formatToParts(date);
   const get = type => parts.find(part => part.type === type)?.value || '';
-  return `${get('day')} de ${capitalizePtMonth(get('month'))} às ${get('hour')}:${get('minute')}`;
+  const fields = (order === 'dmy' ? ['day', 'month', 'year'] : order === 'mdy' ? ['month', 'day', 'year'] : ['year', 'month', 'day'])
+    .filter(field => field !== 'year' || year !== 'off');
+  if (monthFormat === 'short') {
+    const monthPart = parts.find(part => part.type === 'month');
+    if (monthPart) monthPart.value = monthPart.value.replace(/\.$/, '').slice(0, 3);
+  }
+  const text = fields.map(get).join('-');
+  return includeTime ? `${text} ${get('hour')}:${get('minute')}` : text;
+}
+
+function formatRecentScrobbleDate(timestampSeconds) {
+  return formatEditorDate(new Date(Number(timestampSeconds) * 1000), true);
 }
 
 function formatObsessionDate(dateIso, fallback = '') {
@@ -12677,14 +12845,13 @@ function formatObsessionDate(dateIso, fallback = '') {
     ? new Date(`${dateIso}T12:00:00Z`)
     : new Date(fallback);
   if (!Number.isFinite(date.getTime())) return String(fallback || '').trim();
-  const parts = new Intl.DateTimeFormat('pt-BR', {
-    day: '2-digit', month: 'long', year: 'numeric', timeZone: 'UTC',
-  }).formatToParts(date);
-  const get = type => parts.find(part => part.type === type)?.value || '';
-  return `${get('day')} de ${capitalizePtMonth(get('month'))} de ${get('year')}`;
+  return formatEditorDate(date, false, true);
 }
 
 function getTemporalMetricText(item) {
+  if (item?._nowPlaying) return window.t?.('Escutando agora...') || 'Escutando agora...';
+  if (item?._temporalType === 'recent' && item._temporalTimestamp > 0) return formatRecentScrobbleDate(item._temporalTimestamp);
+  if (item?._temporalDate) return formatObsessionDate(item._temporalDate);
   return String(item?._temporalText || '').trim();
 }
 
@@ -15761,9 +15928,9 @@ async function drawCollage(items, type, cols, rows, headerLabel, apikey, accentO
     // (padrão, ex: "16 scrobbles"), direita = texto antes (ex: "scrobbles 16"),
     // centro = número no meio, Texto 1 à esquerda e Texto 2 à direita.
     const playsText = temporalMetric || (
-      numberPos === 'right'  ? [scrobblesLabel, playsNum].filter(Boolean).join(' ') :
-      numberPos === 'center' ? [scrobblesLabel, playsNum, scrobblesLabel2].filter(Boolean).join(' ') :
-      /* left */               [playsNum, scrobblesLabel].filter(Boolean).join(' '));
+      numberPos === 'right'  ? [displayCountLabel(), playsNum].filter(Boolean).join(' ') :
+      numberPos === 'center' ? [displayCountLabel(), playsNum, scrobblesLabel2].filter(Boolean).join(' ') :
+      /* left */               [playsNum, displayCountLabel()].filter(Boolean).join(' '));
     const playsEntry = { text: playsText, drawX: playsDrawX, drawY: textBottom };
 
     let albumLines = [];
@@ -16591,10 +16758,10 @@ function getStandaloneTileTextModel(item, type, accent) {
   const temporalMetric = getTemporalMetricText(item);
   const playsNumber = temporalMetric || Number(plays).toLocaleString('pt-BR');
   const playsText = temporalMetric || (numberPos === 'right'
-    ? [scrobblesLabel, playsNumber].filter(Boolean).join(' ')
+    ? [displayCountLabel(), playsNumber].filter(Boolean).join(' ')
     : numberPos === 'center'
-      ? [scrobblesLabel, playsNumber, scrobblesLabel2].filter(Boolean).join(' ')
-      : [playsNumber, scrobblesLabel].filter(Boolean).join(' '));
+      ? [displayCountLabel(), playsNumber, scrobblesLabel2].filter(Boolean).join(' ')
+      : [playsNumber, displayCountLabel()].filter(Boolean).join(' '));
 
   const measureContext = document.createElement('canvas').getContext('2d');
   const maxWidth = TILE_SIZE - Math.round(TILE_SIZE * 0.067) * 2;
@@ -23311,6 +23478,7 @@ usernameInput.addEventListener('input', () => {
   if (match) {
     apikeyInput.value = match;
   }
+  scheduleLastfmProfileLookup();
   if (headerUseUsernameLabel && currentItems.length) {
     const dateFrom = periodMode==='custom' ? document.getElementById('date-from').value : null;
     const dateTo   = periodMode==='custom' ? document.getElementById('date-to').value   : null;
@@ -23342,7 +23510,12 @@ apikeyInput.addEventListener('input', () => {
   if (foundUser && !usernameInput.value) {
     usernameInput.value = foundUser[0];
   }
+  scheduleLastfmProfileLookup();
 });
+usernameInput.addEventListener('change', scheduleLastfmProfileLookup);
+usernameInput.addEventListener('focus', scheduleLastfmProfileLookup);
+document.addEventListener('collager:account-state-changed', scheduleLastfmProfileLookup);
+setTimeout(scheduleLastfmProfileLookup, 0);
 
 // ─────────────────────────────────────────────────────────────
 // Persistência das chaves das fontes de imagem (YouTube / Spotify / Fanart.tv)
@@ -23836,6 +24009,9 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
   // identificados por um seletor do grupo + o atributo data-* que guarda o valor.
   const SETTINGS_BUTTON_GROUPS = [
     { sel: '.type-btn',                 attr: 'type',   id: 'type-selector' },
+    { sel: '#editor-date-order button', attr: 'order',  id: 'editor-date-order' },
+    { sel: '#editor-year-format button', attr: 'year',   id: 'editor-year-format' },
+    { sel: '#editor-month-format button', attr: 'month', id: 'editor-month-format' },
     { sel: '.qbtn',                     attr: 'period', id: 'period-quick-select' },
     { sel: '.period-opt',               attr: 'mode',   id: 'period-mode-toggle' },
     { sel: '#ratio-seg button',         attr: 'ratio',  id: 'tile-ratio' },
