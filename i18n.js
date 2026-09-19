@@ -7,9 +7,13 @@
   const textState = new WeakMap();
   const attributeState = new WeakMap();
   const translatedAttributes = ['aria-label', 'data-tooltip', 'data-placeholder', 'placeholder', 'title'];
+  const numericTemplateValues = ['count', 'current', 'total', 'page', 'position'];
+  const translatedTemplateValues = ['error', 'action', 'type', 'area', 'label', 'message'];
   let currentLocale = 'en-US';
   let currentMessages = { strings: {}, patterns: [] };
   let observer = null;
+  let localeRequest = 0;
+  const reverseStrings = new Map();
 
   function preferredLocale() {
     const saved = localStorage.getItem(storageKey);
@@ -19,10 +23,13 @@
 
   async function loadLocale(locale) {
     if (localeCache.has(locale)) return localeCache.get(locale);
-    const response = await fetch(`./locales/${locale}.json?v=20260907-2`, { cache: 'no-store' });
+    const response = await fetch(`./locales/${locale}.json?v=20260913-1`, { cache: 'no-store' });
     if (!response.ok) throw new Error(`Não foi possível carregar o idioma ${locale}.`);
     const messages = await response.json();
     localeCache.set(locale, messages);
+    if (locale === 'en-US') {
+      Object.entries(messages.strings || {}).forEach(([source, target]) => reverseStrings.set(target, source));
+    }
     return messages;
   }
 
@@ -30,7 +37,7 @@
     const names = [];
     const escaped = template.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\{([\w]+)\\\}/g, (_, name) => {
       names.push(name);
-      return ['count', 'current', 'total', 'page', 'position'].includes(name) ? '(\\d+)' : '(.+?)';
+      return numericTemplateValues.includes(name) ? '([\\d.,]+)' : '(.+?)';
     });
     return { names, regex: new RegExp(`^${escaped}$`, 'u') };
   }
@@ -44,9 +51,31 @@
       const match = source.match(compiled.regex);
       if (!match) continue;
       const values = Object.fromEntries(compiled.names.map((name, index) => [name, match[index + 1]]));
-      return pattern.target.replace(/\{([\w]+)\}/g, (_, name) => translate(values[name] ?? ''));
+      return pattern.target.replace(/\{([\w]+)\}/g, (_, name) => {
+        const value = values[name] ?? '';
+        if (numericTemplateValues.includes(name)) return Number(value.replace(/[.,]/g, '')).toLocaleString(currentLocale);
+        return (pattern.translateValues || translatedTemplateValues).includes(name) ? translate(value) : value;
+      });
     }
     return source;
+  }
+
+  // Dynamic controls may already contain English when the observer first sees them.
+  function canonicalSource(value) {
+    const english = localeCache.get('en-US');
+    if (!english || Object.prototype.hasOwnProperty.call(english.strings || {}, value)) return value;
+    if (reverseStrings.has(value)) return reverseStrings.get(value);
+    for (const pattern of english.patterns || []) {
+      const compiled = pattern._reverseCompiled || (pattern._reverseCompiled = templateRegex(pattern.target));
+      const match = value.match(compiled.regex);
+      if (!match) continue;
+      const values = Object.fromEntries(compiled.names.map((name, index) => [name, match[index + 1]]));
+      return pattern.source.replace(/\{([\w]+)\}/g, (_, name) => {
+        const captured = values[name] ?? '';
+        return (pattern.translateValues || translatedTemplateValues).includes(name) ? canonicalSource(captured) : captured;
+      });
+    }
+    return value;
   }
 
   function shouldIgnore(element) {
@@ -61,10 +90,10 @@
     if (!visible) return;
     let state = textState.get(node);
     if (!state) {
-      state = { source: visible, last: visible };
+      state = { source: canonicalSource(visible), last: visible };
       textState.set(node, state);
     } else if (visible !== state.last) {
-      state.source = visible;
+      state.source = canonicalSource(visible);
     }
     const rendered = translate(state.source);
     state.last = rendered;
@@ -83,10 +112,10 @@
       const visible = element.getAttribute(attribute) || '';
       let state = states.get(attribute);
       if (!state) {
-        state = { source: visible, last: visible };
+        state = { source: canonicalSource(visible), last: visible };
         states.set(attribute, state);
       } else if (visible !== state.last) {
-        state.source = visible;
+        state.source = canonicalSource(visible);
       }
       const rendered = translate(state.source);
       state.last = rendered;
@@ -112,8 +141,12 @@
   }
 
   async function setLocale(locale) {
+    const request = ++localeRequest;
     const normalized = supportedLocales.includes(locale) ? locale : 'en-US';
-    currentMessages = await loadLocale(normalized);
+    await loadLocale('en-US');
+    const messages = await loadLocale(normalized);
+    if (request !== localeRequest) return currentLocale;
+    currentMessages = messages;
     currentLocale = normalized;
     localStorage.setItem(storageKey, normalized);
     document.documentElement.lang = normalized;

@@ -1,5 +1,10 @@
-serve-local.js
 .env
 .env.*
 .git
+.codex
+.agents
 node_modules
+tests
+serve-local.js
+SECURITY-AUDIT.md
+*.log

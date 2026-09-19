@@ -27,6 +27,12 @@ O endpoint aplica quatro protecoes:
 
 Sem Redis, o site continua funcionando com cache, fila e deduplicacao em memoria, mas cada instancia da Vercel tera seu proprio estado. Para uma unica chave atender todos os visitantes com protecao compartilhada, mantenha o Redis conectado.
 
+Autorizacao, escritas na conta e envio de bugs em producao exigem Redis disponivel para aplicar limites compartilhados. Se essa protecao falhar, essas operacoes respondem com 503 em vez de prosseguir sem limite. No servidor local, sem Redis configurado, os limites usam memoria do processo.
+
+Configure tambem `SESSION_SECRET` com pelo menos 32 caracteres aleatorios, exclusivo desta aplicacao, para separar a criptografia das sessoes do segredo do Last.fm. Sem essa variavel, a chave e derivada do segredo do Last.fm. Nunca coloque esses valores no HTML, no Git ou nas capturas de tela. A mudanca para cookies criptografados exige que usuarios autorizem o Last.fm novamente; trocar `SESSION_SECRET` tambem invalida sessoes anteriores.
+
+As permissoes e limites reais das contas Vercel, Redis e Discord precisam ser conferidos nos paineis: este repositorio nao configura MFA, permissoes de equipe, limites de gastos nem retencao dos logs. Veja `SECURITY-AUDIT.md` para o escopo da revisao e as verificacoes restantes.
+
 Os valores opcionais `LASTFM_MIN_INTERVAL_MS` e `LASTFM_MAX_QUEUE_WAIT_MS` controlam o ritmo. Os padroes sao, respectivamente, `1100` e `12000` milissegundos.
 
 ## Frontend em outro dominio

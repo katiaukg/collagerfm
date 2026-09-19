@@ -1,21 +1,10 @@
 'use strict';
 
 const { callLastfmWrite, readSession, setSessionCookie } = require('./_lastfm-session');
+const { reserveScrobbleCooldown } = require('./_lastfm-resilience');
+const { requireSameOrigin, parseJsonBody, httpError, securityHeaders, rateLimit } = require('./_security');
 const MAX_REPLACEMENT_AGE_SECONDS = 14 * 24 * 60 * 60;
 const SCROBBLE_COOLDOWN_MS = 30000;
-
-function bodyOf(request) {
-  if (request.body && typeof request.body === 'object') return request.body;
-  try { return JSON.parse(request.body || '{}'); } catch (_) { return {}; }
-}
-
-function sameOrigin(request) {
-  const origin = String(request.headers?.origin || '').trim();
-  if (!origin) return true;
-  const proto = String(request.headers?.['x-forwarded-proto'] || 'https').split(',')[0].trim();
-  const host = String(request.headers?.['x-forwarded-host'] || request.headers?.host || '').split(',')[0].trim();
-  return origin === `${proto}://${host}`;
-}
 
 function send(response, status, payload) {
   response.status(status);
@@ -24,7 +13,11 @@ function send(response, status, payload) {
   response.send(JSON.stringify(payload));
 }
 
-function cleanMetadata(value) { return String(value || '').trim().slice(0, 500); }
+function cleanMetadata(value) {
+  if (value === undefined || value === null) return '';
+  if (typeof value !== 'string' || value.length > 500) throw httpError(400, 'Invalid metadata.');
+  return value.trim();
+}
 
 function optionalPositiveInteger(value, max = Number.MAX_SAFE_INTEGER) {
   const parsed = Math.floor(Number(value));
@@ -73,19 +66,39 @@ function originalParams(original, sessionKey) {
   return { artist, track, timestamp: String(timestamp), sk: sessionKey };
 }
 
+async function enforceScrobbleCooldown(session) {
+  let remainingMs = Math.max(0, SCROBBLE_COOLDOWN_MS - (Date.now() - Number(session.lastScrobbleAt || 0)));
+  if (!remainingMs) {
+    const reservation = await reserveScrobbleCooldown(session.name, SCROBBLE_COOLDOWN_MS);
+    if (reservation.reserved) return;
+    remainingMs = reservation.retryAfterMs;
+  }
+  const error = new Error(`Aguarde ${Math.ceil(remainingMs / 1000)}s para scrobblar novamente.`);
+  error.statusCode = 429;
+  error.code = 'scrobble_cooldown';
+  error.retryAfterMs = remainingMs;
+  throw error;
+}
+
 module.exports = async function handler(request, response) {
+  securityHeaders(response);
   if (request.method !== 'POST') return send(response, 405, { error: 'Metodo nao permitido.' });
-  if (!sameOrigin(request)) return send(response, 403, { error: 'Origem nao permitida.' });
+  let body;
+  try {
+    requireSameOrigin(request);
+    body = parseJsonBody(request);
+    if (body.username !== undefined) cleanMetadata(body.username);
+  } catch (error) { return send(response, error.statusCode || 400, { error: error.message }); }
   const session = readSession(request);
   if (!session) return send(response, 401, { error: 'Autorize sua conta do Last.fm para continuar.', authRequired: true });
 
-  const body = bodyOf(request);
   const requestedUser = cleanMetadata(body.username);
   if (requestedUser && requestedUser.toLocaleLowerCase() !== session.name.toLocaleLowerCase()) {
     return send(response, 403, { error: `A sessao autorizada pertence a ${session.name}, nao a ${requestedUser}.` });
   }
 
   try {
+    await rateLimit(request, 'write', 60);
     if (body.action === 'love') {
       const artist = cleanMetadata(body.artist);
       const track = cleanMetadata(body.track);
@@ -108,14 +121,7 @@ module.exports = async function handler(request, response) {
       const duration = optionalPositiveInteger(body.duration, 24 * 60 * 60);
       const timestamp = scrobbleTimestamp(body.timestamp);
       if (!artist || !track) throw new Error('Informe faixa e artista para adicionar o scrobble.');
-      const remainingMs = Math.max(0, SCROBBLE_COOLDOWN_MS - (Date.now() - Number(session.lastScrobbleAt || 0)));
-      if (remainingMs > 0) {
-        const error = new Error(`Aguarde ${Math.ceil(remainingMs / 1000)}s para scrobblar novamente.`);
-        error.statusCode = 429;
-        error.code = 'scrobble_cooldown';
-        error.retryAfterMs = remainingMs;
-        throw error;
-      }
+      await enforceScrobbleCooldown(session);
       const params = { method: 'track.scrobble', artist, track, timestamp, sk: session.key };
       if (album) params.album = album;
       if (albumArtist) params.albumArtist = albumArtist;
@@ -159,6 +165,7 @@ module.exports = async function handler(request, response) {
       }
 
       try {
+        await enforceScrobbleCooldown(session);
         const scrobble = await callLastfmWrite({ method: 'track.scrobble', artist, track, album, timestamp: original.timestamp, sk: session.key });
         assertAcceptedScrobble(scrobble, 'O Last.fm nao aceitou o scrobble editado.');
       } catch (error) {
@@ -170,6 +177,7 @@ module.exports = async function handler(request, response) {
       const source = body.scrobble || body.original || {};
       const original = originalParams(source, session.key);
       const album = cleanMetadata(source.album);
+      await enforceScrobbleCooldown(session);
       const scrobble = await callLastfmWrite({
         method: 'track.scrobble',
         artist: original.artist,

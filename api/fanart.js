@@ -1,4 +1,5 @@
 const USER_AGENT = 'CollagerFM/1.0 (https://github.com/katiaukg/collagerfm)';
+const { parseJsonBody, requireSameOrigin, rateLimit } = require('./_security');
 
 function sortImages(images) {
   return (Array.isArray(images) ? images : [])
@@ -63,7 +64,14 @@ module.exports = async function handler(request, response) {
   }
 
   try {
-    const body = typeof request.body === 'string' ? JSON.parse(request.body || '{}') : (request.body || {});
+    requireSameOrigin(request);
+    const body = parseJsonBody(request);
+    await rateLimit(request, 'fanart', 120);
+    for (const key of ['apiKey', 'artist', 'album', 'artistMbid', 'albumMbid']) {
+      if (body[key] !== undefined && (typeof body[key] !== 'string' || body[key].length > 500)) {
+        return response.status(400).json({ error: 'Invalid text field.' });
+      }
+    }
     const apiKey = String(body.apiKey || '').trim();
     const artist = String(body.artist || '').trim();
     const album = String(body.album || '').trim();
@@ -104,6 +112,6 @@ module.exports = async function handler(request, response) {
       albumCovers: sortImages(albumCovers),
     });
   } catch (error) {
-    return response.status(error.status || 502).json({ error: `Falha na Fanart.tv: ${error.message}` });
+    return response.status(error.statusCode || error.status || 502).json({ error: error.statusCode ? error.message : 'Falha na Fanart.tv.' });
   }
 };

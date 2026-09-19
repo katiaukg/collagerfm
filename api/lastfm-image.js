@@ -1,4 +1,5 @@
 'use strict';
+const { readImageBytes, securityHeaders } = require('./_security');
 
 const ALLOWED_HOSTS = [
   /(^|\.)lastfm\.freetls\.fastly\.net$/i,
@@ -10,13 +11,14 @@ const ALLOWED_HOSTS = [
 function isAllowedUrl(value) {
   try {
     const url = new URL(String(value || ''));
-    return url.protocol === 'https:' && ALLOWED_HOSTS.some(pattern => pattern.test(url.hostname));
+    return url.protocol === 'https:' && !url.port && !url.username && !url.password && ALLOWED_HOSTS.some(pattern => pattern.test(url.hostname));
   } catch (_) {
     return false;
   }
 }
 
 module.exports = async function handler(request, response) {
+  securityHeaders(response);
   if (request.method !== 'GET') {
     response.status(405).send('Method not allowed');
     return;
@@ -41,6 +43,7 @@ module.exports = async function handler(request, response) {
         signal: AbortSignal.timeout(15000),
       });
       if (![301, 302, 303, 307, 308].includes(upstream.status)) break;
+      await upstream.body?.cancel();
       const next = new URL(upstream.headers.get('location') || '', currentUrl).href;
       if (!isAllowedUrl(next)) {
         response.status(403).send('Unsafe Last.fm image redirect');
@@ -58,7 +61,7 @@ module.exports = async function handler(request, response) {
       return;
     }
 
-    const bytes = Buffer.from(await upstream.arrayBuffer());
+    const bytes = await readImageBytes(upstream);
     if (bytes.length > 12 * 1024 * 1024) {
       response.status(413).send('Image too large');
       return;
@@ -67,6 +70,6 @@ module.exports = async function handler(request, response) {
     response.setHeader('Content-Type', contentType);
     response.status(200).send(bytes);
   } catch (error) {
-    response.status(502).send(`Last.fm image proxy failed: ${error.message}`);
+    response.status(error.statusCode || 502).send('Last.fm image proxy failed');
   }
 };

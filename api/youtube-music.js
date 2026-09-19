@@ -1,6 +1,12 @@
 let cachedConfig = null;
+const { parseJsonBody, requireSameOrigin, rateLimit } = require('./_security');
 
 async function getYoutubeMusicConfig() {
+  const configuredKey = String(process.env.YOUTUBE_MUSIC_API_KEY || '').trim();
+  if (configuredKey) return {
+    apiKey: configuredKey,
+    clientVersion: String(process.env.YOUTUBE_MUSIC_CLIENT_VERSION || '1.20250519.01.00').trim(),
+  };
   if (cachedConfig && cachedConfig.expires > Date.now()) return cachedConfig;
   const home = await fetch('https://music.youtube.com/', {
     headers: { 'User-Agent': 'Mozilla/5.0 Chrome/138.0 Safari/537.36' },
@@ -21,7 +27,10 @@ module.exports = async function handler(request, response) {
     return response.status(405).json({ error: 'Metodo nao permitido.' });
   }
   try {
-    const body = typeof request.body === 'string' ? JSON.parse(request.body || '{}') : (request.body || {});
+    requireSameOrigin(request);
+    const body = parseJsonBody(request);
+    await rateLimit(request, 'youtube', 120);
+    if (typeof body.query !== 'string' || body.query.length > 500) return response.status(400).json({ error: 'Invalid query.' });
     const query = String(body.query || '').trim();
     if (!query) return response.status(400).json({ error: 'Busca vazia.' });
     const config = await getYoutubeMusicConfig();
@@ -52,6 +61,6 @@ module.exports = async function handler(request, response) {
     response.setHeader('Cache-Control', 'public, max-age=300, s-maxage=300');
     return response.status(upstream.status).json(payload);
   } catch (error) {
-    return response.status(502).json({ error: `Falha no YouTube Music: ${error.message}` });
+    return response.status(error.statusCode || 502).json({ error: error.statusCode ? error.message : 'Falha no YouTube Music.' });
   }
 };

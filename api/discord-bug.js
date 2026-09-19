@@ -1,72 +1,16 @@
 'use strict';
 
-const crypto = require('crypto');
+const { parseJsonBody, requireSameOrigin, rateLimit } = require('./_security');
 
 const DEFAULT_CHANNEL_ID = '1533262608134705292';
 const RATE_LIMIT_WINDOW_SECONDS = 10 * 60;
 const RATE_LIMIT_MAX_REPORTS = 5;
-const memoryRateLimit = new Map();
 
 function sendJson(response, status, payload) {
   response.status(status);
   response.setHeader('Content-Type', 'application/json; charset=utf-8');
   response.setHeader('Cache-Control', 'no-store');
   response.send(JSON.stringify(payload));
-}
-
-function clientAddress(request) {
-  const forwarded = String(request.headers?.['x-forwarded-for'] || '').split(',')[0].trim();
-  return forwarded || String(request.socket?.remoteAddress || 'unknown');
-}
-
-function redisCredentials() {
-  const url = String(process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL || '').trim().replace(/\/$/, '');
-  const token = String(process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN || '').trim();
-  return url && token ? { url, token } : null;
-}
-
-async function consumeRateLimit(address) {
-  const hash = crypto.createHash('sha256').update(address).digest('hex');
-  const credentials = redisCredentials();
-  if (credentials) {
-    try {
-      const key = `collager:discord-bugs:v1:${hash}`;
-      const script = 'local n=redis.call("INCR",KEYS[1]); if n==1 then redis.call("EXPIRE",KEYS[1],ARGV[1]) end; return n';
-      const redisResponse = await fetch(credentials.url, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${credentials.token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(['EVAL', script, '1', key, String(RATE_LIMIT_WINDOW_SECONDS)]),
-        signal: AbortSignal.timeout(5000),
-      });
-      const payload = await redisResponse.json().catch(() => ({}));
-      if (!redisResponse.ok || payload.error) throw new Error('Rate limit unavailable');
-      return Number(payload.result) <= RATE_LIMIT_MAX_REPORTS;
-    } catch (error) {
-      console.warn('Redis bug-report rate limit unavailable:', error.message);
-    }
-  }
-
-  const now = Date.now();
-  const windowMs = RATE_LIMIT_WINDOW_SECONDS * 1000;
-  const recent = (memoryRateLimit.get(hash) || []).filter(timestamp => now - timestamp < windowMs);
-  recent.push(now);
-  memoryRateLimit.set(hash, recent);
-  return recent.length <= RATE_LIMIT_MAX_REPORTS;
-}
-
-function sameOriginRequest(request) {
-  const origin = String(request.headers?.origin || '').trim();
-  if (!origin) return true;
-  try {
-    const host = String(request.headers?.['x-forwarded-host'] || request.headers?.host || '').trim();
-    const allowedOrigin = String(process.env.ALLOWED_ORIGIN || '').trim();
-    return new URL(origin).host === host || (allowedOrigin && origin === allowedOrigin);
-  } catch (_) {
-    return false;
-  }
 }
 
 function discordConfigurationError(status) {
@@ -82,7 +26,9 @@ module.exports = async function handler(request, response) {
     response.setHeader('Allow', 'POST');
     return sendJson(response, 405, { error: 'Method not allowed.' });
   }
-  if (!sameOriginRequest(request)) return sendJson(response, 403, { error: 'Origin not allowed.' });
+  let body;
+  try { requireSameOrigin(request); body = parseJsonBody(request); }
+  catch (error) { return sendJson(response, error.statusCode || 400, { error: error.message }); }
 
   const botToken = String(process.env.DISCORD_BOT_TOKEN || '').trim();
   const channelId = String(process.env.DISCORD_BUG_CHANNEL_ID || DEFAULT_CHANNEL_ID).trim();
@@ -90,7 +36,9 @@ module.exports = async function handler(request, response) {
     return sendJson(response, 503, { error: 'Bug reporting is not configured.' });
   }
 
-  const body = request.body && typeof request.body === 'object' ? request.body : {};
+  for (const key of ['title', 'details', 'requester', 'page', 'website']) {
+    if (body[key] !== undefined && typeof body[key] !== 'string') return sendJson(response, 400, { error: 'Invalid bug report.' });
+  }
   const title = String(body.title || '').trim();
   const details = String(body.details || '').trim();
   const requester = String(body.requester || '').trim();
@@ -101,9 +49,7 @@ module.exports = async function handler(request, response) {
   }
 
   try {
-    if (!await consumeRateLimit(clientAddress(request))) {
-      return sendJson(response, 429, { error: 'Too many reports. Please try again later.' });
-    }
+    await rateLimit(request, 'discord', RATE_LIMIT_MAX_REPORTS, RATE_LIMIT_WINDOW_SECONDS * 1000);
 
     const fields = [];
     if (requester) fields.push({ name: 'Requested by', value: requester, inline: true });
@@ -134,6 +80,7 @@ module.exports = async function handler(request, response) {
     }
     return sendJson(response, 200, { ok: true });
   } catch (error) {
+    if (error.statusCode) return sendJson(response, error.statusCode, { error: error.message });
     console.error('Discord bug report error:', error.message);
     return sendJson(response, 502, { code: 'discord_connection_failed', error: 'Could not send the bug report.' });
   }

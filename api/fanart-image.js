@@ -1,8 +1,9 @@
 const ALLOWED_HOST = 'assets.fanart.tv';
+const { readImageBytes, securityHeaders } = require('./_security');
 
 function safeTarget(value) {
   const target = new URL(value);
-  if (target.protocol !== 'https:' || target.hostname !== ALLOWED_HOST) throw new Error('Forbidden');
+  if (target.protocol !== 'https:' || target.hostname !== ALLOWED_HOST || target.port || target.username || target.password) throw new Error('Forbidden');
   return target;
 }
 
@@ -17,12 +18,14 @@ async function fetchImage(target, redirects = 0) {
     signal: AbortSignal.timeout(15000),
   });
   if (upstream.status >= 300 && upstream.status < 400 && upstream.headers.get('location') && redirects < 4) {
+    await upstream.body?.cancel();
     return fetchImage(safeTarget(new URL(upstream.headers.get('location'), target).href), redirects + 1);
   }
   return upstream;
 }
 
 module.exports = async function handler(request, response) {
+  securityHeaders(response);
   if (request.method !== 'GET') {
     response.setHeader('Allow', 'GET');
     return response.status(405).send('Method Not Allowed');
@@ -33,10 +36,11 @@ module.exports = async function handler(request, response) {
     if (!upstream.ok) return response.status(upstream.status).send('Image unavailable');
     const contentType = upstream.headers.get('content-type') || 'image/jpeg';
     if (!contentType.toLowerCase().startsWith('image/')) return response.status(415).send('Unsupported content');
+    const bytes = await readImageBytes(upstream);
     response.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=86400');
     response.setHeader('Content-Type', contentType);
-    return response.status(200).send(Buffer.from(await upstream.arrayBuffer()));
+    return response.status(200).send(bytes);
   } catch (error) {
-    return response.status(error.message === 'Forbidden' ? 403 : 502).send(error.message);
+    return response.status(error.statusCode || (error.message === 'Forbidden' ? 403 : 502)).send('Image unavailable');
   }
 };

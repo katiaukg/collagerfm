@@ -6210,7 +6210,7 @@
   </div>
 </div>
 
-<script src="./i18n.js?v=20260907-2"></script>
+<script src="./i18n.js?v=20260913-1"></script>
 <script>
 // ─────────────────────────────────────────────────────────────
 // CONFIG & STATE
@@ -6951,6 +6951,12 @@ const DEFAULTS = {
 
 const TYPE_LABELS = { artists: 'Artistas', albums: 'Álbuns', tracks: 'Faixas', new_artists: 'Novos no período', specific_artists: 'Artistas específicos', recent: 'Recentes', loved: 'Curtidas', obsessions: 'Obsessões' };
 const uiText = value => window.collagerI18n?.t(String(value ?? '')) ?? String(value ?? '');
+const uiNumber = value => Number(value).toLocaleString(window.collagerI18n?.locale || 'en-US');
+
+function setLiteralText(element, value, literal = true) {
+  element.toggleAttribute('data-i18n-skip', literal);
+  element.textContent = String(value ?? '');
+}
 const TILE_SIZE   = 300;
 
 // ── Fontes de imagem por tipo — a ORDEM DE PRIORIDADE agora é lida
@@ -9212,7 +9218,7 @@ function renderTileLineOrderControls() {
     if (swatch) swatchParking.appendChild(swatch);
   });
   list.innerHTML = lines.map((line, i) => {
-    const displayLabel = line.id === 'plays' ? getPlaysUiLabel() : line.label;
+    const displayLabel = escapeHtml(line.id === 'plays' ? getPlaysUiLabel() : line.label);
     return '<div class="tile-line-chip" draggable="true" data-id="' + line.id + '"><span class="drag-handle">⋮⋮</span><span class="line-num">' + (i + 1) + '.</span><span class="line-name">' + displayLabel + '</span><span class="line-color-host"></span><label class="toggle-switch" style="transform:scale(.78);"><input type="checkbox" ' + (line.enabled ? 'checked' : '') + ' aria-label="Mostrar ' + displayLabel + '"><span class="toggle-slider"></span></label></div>';
   }).join('');
   list.querySelectorAll('.tile-line-chip').forEach(chip => {
@@ -11407,13 +11413,13 @@ function renderSpecificArtistsList() {
     sidebarList.innerHTML = selectedSpecificArtists.map((artist, i) => `
       <div class="specific-selected-item" data-index="${i}">
         <button type="button" aria-label="Remover ${escapeHtml(artist.name)}" title="Remover">x</button>
-        <span title="${escapeHtml(artist.name)}">${escapeHtml(artist.name)}</span>
+        <span data-i18n-skip title="${escapeHtml(artist.name)}">${escapeHtml(artist.name)}</span>
       </div>
     `).join('');
   }
   if (floatingList) {
     floatingList.style.display = show ? 'flex' : 'none';
-    floatingList.innerHTML = selectedSpecificArtists.map(artist => `<div class="specific-artist-pill">${escapeHtml(artist.name)}</div>`).join('');
+    floatingList.innerHTML = selectedSpecificArtists.map(artist => `<div class="specific-artist-pill" data-i18n-skip>${escapeHtml(artist.name)}</div>`).join('');
   }
 }
 
@@ -11588,8 +11594,8 @@ if (specificArtistSearchInput && specificArtistResults) {
         specificArtistResults.classList.add('visible');
         specificArtistResults.innerHTML = results.map((artist, i) => `
           <button type="button" class="specific-artist-row" data-index="${i}">
-            <span>${escapeHtml(artist.name)}</span>
-            <small>${artist.playcount ? Number(artist.playcount).toLocaleString('pt-BR') + ' scrobbles' : ''}</small>
+            <span data-i18n-skip>${escapeHtml(artist.name)}</span>
+            <small>${artist.playcount ? uiNumber(artist.playcount) + ' scrobbles' : ''}</small>
           </button>
         `).join('');
         specificArtistResults._lastResults = results;
@@ -11704,8 +11710,8 @@ if (trackActionSearchInput && trackActionSearchResults) {
         trackActionSearchResults.classList.add('visible');
         trackActionSearchResults.innerHTML = results.map((track, index) => `
           <button type="button" class="specific-artist-row" data-index="${index}">
-            <span>${escapeHtml(track.name)}</span>
-            <small>${escapeHtml(track.artist)}</small>
+            <span data-i18n-skip>${escapeHtml(track.name)}</span>
+            <small data-i18n-skip>${escapeHtml(track.artist)}</small>
           </button>
         `).join('');
       } catch (error) {
@@ -15545,7 +15551,7 @@ async function drawCollage(items, type, cols, rows, headerLabel, apikey, accentO
     accentOverride = modeAccent[queryState.mode];
   }
   if (isTemporalCollageRendered()) {
-    headerLabel = `${String(headerLabel || '').replace(/\s*·\s*página\s+\d+\s*$/iu, '')} · página ${temporalCollagePage + 1}`.trim();
+    headerLabel = `${String(headerLabel || '').replace(/\s*·\s*(?:página|page)\s+\d+\s*$/iu, '')} · ${uiText(`página ${temporalCollagePage + 1}`)}`.trim();
   }
   updateCutModeExamples(items, type);
   const liveCanvas = document.getElementById('collage-canvas');
@@ -15923,7 +15929,7 @@ async function drawCollage(items, type, cols, rows, headerLabel, apikey, accentO
     ctx.textBaseline = 'alphabetic';
     const playsHex   = playsColorOverride ?? accent;
     const temporalMetric = getTemporalMetricText(item);
-    const playsNum   = temporalMetric || Number(plays).toLocaleString('pt-BR');
+    const playsNum   = temporalMetric || uiNumber(plays);
     // Posição do número em relação ao(s) texto(s): esquerda = número antes
     // (padrão, ex: "16 scrobbles"), direita = texto antes (ex: "scrobbles 16"),
     // centro = número no meio, Texto 1 à esquerda e Texto 2 à direita.
@@ -16756,7 +16762,7 @@ function getStandaloneTileTextModel(item, type, accent) {
   const albumName = applyTextCase(rawAlbumName, getEffectiveTextCaseMode('album'));
   const plays = getEffectivePoolPlays(item, poolIdx) || '?';
   const temporalMetric = getTemporalMetricText(item);
-  const playsNumber = temporalMetric || Number(plays).toLocaleString('pt-BR');
+  const playsNumber = temporalMetric || uiNumber(plays);
   const playsText = temporalMetric || (numberPos === 'right'
     ? [displayCountLabel(), playsNumber].filter(Boolean).join(' ')
     : numberPos === 'center'
@@ -16933,12 +16939,12 @@ async function buildStandaloneHtml() {
       ? item.name || 'Artista'
       : `${item.name || ''}${getItemArtistName(item, type) ? ` — ${getItemArtistName(item, type)}` : ''}`;
     const imageLink = imageHref
-      ? `<a class="tile-image-link" href="${escapeExportHtml(imageHref)}" target="_blank" rel="noopener" aria-label="Abrir ${escapeExportHtml(label)} no Last.fm"></a>`
+      ? `<a class="tile-image-link" href="${escapeExportHtml(imageHref)}" target="_blank" rel="noopener" aria-label="${escapeExportHtml(uiText(`Abrir ${label} no Last.fm`))}"></a>`
       : '';
     return `<article class="tile" tabindex="0" aria-label="${escapeExportHtml(label)}" data-href="${escapeExportHtml(imageHref)}" style="${style}">${imageLink}${renderStandaloneTileText(models, width, textHref)}</article>`;
   }).join('');
 
-  const title = `${TYPE_LABELS[type] || 'Collage'} — collager.fm`;
+  const title = `${uiText(TYPE_LABELS[type] || 'Collage')} — collager.fm`;
   const padCqw = (pad / width * 100).toFixed(5);
   const viewportHeightWidth = (width / height * 100).toFixed(7);
   const viewportPaddingWidth = (32 * width / height).toFixed(7);
@@ -17198,10 +17204,10 @@ function capturePendingQueryState() {
     effectiveType: getEffectiveType(),
     newSubType,
     specificSubType,
-    periodMode,
-    period: currentPeriod,
-    dateFrom: document.getElementById('date-from')?.value || '',
-    dateTo: document.getElementById('date-to')?.value || '',
+    periodMode: currentType === 'obsessions' ? 'preset' : periodMode,
+    period: currentType === 'obsessions' ? 'overall' : currentPeriod,
+    dateFrom: currentType === 'obsessions' ? '' : (document.getElementById('date-from')?.value || ''),
+    dateTo: currentType === 'obsessions' ? '' : (document.getElementById('date-to')?.value || ''),
     cols: parseInt(document.getElementById('cols')?.value || DEFAULTS.cols),
     rows: parseInt(document.getElementById('rows')?.value || DEFAULTS.rows),
     specificArtists: selectedSpecificArtists.map(artist => normalizeMemoryPart(artist.name)).sort(),
@@ -17446,7 +17452,11 @@ async function generate() {
         Math.floor(parseLocalDateEnd(dateTo).getTime()/1000), limit);
     }
 
-    if (!items.length) { showStatus('Nenhum dado encontrado para esse período.', true); setLoading(false); return; }
+    if (!items.length) {
+      showStatus(isObsessionsMode ? 'Nenhuma obsessão encontrada no histórico geral desta conta.' : 'Nenhum dado encontrado para esse período.', true);
+      setLoading(false);
+      return;
+    }
     if (isTemporalMode) {
       temporalPaginationRequestedLimit = limit;
       temporalPaginationHasMore = temporalPaginationEstimatedTotal > 0
@@ -18759,7 +18769,7 @@ function closeObsessionNoteDialog(note = null) {
 
 function requestObsessionNote(track) {
   if (pendingObsessionNoteResolve) closeObsessionNoteDialog(null);
-  obsessionNoteTrack.textContent = `${track.artist} — ${track.name}`;
+  setLiteralText(obsessionNoteTrack, `${track.artist} — ${track.name}`);
   obsessionNoteInput.value = '';
   obsessionNoteOverlay.style.display = 'flex';
   setTimeout(() => obsessionNoteInput.focus(), 0);
@@ -18919,7 +18929,7 @@ function openTextEditModal(index) {
   const lovedMode = isLovedCollageRendered();
   const obsessionsMode = isObsessionsCollageRendered();
   const temporalMode = isTemporalCollageRendered();
-  const readOnlyMetadata = temporalMode;
+  const readOnlyMetadata = false;
   syncTileConfigTextFields(effectiveType, temporalMode);
   [editTextMain, editTextAlbum, editTextSub].forEach(input => {
     input.readOnly = readOnlyMetadata;
@@ -18930,8 +18940,8 @@ function openTextEditModal(index) {
   tileImageSection.style.display = 'flex';
   tileMergeActions.style.display = temporalMode ? 'none' : 'flex';
   document.getElementById('edit-tile-delete').style.display = temporalMode ? 'none' : '';
-  document.getElementById('edit-text-save').style.display = temporalMode ? 'none' : '';
-  document.getElementById('edit-text-reset').style.display = temporalMode ? 'none' : '';
+  document.getElementById('edit-text-save').style.display = '';
+  document.getElementById('edit-text-reset').style.display = '';
   recentMetadataActions.style.display = recentMode ? 'flex' : 'none';
   lovedMetadataActions.style.display = lovedMode ? 'flex' : 'none';
   obsessionActions.style.display = obsessionsMode ? 'flex' : 'none';
@@ -19200,7 +19210,7 @@ function showExtensionActivity(requestId, action, payload = {}) {
   extensionActivityPanel.style.setProperty('--extension-progress', '5%');
   extensionActivityTitle.textContent = EXTENSION_ACTION_LABELS[action] || 'Executando ação';
   const target = extensionActivityTargetText(payload);
-  extensionActivityTarget.textContent = target;
+  setLiteralText(extensionActivityTarget, target);
   extensionActivityTarget.classList.toggle('visible', Boolean(target));
   extensionActivityMessage.textContent = 'Enviando comando à extensão...';
   setExtensionActivityAction();
@@ -20093,7 +20103,8 @@ function ensureLastfmWriteAuthorization() {
     applyRecentMetadataAuthState(current);
     if (current.connected) return current;
     if (!current.configured) throw new Error(lastfmAuthorizationRequiredMessage(current));
-    const popup = window.open('/api/lastfm-auth?action=start', 'collager-lastfm-auth', 'popup,width=720,height=760');
+    const locale = window.collagerI18n?.locale || 'en-US';
+    const popup = window.open(`/api/lastfm-auth?action=start&locale=${encodeURIComponent(locale)}`, 'collager-lastfm-auth', 'popup,width=720,height=760');
     if (!popup) throw new Error('O navegador bloqueou a janela de autorização do Last.fm.');
     setActiveTemporalStatus('Autorize o collager.fm na janela do Last.fm.');
     return await new Promise((resolve, reject) => {
@@ -20197,7 +20208,8 @@ lastfmChangeAccount.addEventListener('click', async event => {
     if (changingAccount) {
       const disconnectResponse = await fetch('/api/lastfm-auth?action=disconnect', {
         method: 'POST',
-        headers: { Accept: 'application/json' },
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: '{}',
       });
       const disconnectPayload = await disconnectResponse.json().catch(() => ({}));
       if (!disconnectResponse.ok) throw new Error(disconnectPayload.error || 'Não foi possível desconectar a conta atual.');
@@ -20515,17 +20527,17 @@ function buildMergeSearchCard(item, selected) {
   info.className = 'msc-info';
   const titleEl = document.createElement('div');
   titleEl.className = 'msc-title';
-  titleEl.textContent = item.name || '';
+  setLiteralText(titleEl, item.name || '');
   info.appendChild(titleEl);
   if (sub) {
     const artistEl = document.createElement('div');
     artistEl.className = 'msc-artist';
-    artistEl.textContent = sub;
+    setLiteralText(artistEl, sub);
     info.appendChild(artistEl);
   }
   const playsEl = document.createElement('div');
   playsEl.className = 'msc-plays';
-  playsEl.textContent = `${plays.toLocaleString('pt-BR')} scrobble${plays === 1 ? '' : 's'} no período`;
+  playsEl.textContent = `${uiNumber(plays)} scrobble${plays === 1 ? '' : 's'} no período`;
   info.appendChild(playsEl);
   card.appendChild(info);
 
@@ -20550,7 +20562,7 @@ function updateMergeSearchTotals() {
   mergeSearchConfirmBtn.style.display = '';
   mergeSearchConfirmBtn.textContent = `Mesclar com ${n} selecionado${n > 1 ? 's' : ''}`;
   mergeSearchTotalEl.style.display = '';
-  mergeSearchTotalEl.textContent = `+ ${total.toLocaleString('pt-BR')} scrobble${total === 1 ? '' : 's'} será${total === 1 ? '' : 'ão'} adicionado${total === 1 ? '' : 's'}`;
+  mergeSearchTotalEl.textContent = `+ ${uiNumber(total)} scrobble${total === 1 ? '' : 's'} será${total === 1 ? '' : 'ão'} adicionado${total === 1 ? '' : 's'}`;
 }
 
 // Monta os botões de página (1, 2, 3...) — um por página de resultados novos.
@@ -21423,13 +21435,13 @@ function createChangedTitlePreviewRow(entry) {
   const row = document.createElement('div');
   row.className = 'changed-title-preview-row';
   const original = document.createElement('span');
-  original.textContent = changedTitleDisplayValue(entry.original);
+  setLiteralText(original, changedTitleDisplayValue(entry.original), entry.original !== '');
   original.title = original.textContent;
   const arrow = document.createElement('span');
   arrow.className = 'changed-title-arrow';
   arrow.textContent = '→';
   const changed = document.createElement('span');
-  changed.textContent = changedTitleDisplayValue(entry.changed);
+  setLiteralText(changed, changedTitleDisplayValue(entry.changed), entry.changed !== '');
   changed.title = changed.textContent;
   row.append(original, arrow, changed);
   return row;
@@ -21510,13 +21522,13 @@ function createChangedTitleListRow(entry) {
   flow.className = 'changed-title-flow';
   const original = document.createElement('div');
   original.className = 'changed-title-value';
-  original.textContent = changedTitleDisplayValue(entry.original);
+  setLiteralText(original, changedTitleDisplayValue(entry.original), entry.original !== '');
   const arrow = document.createElement('div');
   arrow.className = 'changed-title-list-arrow';
   arrow.textContent = '→';
   const changed = document.createElement('div');
   changed.className = 'changed-title-value changed';
-  changed.textContent = changedTitleDisplayValue(entry.changed);
+  setLiteralText(changed, changedTitleDisplayValue(entry.changed), entry.changed !== '');
   flow.append(original, arrow, changed);
 
   const restore = document.createElement('button');
@@ -21594,13 +21606,13 @@ function appendHistoryMetadata(container, item) {
   [album, artist].filter(Boolean).forEach(text => {
     const meta = document.createElement('div');
     meta.className = 'dt-meta';
-    meta.textContent = text;
+    setLiteralText(meta, text);
     container.appendChild(meta);
   });
 }
 
 function getHistoryMetricText(item, plays) {
-  return getTemporalMetricText(item) || (plays ? `${Number(plays).toLocaleString('pt-BR')} scrobbles` : '');
+  return getTemporalMetricText(item) || (plays ? `${uiNumber(plays)} scrobbles` : '');
 }
 
 async function restoreHistoryPoolIdx(poolIdx) {
@@ -21643,7 +21655,9 @@ function createHistoryCard(poolIdx, kind) {
       half.appendChild(makeHistoryImage(idx));
       const label = document.createElement('div');
       label.className = 'mc-label';
-      label.textContent = halfItem?.name || '';
+      const title = document.createElement('span');
+      setLiteralText(title, halfItem?.name || '');
+      label.appendChild(title);
       appendHistoryMetadata(label, halfItem);
       const metricText = getHistoryMetricText(halfItem, plays);
       if (metricText) {
@@ -21678,7 +21692,7 @@ function createHistoryCard(poolIdx, kind) {
   info.className = 'dt-info';
   const name = document.createElement('div');
   name.className = 'dt-name';
-  name.textContent = item.name || '';
+  setLiteralText(name, item.name || '');
   info.appendChild(name);
   appendHistoryMetadata(info, item);
   const plays = getEffectivePoolPlays(item, poolIdx);
@@ -21743,7 +21757,9 @@ function createBehaviorHistoryCard(saved, kind, type, context = null) {
       half.appendChild(makeBehaviorHistoryImage(entry, type));
       const label = document.createElement('div');
       label.className = 'mc-label';
-      label.textContent = entry.item.name || '';
+      const title = document.createElement('span');
+      setLiteralText(title, entry.item.name || '');
+      label.appendChild(title);
       appendHistoryMetadata(label, entry.item);
       half.appendChild(label);
       card.appendChild(half);
@@ -21771,7 +21787,7 @@ function createBehaviorHistoryCard(saved, kind, type, context = null) {
   info.className = 'dt-info';
   const name = document.createElement('div');
   name.className = 'dt-name';
-  name.textContent = source.item.name || '';
+  setLiteralText(name, source.item.name || '');
   info.appendChild(name);
   appendHistoryMetadata(info, source.item);
   tile.appendChild(info);
@@ -21947,9 +21963,9 @@ function renderHistoryRuleSelection(side) {
   if (!item) return;
   attachHistorySearchThumb(selected, item, historyModalType);
   const name = document.createElement('strong');
-  name.textContent = item.name || '?';
+  setLiteralText(name, item.name || '?');
   const metadata = document.createElement('span');
-  metadata.textContent = getHistorySearchMetadata(item, historyModalType);
+  setLiteralText(metadata, getHistorySearchMetadata(item, historyModalType));
   const clear = document.createElement('button');
   clear.type = 'button';
   clear.textContent = '×';
@@ -22024,9 +22040,9 @@ function renderHistoryRuleBuilderResults(side, items) {
     row.className = 'history-rule-result';
     attachHistorySearchThumb(row, item, historyModalType);
     const name = document.createElement('strong');
-    name.textContent = item.name || '?';
+    setLiteralText(name, item.name || '?');
     const metadata = document.createElement('span');
-    metadata.textContent = getHistorySearchMetadata(item, historyModalType);
+    setLiteralText(metadata, getHistorySearchMetadata(item, historyModalType));
     const select = document.createElement('button');
     select.type = 'button';
     select.textContent = uiText('Selecionar');
@@ -24156,8 +24172,13 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
 
   // Aplica de volta um valor escaneado de input/select.
   function applyFormField(f) {
+    if (!f || !scanFormFields().some(field => field.id === f.id)) return;
     const el = document.getElementById(f.id);
     if (!el) return; // controle pode ter sido removido em uma versão mais nova
+    if (typeof f.value !== 'string' && typeof f.value !== 'boolean' && typeof f.value !== 'number') return;
+    if (String(f.value).length > 4096) return;
+    if ((el.type === 'number' || el.type === 'range') && (!Number.isFinite(Number(f.value))
+      || (el.min !== '' && Number(f.value) < Number(el.min)) || (el.max !== '' && Number(f.value) > Number(el.max)))) return;
     if (f.id === 'username' && f.value === '%user%') return;
     if (f.type === 'checkbox') el.checked = !!f.value;
     else el.value = f.value;
@@ -24167,10 +24188,12 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
 
   // Aplica de volta a opção ativa de um grupo de botões segmentado.
   function applyButtonGroup(g) {
-    const buttons = document.querySelectorAll(g.selector);
+    const definition = SETTINGS_BUTTON_GROUPS.find(group => group.id === g?.id);
+    if (!definition) return;
+    const buttons = document.querySelectorAll(definition.sel);
     if (!buttons.length) return;
     const value = g.id === 'header-default-logopos' && g.value === 'center' ? 'center-top' : g.value;
-    const target = Array.from(buttons).find(b => b.dataset[g.attr] === value);
+    const target = Array.from(buttons).find(b => b.dataset[definition.attr] === value);
     if (!target) return;
     target.click(); // dispara o listener real do grupo (mantém toda a lógica de UI já existente)
   }
@@ -24341,7 +24364,7 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
         restoredOrder[type] = [
           ...savedLines.filter(line => defaults.some(base => base.id === line.id)),
           ...defaults.filter(base => !savedById.has(base.id)),
-        ].map(line => ({ ...line, enabled: line.enabled !== false }));
+        ].map(line => ({ ...defaults.find(base => base.id === line.id), enabled: line.enabled !== false }));
       });
       tileLineOrder = restoredOrder;
       renderTileLineOrderControls();
@@ -24487,6 +24510,17 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
   }
 
   async function applySettings(data) {
+    let entries = 0;
+    function validateImportedValue(value, depth = 0) {
+      if (++entries > 200000 || depth > 30) throw new Error('Arquivo de configurações inválido.');
+      if (value && typeof value === 'object') {
+        Object.entries(value).forEach(([key, child]) => {
+          if (['__proto__', 'prototype', 'constructor'].includes(key)) throw new Error('Arquivo de configurações inválido.');
+          validateImportedValue(child, depth + 1);
+        });
+      }
+    }
+    validateImportedValue(data);
     if (!data || typeof data !== 'object') throw new Error('Arquivo de configurações inválido.');
     if (data.__version !== 4) throw new Error('Somente arquivos de configurações da versão 4 são aceitos.');
 
@@ -24685,7 +24719,7 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
       dot.className = 'preset-color-dot';
       dot.style.background = preset.color;
       const name = document.createElement('span');
-      name.textContent = preset.name;
+      setLiteralText(name, preset.name, preset.id !== 'default');
       name.style.color = preset.color;
       name.className = 'preset-option-name';
       button.append(dot, name);
@@ -24709,7 +24743,7 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
     if (!selected) return;
     const name = document.getElementById('preset-current-name');
     const dot = document.getElementById('preset-current-color');
-    name.textContent = selected.name;
+    setLiteralText(name, selected.name, selected.id !== 'default');
     name.style.color = selected.color;
     dot.style.background = selected.color;
   }
@@ -24735,7 +24769,7 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
 
       const name = document.createElement('span');
       name.className = 'preset-option-name';
-      name.textContent = preset.name;
+      setLiteralText(name, preset.name, preset.id !== 'default');
       name.style.color = preset.color;
       row.append(dot, name);
 
@@ -25431,6 +25465,10 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
     const file = e.target.files[0];
     e.target.value = '';
     if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      showStatus('Erro ao importar configurações: arquivo inválido.', true);
+      return;
+    }
     const reader = new FileReader();
     reader.onload = async ev => {
       try {

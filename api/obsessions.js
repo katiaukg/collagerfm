@@ -1,10 +1,11 @@
 'use strict';
 
 const crypto = require('crypto');
+const { rateLimit } = require('./_security');
 
 const CACHE_TTL = 5 * 60 * 1000;
 const STALE_CACHE_TTL = 24 * 60 * 60 * 1000;
-const CACHE_PREFIX = 'collager:obsessions:v2:';
+const CACHE_PREFIX = 'collager:obsessions:v3:';
 const responseCache = new Map();
 const LASTFM_PAGE_HEADERS = {
   Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
@@ -101,7 +102,7 @@ function decodeHtml(value) {
     if (entity[0] === '#') {
       const hex = entity[1]?.toLowerCase() === 'x';
       const code = Number.parseInt(entity.slice(hex ? 2 : 1), hex ? 16 : 10);
-      return Number.isFinite(code) ? String.fromCodePoint(code) : match;
+      return Number.isFinite(code) && code >= 0 && code <= 0x10ffff ? String.fromCodePoint(code) : match;
     }
     return Object.prototype.hasOwnProperty.call(named, entity.toLowerCase())
       ? named[entity.toLowerCase()]
@@ -189,7 +190,13 @@ async function fetchPage(user, page) {
     error.status = upstream.status;
     throw error;
   }
-  return upstream.text();
+  const html = await upstream.text();
+  if (/<title>\s*Client Challenge\s*<\/title>|\/_fs-ch-|cf-chl-/i.test(html)) {
+    const error = new Error('O Last.fm exigiu uma verificação de acesso. Não foi possível consultar o histórico geral de obsessões agora.');
+    error.status = 503;
+    throw error;
+  }
+  return html;
 }
 
 module.exports = async function handler(request, response) {
@@ -199,6 +206,8 @@ module.exports = async function handler(request, response) {
   response.setHeader('Vary', 'Origin');
   if (request.method !== 'GET') return sendJson(response, 405, { error: 'Metodo nao permitido.' });
   if (!isOriginAllowed(request)) return sendJson(response, 403, { error: 'Origem nao permitida.' });
+  try { await rateLimit(request, 'obsessions', 30); }
+  catch (error) { return sendJson(response, error.statusCode || 503, { error: error.message }); }
 
   const user = String(request.query?.user || '').trim();
   const limit = Math.max(1, Math.min(500, Number.parseInt(request.query?.limit, 10) || 50));

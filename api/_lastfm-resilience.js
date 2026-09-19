@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const memoryCache = new Map();
 const inFlightRequests = new Map();
 const queueStatusMemory = new Map();
+const scrobbleCooldownMemory = new Map();
 let localNextRequestAt = 0;
 let localBackoffUntil = 0;
 
@@ -15,6 +16,7 @@ const JOB_QUEUE_KEY = 'collager:lastfm:job-queue:v1';
 const JOB_LEASE_PREFIX = 'collager:lastfm:job-lease:v1:';
 const BACKOFF_KEY = 'collager:lastfm:backoff:v1';
 const STATUS_PREFIX = 'collager:lastfm:status:v1:';
+const SCROBBLE_COOLDOWN_PREFIX = 'collager:lastfm:scrobble-cooldown:v1:';
 const DEFAULT_INTERVAL_MS = 1100;
 const DEFAULT_MAX_QUEUE_WAIT_MS = 12000;
 
@@ -52,6 +54,66 @@ async function redisCommand(command) {
 
 function hashKey(value) {
   return crypto.createHash('sha256').update(String(value), 'utf8').digest('hex');
+}
+
+function reserveLocalScrobbleCooldown(key, durationMs, now = Date.now()) {
+  const currentUntil = Number(scrobbleCooldownMemory.get(key) || 0);
+  if (currentUntil > now) {
+    return { reserved: false, retryAfterMs: currentUntil - now, cooldownUntil: currentUntil };
+  }
+
+  const cooldownUntil = now + durationMs;
+  scrobbleCooldownMemory.set(key, cooldownUntil);
+  if (scrobbleCooldownMemory.size > 1000) {
+    for (const [storedKey, storedUntil] of scrobbleCooldownMemory) {
+      if (storedUntil <= now) scrobbleCooldownMemory.delete(storedKey);
+    }
+  }
+  return { reserved: true, retryAfterMs: 0, cooldownUntil };
+}
+
+async function reserveScrobbleCooldown(account, cooldownMs = 30000) {
+  const durationMs = Math.max(1000, Math.min(5 * 60 * 1000, Number(cooldownMs) || 30000));
+  const identity = String(account || '').trim().toLocaleLowerCase();
+  if (!identity) throw new Error('Conta Last.fm invalida para reservar o scrobble.');
+
+  const key = `${SCROBBLE_COOLDOWN_PREFIX}${hashKey(identity)}`;
+  const now = Date.now();
+  const localReservation = reserveLocalScrobbleCooldown(key, durationMs, now);
+  if (!localReservation.reserved) return localReservation;
+  if (!redisCredentials()) {
+    if (process.env.VERCEL) {
+      const error = new Error('Scrobble protection is unavailable. Please try again later.');
+      error.statusCode = 503;
+      throw error;
+    }
+    return localReservation;
+  }
+
+  const script = [
+    'local ttl=redis.call("PTTL",KEYS[1])',
+    'if ttl>0 then return {0,ttl} end',
+    'redis.call("PSETEX",KEYS[1],ARGV[1],ARGV[2])',
+    'return {1,tonumber(ARGV[1])}',
+  ].join(';');
+
+  try {
+    const response = await redisCommand([
+      'EVAL', script, '1', key, String(durationMs), crypto.randomBytes(16).toString('hex'),
+    ]);
+    const result = Array.isArray(response.result) ? response.result.map(Number) : [];
+    if (result[0] === 1) return localReservation;
+
+    const retryAfterMs = Math.max(1, result[1] || durationMs);
+    const cooldownUntil = Date.now() + retryAfterMs;
+    scrobbleCooldownMemory.set(key, cooldownUntil);
+    return { reserved: false, retryAfterMs, cooldownUntil };
+  } catch (_) {
+    // A failed distributed reservation must not allow a write on another instance.
+    const error = new Error('Scrobble protection is unavailable. Please try again later.');
+    error.statusCode = 503;
+    throw error;
+  }
 }
 
 function normalizeCacheKey(params) {
@@ -383,5 +445,6 @@ module.exports = {
   renewQueueOwner,
   redisConfigured: () => Boolean(redisCredentials()),
   reserveGlobalSlot,
+  reserveScrobbleCooldown,
   resilientCachedRequest,
 };

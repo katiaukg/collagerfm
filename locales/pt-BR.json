@@ -2,6 +2,89 @@
   "locale": "pt-BR",
   "name": "Português (Brasil)",
   "strings": {
+    "Too many requests. Please try again later.": "Muitas solicitações. Tente novamente mais tarde.",
+    "Please try again later.": "Tente novamente mais tarde.",
+    "Invalid metadata.": "Metadados inválidos.",
+    "Invalid text field.": "Campo de texto inválido.",
+    "Request too large.": "Solicitação muito grande.",
+    "Invalid request.": "Solicitação inválida.",
+    "Autorização expirada. Inicie a conexão novamente.": "Autorização expirada. Inicie a conexão novamente.",
+    "Nenhuma obsessão encontrada no histórico geral desta conta.": "Nenhuma obsessão encontrada no histórico geral desta conta.",
+    "Falha ao consultar obsessoes: O Last.fm exigiu uma verificação de acesso. Não foi possível consultar o histórico geral de obsessões agora.": "O Last.fm exigiu uma verificação de acesso. Não foi possível consultar o histórico geral de obsessões agora.",
+    "Scrobble protection is unavailable. Please try again later.": "A proteção de scrobbles está indisponível. Tente novamente mais tarde.",
+    "Recentes": "Recentes",
+    "Mesclar": "Mesclar",
+    "Excluir": "Excluir",
+    "Não foi possível pesquisar no Spotify (403). Em modo de desenvolvimento, o proprietário do aplicativo precisa ter Spotify Premium e a conta autorizada deve estar liberada no dashboard.": "Não foi possível pesquisar no Spotify (403). Em modo de desenvolvimento, o proprietário do aplicativo precisa ter Spotify Premium e a conta autorizada deve estar liberada no dashboard.",
+    "Não foi possível pesquisar no Spotify agora: limite temporário de requisições atingido.": "Não foi possível pesquisar no Spotify agora: limite temporário de requisições atingido.",
+    "Resposta de perfil inválida.": "Resposta de perfil inválida.",
+    "Não foi possível carregar a logo do collager.fm.": "Não foi possível carregar a logo do collager.fm.",
+    "Carregar próxima página": "Carregar próxima página",
+    "Não foi possível codificar a imagem-base.": "Não foi possível codificar a imagem-base.",
+    "Não foi possível ler a imagem-base.": "Não foi possível ler a imagem-base.",
+    "Não foi possível preparar o arquivo nesse formato.": "Não foi possível preparar o arquivo nesse formato.",
+    "Nenhuma imagem encontrada na área de transferência.": "Nenhuma imagem encontrada na área de transferência.",
+    "Permissão negada. Use Ctrl+V com o modal aberto.": "Permissão negada. Use Ctrl+V com o modal aberto.",
+    "O arquivo arrastado não é uma imagem.": "O arquivo arrastado não é uma imagem.",
+    "Excluindo obsessão": "Excluindo obsessão",
+    "Obsessão excluída com sucesso.": "Obsessão excluída com sucesso.",
+    "A extensão companheira não respondeu. Recarregue a extensão e tente novamente.": "A extensão companheira não respondeu. Recarregue a extensão e tente novamente.",
+    "Site está temporariamente inacessível, a automatização tentará novamente em 1 minuto.": "Site está temporariamente inacessível, a automatização tentará novamente em 1 minuto.",
+    "Site está temporariamente inacessível, tente novamente mais tarde.": "Site está temporariamente inacessível, tente novamente mais tarde.",
+    "Instale a extensão companheira do collager.fm e recarregue a página antes de continuar.": "Instale a extensão companheira do collager.fm e recarregue a página antes de continuar.",
+    "Este scrobble não possui um horário válido.": "Este scrobble não possui um horário válido.",
+    "O horário deste scrobble está no futuro.": "O horário deste scrobble está no futuro.",
+    "O Last.fm não aceita reenviar este scrobble porque ele tem mais de aproximadamente 14 dias.": "O Last.fm não aceita reenviar este scrobble porque ele tem mais de aproximadamente 14 dias.",
+    "Autorize o Last.fm para aplicar correções automáticas.": "Autorize o Last.fm para aplicar correções automáticas.",
+    "Não foi possível verificar a autorização do Last.fm.": "Não foi possível verificar a autorização do Last.fm.",
+    "O navegador bloqueou a janela de autorização do Last.fm.": "O navegador bloqueou a janela de autorização do Last.fm.",
+    "A autorização do Last.fm expirou. Tente novamente.": "A autorização do Last.fm expirou. Tente novamente.",
+    "A autorização do Last.fm falhou.": "A autorização do Last.fm falhou.",
+    "Não foi possível recolocar o scrobble.": "Não foi possível recolocar o scrobble.",
+    "Não foi possível desconectar a conta atual.": "Não foi possível desconectar a conta atual.",
+    "Nenhum Artist Thumb ou Background foi encontrado para este artista.": "Nenhum Artist Thumb ou Background foi encontrado para este artista.",
+    "nome do álbum ou artista...": "nome do álbum ou artista...",
+    "Digite um nome para buscar.": "Digite um nome para buscar.",
+    "Selecione as datas do período personalizado antes de buscar.": "Selecione as datas do período personalizado antes de buscar.",
+    "Varrendo o histórico de scrobbles do período... isso pode levar um tempinho.": "Varrendo o histórico de scrobbles do período... isso pode levar um tempinho.",
+    "Nenhum resultado novo — seus itens já selecionados continuam na lista abaixo.": "Nenhum resultado novo — seus itens já selecionados continuam na lista abaixo.",
+    "Nenhum resultado encontrado nesse período.": "Nenhum resultado encontrado nesse período.",
+    "Um dos tiles não está mais disponível — mesclagem cancelada.": "Um dos tiles não está mais disponível — mesclagem cancelada.",
+    "As regras automáticas desta faixa foram desativadas.": "As regras automáticas desta faixa foram desativadas.",
+    "Salvando edição...": "Salvando edição...",
+    "Este processo substitui o scrobble: o registro com metadata antigo será excluído e um novo registro corrigido será enviado. Deseja continuar?": "Este processo substitui o scrobble: o registro com metadata antigo será excluído e um novo registro corrigido será enviado. Deseja continuar?",
+    "Substituição cancelada.": "Substituição cancelada.",
+    "Scrobble substituído com sucesso no Last.fm.": "Scrobble substituído com sucesso no Last.fm.",
+    "Edição salva. As regras de correção e exclusão foram atualizadas.": "Edição salva. As regras de correção e exclusão foram atualizadas.",
+    "Edição salva. A correção automática foi atualizada.": "Edição salva. A correção automática foi atualizada.",
+    "Regra de exclusão automática atualizada.": "Regra de exclusão automática atualizada.",
+    "Edição aplicada somente a este quadro.": "Edição aplicada somente a este quadro.",
+    "Excluir definitivamente este scrobble do seu histórico do Last.fm?": "Excluir definitivamente este scrobble do seu histórico do Last.fm?",
+    "Exclusão cancelada.": "Exclusão cancelada.",
+    "Scrobble excluído do Last.fm.": "Scrobble excluído do Last.fm.",
+    "Não foi possível identificar usuário, faixa e artista.": "Não foi possível identificar usuário, faixa e artista.",
+    "Excluir definitivamente esta obsessão do seu perfil do Last.fm?": "Excluir definitivamente esta obsessão do seu perfil do Last.fm?",
+    "Obsessão excluída do Last.fm.": "Obsessão excluída do Last.fm.",
+    "Digite um nome para o preset.": "Digite um nome para o preset.",
+    "Já existe um preset com este nome.": "Já existe um preset com este nome.",
+    "Informe um horário válido para o scrobble.": "Informe um horário válido para o scrobble.",
+    "O horário do scrobble não pode estar no futuro.": "O horário do scrobble não pode estar no futuro.",
+    "O Last.fm aceita scrobbles enviados somente por aproximadamente 14 dias.": "O Last.fm aceita scrobbles enviados somente por aproximadamente 14 dias.",
+    "Este scrobble nao possui artista, faixa e horario validos.": "Este scrobble nao possui artista, faixa e horario validos.",
+    "O Last.fm aceita reenviar scrobbles somente por aproximadamente 14 dias.": "O Last.fm aceita reenviar scrobbles somente por aproximadamente 14 dias.",
+    "Metodo nao permitido.": "Metodo nao permitido.",
+    "Origem nao permitida.": "Origem nao permitida.",
+    "Autorize sua conta do Last.fm para continuar.": "Autorize sua conta do Last.fm para continuar.",
+    "Informe faixa e artista para curtir.": "Informe faixa e artista para curtir.",
+    "Informe faixa e artista para remover das curtidas.": "Informe faixa e artista para remover das curtidas.",
+    "Informe faixa e artista para adicionar o scrobble.": "Informe faixa e artista para adicionar o scrobble.",
+    "O Last.fm não aceitou o novo scrobble.": "O Last.fm não aceitou o novo scrobble.",
+    "Informe faixa e artista para salvar a edicao.": "Informe faixa e artista para salvar a edicao.",
+    "O Last.fm nao aceitou o scrobble editado.": "O Last.fm nao aceitou o scrobble editado.",
+    "O Last.fm nao aceitou recolocar este scrobble.": "O Last.fm nao aceitou recolocar este scrobble.",
+    "Acao invalida.": "Acao invalida.",
+    "O Last.fm não oferece exclusão de scrobble na API pública. Abra o histórico no Last.fm para excluir este registro manualmente.": "O Last.fm não oferece exclusão de scrobble na API pública. Abra o histórico no Last.fm para excluir este registro manualmente.",
+    "O Last.fm não oferece edição nem exclusão de scrobble na API pública. A correção continua salva somente no collager.fm.": "O Last.fm não oferece edição nem exclusão de scrobble na API pública. A correção continua salva somente no collager.fm.",
     "Assinatura Pro confirmada pelo Last.fm": "Assinatura Pro confirmada pelo Last.fm",
     "Toques": "Toques",
     "Formato da data": "Formato da data",
@@ -702,6 +785,122 @@
   },
   "patterns": [
     {
+      "source": "Abrir {item} no Last.fm",
+      "target": "Abrir {item} no Last.fm"
+    },
+    {
+      "source": "{count} scrobbles",
+      "target": "{count} scrobbles"
+    },
+    {
+      "source": "Informe o Client ID e conecte sua conta. Cadastre exatamente esta Redirect URI: {url}",
+      "target": "Informe o Client ID e conecte sua conta. Cadastre exatamente esta Redirect URI: {url}"
+    },
+    {
+      "source": "Não foi possível pesquisar imagens no Spotify (HTTP {code}).",
+      "target": "Não foi possível pesquisar imagens no Spotify (HTTP {code})."
+    },
+    {
+      "source": "{count} scrobble no período",
+      "target": "{count} scrobble no período"
+    },
+    {
+      "source": "{count} scrobbles no período",
+      "target": "{count} scrobbles no período"
+    },
+    {
+      "source": "+ {count} scrobble será adicionado",
+      "target": "+ {count} scrobble será adicionado"
+    },
+    {
+      "source": "+ {count} scrobbles serão adicionados",
+      "target": "+ {count} scrobbles serão adicionados"
+    },
+    {
+      "source": "Mesclar com {count} selecionado",
+      "target": "Mesclar com {count} selecionado"
+    },
+    {
+      "source": "Mesclar com {count} selecionados",
+      "target": "Mesclar com {count} selecionados"
+    },
+    {
+      "source": "página {page}",
+      "target": "página {page}"
+    },
+    {
+      "source": "Página anterior ({current}/{total})",
+      "target": "Página anterior ({current}/{total})"
+    },
+    {
+      "source": "Próxima página ({current}/{total})",
+      "target": "Próxima página ({current}/{total})"
+    },
+    {
+      "source": "Ir para página {page}",
+      "target": "Ir para página {page}"
+    },
+    {
+      "source": "Página {page}",
+      "target": "Página {page}"
+    },
+    {
+      "source": "Falha ao buscar obsessões ({code}).",
+      "target": "Falha ao buscar obsessões ({code})."
+    },
+    {
+      "source": "Filtrando álbuns dos artistas escolhidos...",
+      "target": "Filtrando álbuns dos artistas escolhidos..."
+    },
+    {
+      "source": "Filtrando tracks dos artistas escolhidos...",
+      "target": "Filtrando tracks dos artistas escolhidos..."
+    },
+    {
+      "source": "Filtrando álbuns dos artistas escolhidos... página {page}",
+      "target": "Filtrando álbuns dos artistas escolhidos... página {page}"
+    },
+    {
+      "source": "Filtrando tracks dos artistas escolhidos... página {page}",
+      "target": "Filtrando tracks dos artistas escolhidos... página {page}"
+    },
+    {
+      "source": "Não foi possível aplicar a imagem: {error}",
+      "target": "Não foi possível aplicar a imagem: {error}"
+    },
+    {
+      "source": "Havia mais de {count} correspondências — mostrando só as mais tocadas. Não achou o que procura? Tente um termo mais específico.",
+      "target": "Havia mais de {count} correspondências — mostrando só as mais tocadas. Não achou o que procura? Tente um termo mais específico."
+    },
+    {
+      "source": "{item} (clique para remover a regra global)",
+      "target": "{item} (clique para remover a regra global)"
+    },
+    {
+      "source": "Título restaurado: {item}.",
+      "target": "Título restaurado: {item}."
+    },
+    {
+      "source": "Correção automática confirmada: {item}",
+      "target": "Correção automática confirmada: {item}"
+    },
+    {
+      "source": "Não altere os campos: clique em Salvar novamente para concluir. {error}",
+      "target": "Não altere os campos: clique em Salvar novamente para concluir. {error}"
+    },
+    {
+      "source": "Curtida definida como obsessão: {item}.",
+      "target": "Curtida definida como obsessão: {item}."
+    },
+    {
+      "source": "A sessao autorizada pertence a {owner}, nao a {user}.",
+      "target": "A sessao autorizada pertence a {owner}, nao a {user}."
+    },
+    {
+      "source": "Last.fm respondeu {code}.",
+      "target": "Last.fm respondeu {code}."
+    },
+    {
       "source": "{count} coluna",
       "target": "{count} coluna"
     },
@@ -979,14 +1178,17 @@
     },
     {
       "source": "Cor do {item}",
+      "translateValues": ["item"],
       "target": "Cor do {item}"
     },
     {
       "source": "Posição da {item}",
+      "translateValues": ["item"],
       "target": "Posição da {item}"
     },
     {
       "source": "Transparência do {item}",
+      "translateValues": ["item"],
       "target": "Transparência do {item}"
     },
     {
@@ -1043,22 +1245,27 @@
     },
     {
       "source": "Fixar {item}",
+      "translateValues": ["item"],
       "target": "Fixar {item}"
     },
     {
       "source": "Desafixar {item}",
+      "translateValues": ["item"],
       "target": "Desafixar {item}"
     },
     {
       "source": "Girar {item} em 90 graus",
+      "translateValues": ["item"],
       "target": "Girar {item} em 90 graus"
     },
     {
       "source": "Tamanho de {item} em pixels",
+      "translateValues": ["item"],
       "target": "Tamanho de {item} em pixels"
     },
     {
       "source": "Redimensionar {item}",
+      "translateValues": ["item"],
       "target": "Redimensionar {item}"
     },
     {

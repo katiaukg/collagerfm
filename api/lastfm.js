@@ -1,4 +1,5 @@
 'use strict';
+const { parseJsonBody, rateLimit } = require('./_security');
 
 const {
   cacheTtlForMethod,
@@ -27,15 +28,6 @@ const ALLOWED_PARAMS = new Set([
   'album', 'artist', 'autocorrect', 'extended', 'from', 'lang', 'limit',
   'method', 'page', 'period', 'to', 'track', 'user',
 ]);
-
-function getRequestBody(request) {
-  if (request.body && typeof request.body === 'object') return request.body;
-  if (typeof request.body === 'string') {
-    try { return JSON.parse(request.body); }
-    catch (_) { return {}; }
-  }
-  return {};
-}
 
 function getSameOrigin(request) {
   const host = String(request.headers.host || '').trim();
@@ -82,7 +74,9 @@ module.exports = async function handler(request, response) {
   if (request.method !== 'POST') return sendJson(response, 405, { error: 'Metodo nao permitido.' });
   if (!isOriginAllowed(request)) return sendJson(response, 403, { error: 'Origem nao permitida.' });
 
-  const body = getRequestBody(request);
+  let body;
+  try { body = parseJsonBody(request); await rateLimit(request, 'lastfm-read', 300); }
+  catch (error) { return sendJson(response, error.statusCode || 400, { error: error.message }); }
   if (String(body.action || '') === 'queue-release') {
     const released = await releaseQueueOwner(body.queueGroup);
     return sendJson(response, 200, { released });
@@ -104,6 +98,16 @@ module.exports = async function handler(request, response) {
     const requestId = String(body.requestId || '').trim();
     const queueGroup = String(body.queueGroup || '').trim();
     const source = body && typeof body.params === 'object' ? body.params : {};
+    if (!source || Array.isArray(source)) return sendJson(response, 400, { error: 'Invalid parameters.' });
+    for (const [key, value] of Object.entries(source)) {
+      if (!ALLOWED_PARAMS.has(key)) continue;
+      if (!['string', 'number', 'boolean'].includes(typeof value) || String(value).length > 500) {
+        return sendJson(response, 400, { error: 'Invalid parameter.' });
+      }
+      if (['limit', 'page'].includes(key) && (!/^\d+$/.test(String(value)) || Number(value) < 1 || Number(value) > (key === 'limit' ? 1000 : 100000))) {
+        return sendJson(response, 400, { error: 'Invalid pagination.' });
+      }
+    }
     const method = String(source.method || '').trim().toLowerCase();
     if (!ALLOWED_METHODS.has(method)) return sendJson(response, 403, { error: 'Metodo do Last.fm nao permitido.' });
 

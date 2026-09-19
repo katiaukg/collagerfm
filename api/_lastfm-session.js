@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const { noteLastfmRateLimit, reserveGlobalSlot } = require('./_lastfm-resilience');
 
 const COOKIE_NAME = 'collager_lfm_session';
+const SESSION_TTL_MS = 90 * 24 * 60 * 60 * 1000;
 
 function getApiCredentials() {
   return {
@@ -19,13 +20,19 @@ function parseCookies(request) {
     .filter(Boolean)
     .reduce((cookies, part) => {
       const separator = part.indexOf('=');
-      if (separator > 0) cookies[part.slice(0, separator)] = decodeURIComponent(part.slice(separator + 1));
+      if (separator > 0) {
+        try { cookies[part.slice(0, separator)] = decodeURIComponent(part.slice(separator + 1)); }
+        catch (_) { /* Ignore malformed cookies instead of failing the request. */ }
+      }
       return cookies;
-    }, {});
+    }, Object.create(null));
 }
 
-function sessionSignature(payload, secret) {
-  return crypto.createHmac('sha256', secret).update(payload).digest('base64url');
+function sessionEncryptionKey(secret) {
+  if (process.env.SESSION_SECRET && process.env.SESSION_SECRET.length < 32) throw new Error('SESSION_SECRET must contain at least 32 characters.');
+  const key = String(process.env.SESSION_SECRET || secret || '');
+  if (!key) throw new Error('Session secret is not configured.');
+  return crypto.createHash('sha256').update(`collager:session:v2:${key}`).digest();
 }
 
 function encodeSession(session, secret) {
@@ -36,21 +43,27 @@ function encodeSession(session, secret) {
   };
   const lastScrobbleAt = Math.floor(Number(session.lastScrobbleAt));
   if (Number.isFinite(lastScrobbleAt) && lastScrobbleAt > 0) contents.lastScrobbleAt = lastScrobbleAt;
-  const payload = Buffer.from(JSON.stringify(contents)).toString('base64url');
-  return `${payload}.${sessionSignature(payload, secret)}`;
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv('aes-256-gcm', sessionEncryptionKey(secret), iv);
+  const encrypted = Buffer.concat([cipher.update(JSON.stringify(contents), 'utf8'), cipher.final()]);
+  return ['v2', iv.toString('base64url'), encrypted.toString('base64url'), cipher.getAuthTag().toString('base64url')].join('.');
 }
 
 function decodeSession(value, secret) {
-  if (!value || !secret) return null;
-  const [payload, signature] = String(value).split('.');
-  if (!payload || !signature) return null;
-  const expected = sessionSignature(payload, secret);
-  const left = Buffer.from(signature);
-  const right = Buffer.from(expected);
-  if (left.length !== right.length || !crypto.timingSafeEqual(left, right)) return null;
+  if (!value || String(value).length > 4096) return null;
   try {
-    const session = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
-    return session.key && session.name ? session : null;
+    const parts = String(value).split('.');
+    if (parts.length !== 4 || parts[0] !== 'v2') return null;
+    const iv = Buffer.from(parts[1], 'base64url');
+    const tag = Buffer.from(parts[3], 'base64url');
+    if (iv.length !== 12 || tag.length !== 16) return null;
+    const decipher = crypto.createDecipheriv('aes-256-gcm', sessionEncryptionKey(secret), iv);
+    decipher.setAuthTag(tag);
+    const session = JSON.parse(Buffer.concat([decipher.update(Buffer.from(parts[2], 'base64url')), decipher.final()]).toString('utf8'));
+    const age = Date.now() - Number(session.issuedAt);
+    if (!Number.isFinite(age) || age < -60000 || age >= SESSION_TTL_MS) return null;
+    return typeof session.key === 'string' && session.key.length <= 128 && session.key
+      && typeof session.name === 'string' && session.name.length <= 100 && session.name ? session : null;
   } catch (_) {
     return null;
   }
@@ -112,4 +125,4 @@ async function callLastfmWrite(params) {
   return payload;
 }
 
-module.exports = { callLastfmWrite, clearSessionCookie, getApiCredentials, readSession, setSessionCookie };
+module.exports = { callLastfmWrite, clearSessionCookie, getApiCredentials, parseCookies, readSession, setSessionCookie };

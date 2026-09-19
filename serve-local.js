@@ -2,6 +2,7 @@ const fs = require('fs');
 const http = require('http');
 const https = require('https');
 const path = require('path');
+const { MAX_BODY_BYTES, parseJsonBody, securityHeaders } = require('./api/_security');
 
 const root = __dirname;
 
@@ -28,6 +29,10 @@ const lastfmAuthApi = require('./api/lastfm-auth');
 const lastfmApi = require('./api/lastfm');
 const lastfmWriteApi = require('./api/lastfm-write');
 const discordBugApi = require('./api/discord-bug');
+const lastfmImageApi = require('./api/lastfm-image');
+const fanartImageApi = require('./api/fanart-image');
+const fanartApi = require('./api/fanart');
+const youtubeMusicApi = require('./api/youtube-music');
 
 const musicBrainzCache = new Map();
 const fanartMusicCache = new Map();
@@ -94,13 +99,23 @@ function handleObsessions(request, response) {
 
 function readJsonBody(request, response, callback) {
   let body = '';
+  let bytes = 0;
+  let rejected = false;
   request.setEncoding('utf8');
   request.on('data', chunk => {
-    if (body.length < 32768) body += chunk;
+    if (rejected) return;
+    bytes += Buffer.byteLength(chunk);
+    if (bytes > MAX_BODY_BYTES) {
+      rejected = true;
+      sendJson(response, 413, { error: 'Request too large.' });
+      return;
+    }
+    body += chunk;
   });
   request.on('end', () => {
-    try { callback(JSON.parse(body || '{}')); }
-    catch (error) { sendJson(response, 400, { error: `Requisicao invalida: ${error.message}` }); }
+    if (rejected) return;
+    try { callback(parseJsonBody({ headers: request.headers, body })); }
+    catch (error) { sendJson(response, error.statusCode || 400, { error: 'Invalid request.' }); }
   });
 }
 
@@ -199,12 +214,14 @@ function invokeServerless(handler, request, response, body = undefined) {
   const adapter = {
     status(value) { statusCode = value; return adapter; },
     setHeader(name, value) { headers[name] = value; },
+    getHeader(name) { return headers[name]; },
     send(value = '') {
-      const data = Buffer.from(String(value));
+      const data = Buffer.isBuffer(value) ? value : Buffer.from(String(value));
       response.writeHead(statusCode, { ...headers, 'Content-Length': data.length });
       response.end(data);
     },
     end(value = '') { adapter.send(value); },
+    json(value) { headers['Content-Type'] = 'application/json; charset=utf-8'; adapter.send(JSON.stringify(value)); },
   };
   Promise.resolve(handler(request, adapter)).catch(error => {
     if (!response.headersSent) sendJson(response, 500, { error: error.message });
@@ -415,7 +432,7 @@ function handleFanartImage(request, response) {
         if ([301, 302, 303, 307, 308].includes(status) && location && redirects < 5) {
           upstreamResponse.resume();
           const redirected = new URL(location, imageUrl);
-          if (redirected.protocol !== 'https:') {
+          if (redirected.protocol !== 'https:' || redirected.hostname !== 'assets.fanart.tv' || redirected.port || redirected.username || redirected.password) {
             response.writeHead(403);
             return response.end('Unsafe image redirect');
           }
@@ -510,6 +527,15 @@ function handleLastfmImage(request, response) {
 }
 
 http.createServer((request, response) => {
+  securityHeaders(response);
+  if (!/^(?:127\.0\.0\.1|localhost):8767$/i.test(String(request.headers.host || ''))) {
+    response.writeHead(403);
+    return response.end('Host not allowed');
+  }
+  if (request.method === 'POST' && request.headers.origin !== `http://${request.headers.host}`) {
+    response.writeHead(403);
+    return response.end('Origin not allowed');
+  }
   if (request.method === 'POST' && request.url.split('?')[0] === '/api/discord-bug') {
     return handleServerlessPost(discordBugApi, request, response);
   }
@@ -528,38 +554,60 @@ http.createServer((request, response) => {
     return invokeServerless(lastfmApi, request, response);
   }
   if (request.method === 'POST' && request.url.split('?')[0] === '/api/youtube-music') {
-    return handleYoutubeMusic(request, response);
+    return handleServerlessPost(youtubeMusicApi, request, response);
   }
   if (request.method === 'POST' && request.url.split('?')[0] === '/api/fanart') {
-    return handleFanart(request, response);
+    return handleServerlessPost(fanartApi, request, response);
   }
   if (request.method === 'GET' && request.url.split('?')[0] === '/api/fanart-image') {
-    return handleFanartImage(request, response);
+    return invokeServerless(fanartImageApi, request, response);
   }
   if (request.method === 'GET' && request.url.split('?')[0] === '/api/lastfm-image') {
-    return handleLastfmImage(request, response);
+    return invokeServerless(lastfmImageApi, request, response);
   }
-  const pathname = decodeURIComponent(request.url.split('?')[0]);
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    response.writeHead(405);
+    return response.end('Method not allowed');
+  }
+  let pathname;
+  try { pathname = decodeURIComponent(request.url.split('?')[0]); }
+  catch (_) { response.writeHead(400); return response.end('Invalid path'); }
+  const segments = pathname.split(/[\\/]/).filter(Boolean);
+  if (segments.some(segment => segment.startsWith('.') || segment.includes(':'))
+    || /^(?:api|tests|node_modules|scripts)$/i.test(segments[0] || '')) {
+    response.writeHead(403);
+    return response.end('Forbidden');
+  }
   const file = path.resolve(root, `.${pathname === '/' ? '/lastfm-collage.html' : pathname}`);
   if (!file.startsWith(`${root}${path.sep}`)) {
     response.writeHead(403);
     return response.end('Forbidden');
   }
   const basename = path.basename(file).toLowerCase();
-  if (basename.startsWith('.') || basename === 'serve-local.js') {
+  if (basename.startsWith('.') || basename === 'serve-local.js' || !/\.(?:html|css|js|json|png|jpe?g|webp|gif|svg|ico|woff2?|ttf|zip)$/i.test(basename)) {
     response.writeHead(403);
     return response.end('Forbidden');
   }
 
-  fs.readFile(file, (error, data) => {
-    if (error) {
+  fs.realpath(file, (resolveError, resolved) => {
+    const resolvedParts = resolved ? path.relative(root, resolved).split(path.sep) : [];
+    if (resolveError || !resolved.startsWith(`${root}${path.sep}`)
+      || resolvedParts.some(part => part.startsWith('.'))
+      || /^(?:api|tests|node_modules|scripts)$/i.test(resolvedParts[0] || '')
+      || !/\.(?:html|css|js|json|png|jpe?g|webp|gif|svg|ico|woff2?|ttf|zip)$/i.test(resolved)) {
       response.writeHead(404);
       return response.end('Not found');
     }
-    response.writeHead(200, {
-      'Cache-Control': 'no-store',
-      'Content-Type': mime[path.extname(file).toLowerCase()] || 'application/octet-stream',
+    fs.readFile(resolved, (error, data) => {
+      if (error) {
+        response.writeHead(404);
+        return response.end('Not found');
+      }
+      response.writeHead(200, {
+        'Cache-Control': 'no-store',
+        'Content-Type': mime[path.extname(file).toLowerCase()] || 'application/octet-stream',
+      });
+      response.end(request.method === 'HEAD' ? undefined : data);
     });
-    response.end(data);
   });
 }).listen(8767, '127.0.0.1');
