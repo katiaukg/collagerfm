@@ -1430,7 +1430,7 @@
     transition: opacity .45s ease;
   }
   #interactive-header-layer.visible { display: block; }
-  #interactive-header-layer.idle { opacity: .3; }
+#interactive-header-layer.idle { opacity: 1; }
   #interactive-header-items { position: absolute; inset: 0; pointer-events: none; }
   #interactive-header-guides {
     position: absolute;
@@ -1608,7 +1608,46 @@
   #interactive-header-layer.grid-hidden .interactive-header-item-label,
   #interactive-header-layer.grid-hidden .interactive-header-item-handle,
   #interactive-header-layer.grid-hidden .interactive-header-size-editor { opacity: 0; pointer-events: none; }
-  #interactive-header-resize { cursor: ns-resize; touch-action: none; }
+#header-box-toolbar {
+  position: fixed; z-index: 881; display: flex; align-items: center; gap: 6px;
+  box-sizing: border-box; padding: 6px; border: 1px solid #484848; border-radius: 8px;
+  background: #202020; color: #f5f5f5; box-shadow: 0 6px 20px #0006; pointer-events: auto;
+}
+#header-box-toolbar[hidden] { display: none; }
+#header-box-toolbar select {
+  flex: 1; min-width: 0; width: 0; height: 36px; padding: 0 8px;
+  border: 1px solid #454545; border-radius: 4px; background: #292929; color: #f5f5f5; font-size: 12px;
+}
+.header-box-size { display: flex; align-items: center; gap: 3px; margin: 0; color: #aaa; font-size: 11px; }
+#header-box-size { width: 48px; height: 36px; box-sizing: border-box; padding: 4px; border: 1px solid #454545; border-radius: 4px; background: #292929; color: white; font-size: 12px; }
+#header-box-toolbar button { flex: 0 0 36px; width: 36px; height: 36px; min-height: 36px; padding: 8px; background: #292929; color: #eee; border: 1px solid #454545; border-radius: 4px; cursor: pointer; }
+#header-box-toolbar button svg { width: 18px; height: 18px; }
+#header-box-toolbar button:hover { background: #3b3b3b; }
+#header-box-toolbar button[aria-pressed="true"] { color: #99e9da; border-color: #99e9da; }
+#header-box-toolbar :disabled { opacity: .4; cursor: default; }
+#header-box-toolbar :focus-visible { outline: 2px solid #99e9da; outline-offset: 2px; }
+#header-box-size { appearance: textfield; }
+#header-box-size::-webkit-inner-spin-button, #header-box-size::-webkit-outer-spin-button { appearance: none; margin: 0; }
+.header-size-steps { display: flex; flex-direction: column; overflow: hidden; border: 1px solid #454545; border-radius: 3px; background: #292929; }
+#header-box-toolbar .header-size-steps button { width: 22px; height: 18px; min-height: 18px; flex: none; padding: 0; line-height: 14px; color: #ddd; border: 0; border-radius: 0; background: transparent; }
+#header-box-toolbar .header-size-steps button + button { border-top: 1px solid #515151; }
+#header-box-toolbar .header-size-steps button:hover { background: #3b3b3b; }
+#header-panel-grip { width: 28px; height: 22px; min-height: 22px; padding: 0; border: 0; background: transparent; color: #aaa; cursor: grab; touch-action: none; font-size: 19px; }
+#header-panel-grip:active { cursor: grabbing; color: white; }
+#interactive-header-control-panel.detached { position: fixed; z-index: 882; }
+#interactive-header-items .interactive-header-item { background: transparent; border-radius: 3px; }
+#interactive-header-items .interactive-header-item.selected { background: transparent; border: 2px solid #296cff; box-shadow: 0 0 0 1px #fff9; }
+#interactive-header-items .interactive-header-item-label,
+#interactive-header-items .interactive-header-size-editor,
+#interactive-header-items .interactive-header-rotate-handle,
+#interactive-header-items .interactive-header-lock-handle { display: none; }
+#interactive-header-items .interactive-header-resize-handle { background: #296cff; border: 2px solid white; border-radius: 50%; width: 18px; height: 18px; right: -9px; bottom: -9px; }
+#interactive-header-items .interactive-header-resize-handle svg { width: 11px; height: 11px; }
+@media (max-width: 47.999rem) {
+  #header-box-toolbar button { flex-basis: 40px; width: 40px; height: 40px; }
+  #header-box-toolbar select, #header-box-size { height: 40px; }
+}
+#interactive-header-resize { cursor: ns-resize; touch-action: none; }
   #interactive-header-resize.vertical { cursor: ew-resize; }
   @media (max-width: 47.999rem) {
     #interactive-header-control-panel {
@@ -5634,6 +5673,13 @@
               <button type="button" data-scale="2">2x</button>
             </div>
           </div>
+          <div style="margin-top:12px;">
+            <span class="download-option-label">Nome do arquivo</span>
+            <div class="download-output-toggle" id="download-filename-toggle">
+              <button type="button" class="active" data-filename-mode="saved-at">Data e hora do salvamento</button>
+              <button type="button" data-filename-mode="period">Período da collage</button>
+            </div>
+          </div>
           <div id="download-quality-row">
             <div class="slider-row-head">
               <span class="slider-name" id="download-quality-label">Qualidade do JPG</span>
@@ -5698,8 +5744,15 @@
           <span class="interactive-header-guide interactive-header-guide-x"></span>
           <span class="interactive-header-guide interactive-header-guide-y"></span>
         </div>
-        <div id="interactive-header-items"></div>
+  <div id="interactive-header-items"></div>
+  <div id="header-box-toolbar" role="group" aria-label="Header">
+    <select id="header-box-selection" aria-label="Header"></select>
+    <div class="header-box-size"><input id="header-box-size" type="number" min="5" max="160" step="1" aria-label="Size"><span>px</span><div class="header-size-steps"><button type="button" data-header-step="1" title="Aumentar tamanho" aria-label="Aumentar tamanho">&#9652;</button><button type="button" data-header-step="-1" title="Diminuir tamanho" aria-label="Diminuir tamanho">&#9662;</button></div></div>
+    <button type="button" id="header-box-rotate" title="Girar 90°" aria-label="Girar 90°"></button>
+    <button type="button" id="header-box-lock" title="Fixar" aria-label="Fixar"></button>
+  </div>
         <div id="interactive-header-control-panel">
+          <button type="button" id="header-panel-grip" title="Mover controles" aria-label="Mover controles">&#10303;</button>
           <button type="button" class="interactive-header-tool" id="interactive-header-grid-toggle" title="Personalizar caixas do cabeçalho" aria-label="Personalizar caixas do cabeçalho">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.4 2.6a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
           </button>
@@ -11137,6 +11190,7 @@ headerInteractiveChk?.addEventListener('change', () => {
 headerInteractiveGridChk?.addEventListener('change', () => {
   headerInteractiveGridVisible = headerInteractiveGridChk.checked;
   syncInteractiveHeaderEditor();
+  if (headerInteractiveGridVisible) redrawIfReady();
   wakeInteractiveHeaderEditor();
 });
 
@@ -16642,6 +16696,7 @@ let downloadFormat = 'png';
 let downloadScale = 1;
 let downloadQuality = 92;
 let htmlTextMode = 'interactive';
+let downloadFilenameMode = 'saved-at';
 
 const DOWNLOAD_MIME_TYPES = {
   png: 'image/png',
@@ -17054,12 +17109,44 @@ function encodeDownloadCanvas(canvas) {
   return new Promise(resolve => canvas.toBlob(resolve, mimeType, quality));
 }
 
+function formatDownloadDate(value, includeTime = false) {
+  const date = value instanceof Date ? value : new Date(value);
+  const pad = number => String(number).padStart(2, '0');
+  const day = `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}`;
+  return includeTime ? `${day}${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}` : day;
+}
+
+function filenamePart(value, fallback = '') {
+  const clean = String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase().replace(/[^a-z0-9]+/g, '');
+  return clean || fallback;
+}
+
+function getDownloadBaseName(now = new Date()) {
+  const state = getRenderedQueryState() || generatedQueryState || {};
+  const type = filenamePart(state.mode || currentType, 'collage');
+  const savedDate = formatDownloadDate(now);
+  if (downloadFilenameMode === 'saved-at') return `collager_${type}_${formatDownloadDate(now, true)}`;
+
+  const customSubtitle = headerSubtitleOverride?.trim();
+  if (customSubtitle) return `collager_${type}_${filenamePart(customSubtitle, 'periodo')}_${savedDate}`;
+
+  const mode = state.periodMode || periodMode;
+  const period = state.period || currentPeriod;
+  if (mode === 'custom') {
+    const from = String(state.dateFrom || document.getElementById('date-from')?.value || '').replace(/\D/g, '');
+    const to = String(state.dateTo || document.getElementById('date-to')?.value || '').replace(/\D/g, '');
+    return `collager_${type}_custom${from || 'date'}-to-${to || 'date'}_${savedDate}`;
+  }
+  const periodNames = { '7day': '7d', '1month': '1m', '3month': '3m', '6month': '6m', '12month': '12m', overall: 'general' };
+  return `collager_${type}_${periodNames[period] || filenamePart(period, 'general')}_${savedDate}`;
+}
+
 function updateDownloadFilename() {
   const dlBtn = document.getElementById('dl-btn');
   if (!dlBtn) return;
-  const baseName = dlBtn.dataset.baseName || 'lastfm-collage';
   const extension = downloadOutput === 'html' ? 'html' : downloadFormat;
-  dlBtn.download = `${baseName}.${extension}`;
+  dlBtn.download = `${getDownloadBaseName()}.${extension}`;
   dlBtn.textContent = `${uiText('Salvar')} ${extension.toUpperCase()}`;
 }
 
@@ -17072,6 +17159,8 @@ function syncDownloadSettingsUi() {
     button.classList.toggle('active', Number(button.dataset.scale) === downloadScale));
   document.querySelectorAll('#download-html-text-toggle button').forEach(button =>
     button.classList.toggle('active', button.dataset.htmlText === htmlTextMode));
+  document.querySelectorAll('#download-filename-toggle button').forEach(button =>
+    button.classList.toggle('active', button.dataset.filenameMode === downloadFilenameMode));
   document.getElementById('download-image-options').classList.toggle('visible', downloadOutput === 'image');
   document.getElementById('download-html-options').classList.toggle('visible', downloadOutput === 'html');
   const qualityRow = document.getElementById('download-quality-row');
@@ -17116,6 +17205,7 @@ function scheduleDownloadRefresh(delay = 500) {
 
 document.getElementById('dl-btn').addEventListener('click', e => {
   if (_downloadReplayClick) { _downloadReplayClick = false; return; }
+  updateDownloadFilename();
   if (!_downloadDirty) return;
   e.preventDefault();
   clearTimeout(_downloadRefreshTimer);
@@ -17534,7 +17624,6 @@ async function generate() {
 
     const canvas = document.getElementById('collage-canvas');
     const dlBtn  = document.getElementById('dl-btn');
-    dlBtn.dataset.baseName = `lastfm-collage-${currentType}-${Date.now()}`;
     updateDownloadFilename();
     dlBtn.classList.add('visible');
     scheduleDownloadRefresh(0);
@@ -17746,6 +17835,15 @@ function positionInteractiveHeaderGuides(layer, rect) {
   guides.style.height = `${rect.h}px`;
 }
 
+let headerPanelPosition = null;
+function clampHeaderPanelPosition(panel, x, y) {
+  headerPanelPosition = {
+    x: Math.max(6, Math.min(x, innerWidth - panel.offsetWidth - 6)),
+    y: Math.max(6, Math.min(y, innerHeight - panel.offsetHeight - 6)),
+  };
+  panel.style.left = `${headerPanelPosition.x}px`;
+  panel.style.top = `${headerPanelPosition.y}px`;
+}
 function positionInteractiveHeaderTools(layer, rect) {
   const panel = document.getElementById('interactive-header-control-panel');
   const gridButton = document.getElementById('interactive-header-grid-toggle');
@@ -17762,6 +17860,10 @@ function positionInteractiveHeaderTools(layer, rect) {
   guidesButton.disabled = !headerInteractiveGridVisible;
   resizeButton.style.display = headerInteractiveEnabled && headerInteractiveGridVisible ? '' : 'none';
   resizeButton.classList.toggle('vertical', isLateralHeaderPosition());
+  if (headerPanelPosition) {
+    clampHeaderPanelPosition(panel, headerPanelPosition.x, headerPanelPosition.y);
+    return;
+  }
 
   const mobile = window.matchMedia('(max-width: 47.999rem)').matches;
   const panelWidth = panel.offsetWidth || (mobile ? 108 : 38);
@@ -17785,6 +17887,23 @@ function positionInteractiveHeaderTools(layer, rect) {
     panel.style.left = `${layer.clientWidth + 8}px`;
     panel.style.top = `${Math.max(4, Math.min(layer.clientHeight - panelHeight - 4, rect.y + 4))}px`;
   }
+  // Keep the launch controls inside the preview's clipping rectangle, even
+  // when the canvas fills it or extends beyond it at higher zoom levels.
+  const bounds = layer.getBoundingClientRect();
+  const center = document.querySelector('.collage-center');
+  const centerBounds = center?.getBoundingClientRect();
+  if (centerBounds && bounds.width && bounds.height) {
+    const scaleX = bounds.width / layer.clientWidth;
+    const scaleY = bounds.height / layer.clientHeight;
+    const left = Math.max(0, centerBounds.left) + 6;
+    const right = Math.min(innerWidth, centerBounds.left + center.clientWidth) - 6;
+    const top = Math.max(0, centerBounds.top) + 6;
+    const bottom = Math.min(innerHeight, centerBounds.top + center.clientHeight) - 6;
+    const preferredX = bounds.left + parseFloat(panel.style.left) * scaleX;
+    const preferredY = bounds.top + parseFloat(panel.style.top) * scaleY;
+    panel.style.left = `${(Math.max(left, Math.min(preferredX, right - panelWidth * scaleX)) - bounds.left) / scaleX}px`;
+    panel.style.top = `${(Math.max(top, Math.min(preferredY, bottom - panelHeight * scaleY)) - bounds.top) / scaleY}px`;
+  }
 }
 
 function updateInteractiveHeaderItemPosition(element, component, headerRect) {
@@ -17807,6 +17926,8 @@ function syncInteractiveHeaderEditor() {
   layer.setAttribute('aria-hidden', hasHeader ? 'false' : 'true');
   if (!hasHeader) {
     itemsHost.replaceChildren();
+    document.getElementById('interactive-header-control-panel').classList.remove('visible');
+    document.getElementById('header-box-toolbar').hidden = true;
     return;
   }
   positionCanvasOverlay(layer);
@@ -17817,8 +17938,12 @@ function syncInteractiveHeaderEditor() {
   positionInteractiveHeaderGuides(layer, rect);
   positionInteractiveHeaderTools(layer, rect);
   layer.classList.toggle('grid-hidden', !headerInteractiveGridVisible);
+  document.getElementById('header-box-toolbar').hidden = !headerInteractiveEnabled || !headerInteractiveGridVisible;
   if (!headerInteractiveEnabled || !lastInteractiveHeaderModel || interactiveHeaderDrag || interactiveHeaderTransform) {
     if (!headerInteractiveEnabled) itemsHost.replaceChildren();
+    // A prévia pode ter acabado de mudar de escala antes do primeiro desenho
+    // do cabeçalho. Reconstrói o modelo para que o editor nunca dependa do zoom.
+    if (headerInteractiveEnabled && headerInteractiveGridVisible && !lastInteractiveHeaderModel) redrawIfReady();
     return;
   }
 
@@ -17840,7 +17965,158 @@ function syncInteractiveHeaderEditor() {
     fragment.appendChild(item);
   });
   itemsHost.replaceChildren(fragment);
+  syncHeaderBoxToolbar();
+  itemsHost.querySelectorAll('.interactive-header-item').forEach(item => item.classList.toggle('selected', item.dataset.key === interactiveHeaderSelectedKey));
   wakeInteractiveHeaderEditor();
+}
+
+function syncHeaderBoxToolbar() {
+  const toolbar = document.getElementById('header-box-toolbar');
+  const layer = document.getElementById('interactive-header-layer');
+  const components = lastInteractiveHeaderModel?.components || [];
+  if (toolbar.parentElement !== document.body) document.body.append(toolbar);
+  toolbar.hidden = !headerInteractiveEnabled || !headerInteractiveGridVisible || !components.length;
+  if (toolbar.hidden) return;
+  const select = document.getElementById('header-box-selection');
+  if (!components.some(component => component.key === interactiveHeaderSelectedKey)) {
+    interactiveHeaderSelectedKey = components[0].key;
+  }
+  const signature = JSON.stringify(components.map(component => [component.key, component.label]));
+  if (select.dataset.signature !== signature) {
+    select.replaceChildren(...components.map(component => new Option(uiText(component.label), component.key)));
+    select.dataset.signature = signature;
+  }
+  select.value = interactiveHeaderSelectedKey;
+  const component = getInteractiveComponent(interactiveHeaderSelectedKey);
+  const locked = !!headerInteractiveLayout[component.key]?.locked;
+  const input = document.getElementById('header-box-size');
+  if (document.activeElement !== input) input.value = Math.round(component.size);
+  input.disabled = locked;
+  const rotate = document.getElementById('header-box-rotate');
+  const lock = document.getElementById('header-box-lock');
+  const item = Array.from(document.querySelectorAll('.interactive-header-item')).find(el => el.dataset.key === component.key);
+  if (item) {
+    rotate.innerHTML = item.querySelector('[data-header-action="rotate"]').innerHTML;
+    lock.innerHTML = item.querySelector('[data-header-action="lock"]').innerHTML;
+  }
+  rotate.disabled = locked;
+  lock.setAttribute('aria-pressed', String(locked));
+  lock.title = lock.ariaLabel = uiText(locked ? 'Desafixar' : 'Fixar');
+  input.ariaLabel = uiText('Tamanho em pixels');
+  select.ariaLabel = toolbar.ariaLabel = uiText('Personalizar caixas do cabeçalho');
+  const rect = getInteractiveHeaderCssRect(layer);
+  const canvasRect = document.getElementById('collage-canvas')?.getBoundingClientRect();
+  const centerRect = document.querySelector('.collage-center')?.getBoundingClientRect();
+  if (!rect || !canvasRect) { toolbar.hidden = true; return; }
+  const viewportWidth = window.visualViewport?.width || window.innerWidth;
+  const viewportHeight = window.visualViewport?.height || window.innerHeight;
+  const headerTop = canvasRect.top + rect.y;
+  const headerBottom = headerTop + rect.h;
+  const headerOutOfView = centerRect && (headerBottom < centerRect.top || headerTop > centerRect.bottom);
+  if (headerOutOfView) { toolbar.hidden = true; return; }
+  toolbar.style.width = `${Math.min(360, Math.max(220, viewportWidth - 16))}px`;
+  const gap = window.matchMedia('(max-width: 47.999rem)').matches ? 12 : 8;
+  const preferredTop = headerPosition === 'bottom'
+    ? headerTop - toolbar.offsetHeight - gap
+    : headerBottom + gap;
+  toolbar.style.left = `${Math.max(8, Math.min(canvasRect.left + rect.x, viewportWidth - toolbar.offsetWidth - 8))}px`;
+  toolbar.style.top = `${Math.max(8, Math.min(preferredTop, viewportHeight - toolbar.offsetHeight - 8))}px`;
+}
+
+let headerBoxToolbarPositionFrame = 0;
+function scheduleHeaderBoxToolbarPosition() {
+  if (headerBoxToolbarPositionFrame) return;
+  headerBoxToolbarPositionFrame = requestAnimationFrame(() => {
+    headerBoxToolbarPositionFrame = 0;
+    const layer = document.getElementById('interactive-header-layer');
+    if (layer?.classList.contains('visible')) positionInteractiveHeaderTools(layer, getInteractiveHeaderCssRect(layer));
+    syncHeaderBoxToolbar();
+  });
+}
+document.querySelector('.collage-center')?.addEventListener('scroll', scheduleHeaderBoxToolbarPosition, { passive: true });
+window.addEventListener('resize', scheduleHeaderBoxToolbarPosition, { passive: true });
+
+document.getElementById('header-box-selection').addEventListener('change', event => selectInteractiveHeaderItem(event.target.value));
+function changeHeaderBoxSize(step) {
+  const input = document.getElementById('header-box-size');
+  if (input.disabled) return false;
+  input.value = Math.max(5, Math.min(160, Number(input.value) + Number(step)));
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+  return true;
+}
+document.querySelectorAll('[data-header-step]').forEach(button => {
+  let repeatTimer = 0;
+  const stopRepeating = () => {
+    if (repeatTimer) clearInterval(repeatTimer);
+    repeatTimer = 0;
+  };
+  button.addEventListener('pointerdown', event => {
+    if (event.button > 0 || !changeHeaderBoxSize(button.dataset.headerStep)) return;
+    event.preventDefault();
+    button.dataset.pointerStep = 'true';
+    button.setPointerCapture(event.pointerId);
+    repeatTimer = window.setInterval(() => changeHeaderBoxSize(button.dataset.headerStep), 100);
+  });
+  button.addEventListener('pointerup', stopRepeating);
+  button.addEventListener('pointercancel', stopRepeating);
+  button.addEventListener('lostpointercapture', stopRepeating);
+  button.addEventListener('click', event => {
+    if (button.dataset.pointerStep === 'true') {
+      delete button.dataset.pointerStep;
+      event.preventDefault();
+      return;
+    }
+    changeHeaderBoxSize(button.dataset.headerStep);
+  });
+});
+
+document.querySelectorAll('#download-filename-toggle button').forEach(button => {
+  button.addEventListener('click', () => {
+    downloadFilenameMode = button.dataset.filenameMode === 'period' ? 'period' : 'saved-at';
+    syncDownloadSettingsUi();
+  });
+});
+document.getElementById('header-panel-grip').addEventListener('pointerdown', event => {
+  if (event.button > 0) return;
+  event.preventDefault();
+  const grip = event.currentTarget;
+  const panel = document.getElementById('interactive-header-control-panel');
+  const bounds = panel.getBoundingClientRect();
+  const offsetX = event.clientX - bounds.left;
+  const offsetY = event.clientY - bounds.top;
+  document.body.append(panel);
+  panel.classList.add('detached');
+  clampHeaderPanelPosition(panel, bounds.left, bounds.top);
+  grip.setPointerCapture(event.pointerId);
+  const move = e => {
+    if (e.pointerId === event.pointerId) clampHeaderPanelPosition(panel, e.clientX - offsetX, e.clientY - offsetY);
+  };
+  const end = e => {
+    if (e.pointerId !== event.pointerId) return;
+    grip.removeEventListener('pointermove', move);
+    grip.removeEventListener('pointerup', end);
+    grip.removeEventListener('pointercancel', end);
+  };
+  grip.addEventListener('pointermove', move);
+  grip.addEventListener('pointerup', end);
+  grip.addEventListener('pointercancel', end);
+});
+document.getElementById('header-box-size').addEventListener('change', event => {
+  const component = getInteractiveComponent(interactiveHeaderSelectedKey);
+  const layout = headerInteractiveLayout[interactiveHeaderSelectedKey];
+  if (!component || !layout || layout.locked) return;
+  layout.size = component.size = Math.max(5, Math.min(160, Math.round(Number(event.target.value) || component.size)));
+  event.target.value = component.size;
+  scheduleInteractiveHeaderRedraw();
+});
+document.getElementById('header-box-size').addEventListener('keydown', event => {
+  if (event.key === 'Enter') { event.preventDefault(); event.target.blur(); }
+});
+for (const action of ['rotate', 'lock']) {
+  document.getElementById(`header-box-${action}`).addEventListener('click', () => {
+    const item = Array.from(document.querySelectorAll('.interactive-header-item')).find(el => el.dataset.key === interactiveHeaderSelectedKey);
+    item?.querySelector(`[data-header-action="${action}"]`)?.click();
+  });
 }
 
 function getInteractiveComponent(key) {
@@ -17855,6 +18131,7 @@ function selectInteractiveHeaderItem(key) {
   host.querySelectorAll('.interactive-header-item').forEach(item => {
     item.classList.toggle('selected', item.dataset.key === interactiveHeaderSelectedKey);
   });
+  syncHeaderBoxToolbar();
   wakeInteractiveHeaderEditor();
 }
 
@@ -17922,6 +18199,7 @@ document.getElementById('interactive-header-grid-toggle')?.addEventListener('cli
     syncInteractiveHeaderEditor();
   }
   if (headerInteractiveGridChk) headerInteractiveGridChk.checked = headerInteractiveGridVisible;
+  if (headerInteractiveGridVisible) redrawIfReady();
   wakeInteractiveHeaderEditor();
 });
 
