@@ -4083,26 +4083,6 @@
         </div>
       </div>
 
-      <div id="editor-date-options" style="display:none;margin-top:10px;gap:0;flex-direction:column;">
-        <div class="editor-date-heading">
-          <span class="section-label">Formato da data</span>
-          <div class="red-slash-toggle" id="editor-year-format" role="group" aria-label="Formato do ano">
-            <button type="button" class="active" data-year="2-digit">AA</button><span class="slash-sep">/</span>
-            <button type="button" data-year="numeric">AAAA</button><span class="slash-sep">/</span>
-            <button type="button" data-year="off">Desativado</button>
-          </div>
-        </div>
-        <div class="red-slash-toggle" id="editor-date-order" role="group" aria-label="Formato da data">
-          <button type="button" class="active" data-order="ymd" data-i18n-skip>AA-MM-DD</button><span class="slash-sep">/</span>
-          <button type="button" data-order="dmy" data-i18n-skip>DD-MM-AA</button><span class="slash-sep">/</span>
-          <button type="button" data-order="mdy" data-i18n-skip>MM-DD-AA</button>
-        </div>
-        <div class="red-slash-toggle" id="editor-month-format" role="group" aria-label="Formato do mês">
-          <button type="button" data-month="long">Mês por extenso</button><span class="slash-sep">/</span>
-          <button type="button" data-month="short">Mês abreviado</button><span class="slash-sep">/</span>
-          <button type="button" class="active" data-month="numeric">Mês em números</button>
-        </div>
-      </div>
       <div id="specific-artists-panel" style="display:none;margin-top:8px;">
         <span class="section-label" style="margin-bottom:5px;display:block;">Pesquisar artistas</span>
         <input id="specific-artist-search" type="text" placeholder="Digite um artista..." autocomplete="off">
@@ -4116,7 +4096,8 @@
         <span class="section-label">Fontes de Imagem</span>
         <div class="source-toggle-group" id="sources-artists" data-srctype="artists">
           <button class="source-btn" data-source="local_folder" draggable="true"><span class="src-num"></span>Pasta local</button>
-          <button class="source-btn active" data-source="deezer" draggable="true"><span class="src-num"></span>Deezer</button>
+          <button class="source-btn active" data-source="itunes" draggable="true"><span class="src-num"></span>iTunes</button>
+          <button class="source-btn" data-source="deezer" draggable="true"><span class="src-num"></span>Deezer</button>
           <button class="source-btn" data-source="fanart" draggable="true"><span class="src-num"></span>Fanart.tv</button>
           <button class="source-btn" data-source="spotify" draggable="true" title="Requer Spotify Premium"><span class="src-num"></span>Spotify<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7z"/><path d="M5 20h14"/></svg></button>
           <button class="source-btn" data-source="youtube" draggable="true"><span class="src-num"></span>YouTube</button>
@@ -4125,6 +4106,7 @@
         <div class="source-toggle-group visible" id="sources-albums" data-srctype="albums">
           <button class="source-btn" data-source="local_folder" draggable="true"><span class="src-num"></span>Pasta local</button>
           <button class="source-btn active" data-source="lastfm" draggable="true"><span class="src-num"></span>Last.fm</button>
+          <button class="source-btn active" data-source="itunes" draggable="true"><span class="src-num"></span>iTunes</button>
           <button class="source-btn" data-source="deezer" draggable="true"><span class="src-num"></span>Deezer</button>
           <button class="source-btn" data-source="spotify" draggable="true" title="Requer Spotify Premium"><span class="src-num"></span>Spotify<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7z"/><path d="M5 20h14"/></svg></button>
           <button class="source-btn" data-source="youtube" draggable="true"><span class="src-num"></span>YouTube</button>
@@ -4133,14 +4115,16 @@
         <div class="source-toggle-group" id="sources-tracks" data-srctype="tracks">
           <button class="source-btn" data-source="local_folder" draggable="true"><span class="src-num"></span>Pasta local</button>
           <button class="source-btn active" data-source="lastfm" draggable="true"><span class="src-num"></span>Last.fm</button>
-          <button class="source-btn active" data-source="deezer" draggable="true"><span class="src-num"></span>Deezer</button>
+          <button class="source-btn active" data-source="itunes" draggable="true"><span class="src-num"></span>iTunes</button>
+          <button class="source-btn" data-source="deezer" draggable="true"><span class="src-num"></span>Deezer</button>
           <button class="source-btn" data-source="spotify" draggable="true" title="Requer Spotify Premium"><span class="src-num"></span>Spotify<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7z"/><path d="M5 20h14"/></svg></button>
           <button class="source-btn" data-source="youtube" draggable="true"><span class="src-num"></span>YouTube</button>
           <button class="source-btn" data-source="fanart" draggable="true"><span class="src-num"></span>Fanart.tv</button>
         </div>
         <div class="source-toggle-group" id="sources-recent" data-srctype="recent">
           <button class="source-btn active" data-source="lastfm" draggable="true"><span class="src-num"></span>Last.fm</button>
-          <button class="source-btn active" data-source="deezer" draggable="true"><span class="src-num"></span>Deezer</button>
+          <button class="source-btn active" data-source="itunes" draggable="true"><span class="src-num"></span>iTunes</button>
+          <button class="source-btn" data-source="deezer" draggable="true"><span class="src-num"></span>Deezer</button>
           <button class="source-btn" data-source="spotify" draggable="true" title="Requer Spotify Premium"><span class="src-num"></span>Spotify<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7z"/><path d="M5 20h14"/></svg></button>
           <button class="source-btn" data-source="youtube" draggable="true"><span class="src-num"></span>YouTube</button>
           <button class="source-btn" data-source="fanart" draggable="true"><span class="src-num"></span>Fanart.tv</button>
@@ -4261,9 +4245,29 @@
             <input type="date" id="date-to">
           </div>
         </div>
-        <div class="warning"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>Datas customizadas buscam recentes. Períodos longos podem demorar.</div>
+      <div class="warning"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>Datas customizadas buscam recentes. Períodos longos podem demorar.</div>
       </div>
     </div>
+      <div id="editor-date-options" style="display:none;margin-top:10px;gap:0;flex-direction:column;">
+        <div class="editor-date-heading">
+          <span class="section-label">Formato da data</span>
+          <div class="red-slash-toggle" id="editor-year-format" role="group" aria-label="Formato do ano">
+            <button type="button" class="active" data-year="2-digit">AA</button><span class="slash-sep">/</span>
+            <button type="button" data-year="numeric">AAAA</button><span class="slash-sep">/</span>
+            <button type="button" data-year="off">Desativado</button>
+          </div>
+        </div>
+        <div class="red-slash-toggle" id="editor-date-order" role="group" aria-label="Formato da data">
+          <button type="button" class="active" data-order="ymd" data-i18n-skip>AA-MM-DD</button><span class="slash-sep">/</span>
+          <button type="button" data-order="dmy" data-i18n-skip>DD-MM-AA</button><span class="slash-sep">/</span>
+          <button type="button" data-order="mdy" data-i18n-skip>MM-DD-AA</button>
+        </div>
+        <div class="red-slash-toggle" id="editor-month-format" role="group" aria-label="Formato do mês">
+          <button type="button" data-month="long">Mês por extenso</button><span class="slash-sep">/</span>
+          <button type="button" data-month="short">Mês abreviado</button><span class="slash-sep">/</span>
+          <button type="button" class="active" data-month="numeric">Mês em números</button>
+        </div>
+      </div>
 
     <div class="divider"></div>
 
@@ -6822,6 +6826,51 @@ async function fetchTrackImageSpotify(artistName, trackName) {
   return imgs[0]?.url || '';
 }
 
+// A busca pública do iTunes não exige chave nem login e retorna capas via CORS.
+const itunesImageCache = new Map();
+async function fetchItunesImage(artistName, itemName, entity) {
+  const key = `${entity}|${artistName}|${itemName}`.toLocaleLowerCase();
+  if (itunesImageCache.has(key)) return itunesImageCache.get(key);
+  const term = [artistName, itemName].filter(Boolean).join(' ');
+  if (!term) return '';
+  const url = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=${entity}&limit=8&country=us`;
+  try {
+    const response = await fetch(url, { signal: combinedSignal(6000) });
+    if (!response.ok) throw new Error(`iTunes HTTP ${response.status}`);
+    const results = (await response.json())?.results || [];
+    const normalize = value => String(value || '').normalize('NFKC').toLocaleLowerCase();
+    const wantedArtist = normalize(artistName);
+    const wantedItem = normalize(itemName);
+    const result = results.find(entry => normalize(entry.artistName) === wantedArtist
+      && normalize(entity === 'song' ? entry.trackName : entry.collectionName).includes(wantedItem))
+      || results.find(entry => normalize(entry.artistName).includes(wantedArtist))
+      || results[0];
+    const artwork = result?.artworkUrl600 || result?.artworkUrl100 || '';
+    const image = artwork.replace('100x100', '600x600');
+    itunesImageCache.set(key, image);
+    return image;
+  } catch (error) {
+    if (error.message === 'cancelled') throw error;
+    console.warn('Fonte iTunes falhou:', error.message);
+    itunesImageCache.set(key, '');
+    return '';
+  }
+}
+
+async function fetchItunesArtistImage(artistName) {
+  // O endpoint de artistas nem sempre entrega artwork; uma capa do catálogo
+  // do artista é uma representação estável para a grade de artistas.
+  return fetchItunesImage(artistName, '', 'album');
+}
+
+async function fetchItunesAlbumImage(artistName, albumName) {
+  return fetchItunesImage(artistName, albumName, 'album');
+}
+
+async function fetchItunesTrackImage(artistName, trackName) {
+  return fetchItunesImage(artistName, trackName, 'song');
+}
+
 const IMAGE_PROXIES = [
   url => `https://images.weserv.nl/?url=${encodeURIComponent(url)}&output=jpg&w=300&h=300&fit=cover`,
   url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
@@ -7017,10 +7066,10 @@ const TILE_SIZE   = 300;
 // nunca de uma lista fixa — ver getSourceOrder() mais abaixo.
 const SOURCES_NEEDING_KEY = { youtube: true, spotify: true };
 let imageSources = {
-  artists: new Set(['deezer']),
-  albums:  new Set(['lastfm']),
-  tracks:  new Set(['lastfm', 'deezer']),
-  recent:  new Set(['lastfm', 'deezer']),
+  artists: new Set(['itunes']),
+  albums:  new Set(['lastfm', 'itunes']),
+  tracks:  new Set(['lastfm', 'itunes']),
+  recent:  new Set(['lastfm', 'itunes']),
 };
 
 const LOCAL_ARTIST_SOURCE = 'local_folder';
@@ -11437,7 +11486,7 @@ function syncTypeSpecificPanels() {
   const specificPanel = document.getElementById('specific-artists-panel');
   const trackActionPanel = document.getElementById('track-action-search-panel');
   const temporalMode = isTemporalCollageType();
-  document.getElementById('editor-date-options').style.display = temporalMode ? 'flex' : 'none';
+  document.getElementById('editor-date-options').style.display = 'flex';
   if (newSubRow) newSubRow.style.display = currentType === 'new_artists' ? 'flex' : 'none';
   if (specificSubRow) specificSubRow.style.display = currentType === 'specific_artists' ? 'flex' : 'none';
   if (specificPanel) specificPanel.style.display = currentType === 'specific_artists' ? '' : 'none';
@@ -11451,7 +11500,7 @@ function syncTypeSpecificPanels() {
   const periodSection = document.getElementById('period-section-wrap');
   const periodDivider = document.getElementById('period-section-divider');
   if (periodSection) periodSection.style.display = temporalMode ? 'none' : '';
-  if (periodDivider) periodDivider.style.display = temporalMode ? 'none' : '';
+  if (periodDivider) periodDivider.style.display = '';
   renderSpecificArtistsList();
 }
 
@@ -13910,6 +13959,7 @@ async function resolveImageUrl(item, type, apikey, options = {}) {
         else if (source === 'fanart') url = await fetchArtistImageFanart(item, apikey);
         else if (source === 'youtube') url = item._youtubeImage || await fetchYoutubeArtistImage(itemName);
         else if (source === 'deezer') url = await fetchArtistImageDeezer(itemName);
+        else if (source === 'itunes') url = await fetchItunesArtistImage(itemName);
         else if (source === 'spotify') url = await fetchArtistImageSpotify(itemName);
       } else if (type === 'albums') {
         if (source === LOCAL_ARTIST_SOURCE) url = resolveLocalImageForItem(item, type);
@@ -13918,12 +13968,14 @@ async function resolveImageUrl(item, type, apikey, options = {}) {
         else if (source === 'spotify') url = await fetchAlbumImageSpotify(artistName, itemName);
         else if (source === 'youtube') url = await fetchAlbumImageYoutube(artistName, itemName);
         else if (source === 'deezer') url = await fetchAlbumImageDeezer(artistName, itemName);
+        else if (source === 'itunes') url = await fetchItunesAlbumImage(artistName, itemName);
       } else if (type === 'tracks') {
         if (source === LOCAL_ARTIST_SOURCE) url = resolveLocalImageForItem(item, type);
         else if (source === 'lastfm' && item?._temporalType === 'recent') url = await fetchRecentImageLastfm(item, artistName, itemName, apikey);
         else if (source === 'lastfm') url = await fetchTrackAlbumImageLastfm(item, artistName, itemName, apikey);
         else if (source === 'fanart') url = await fetchAlbumCoverFanart(item, type, apikey);
         else if (source === 'deezer') url = await fetchTrackImageDeezer(artistName, itemName);
+        else if (source === 'itunes') url = await fetchItunesTrackImage(artistName, itemName);
         else if (source === 'spotify') url = await fetchTrackImageSpotify(artistName, itemName);
         else if (source === 'youtube') url = await fetchTrackImageYoutube(artistName, itemName);
       }
@@ -14448,7 +14500,9 @@ function getHeaderLabel(type, mode, period, dateFrom, dateTo) {
   } else if (mode==='custom') {
     const from = dateFrom.split('-').reverse().join('/');
     const to   = dateTo.split('-').reverse().join('/');
-    subtitle = uiText(`${from} até ${to}`);
+    const rangeConnector = (window.collagerI18n?.locale || document.documentElement.lang || 'en-US').startsWith('pt')
+      ? ' até ' : ' to ';
+    subtitle = `${from}${rangeConnector}${to}`;
   } else {
     const names = { '7day':'Nessa semana','1month':'Nesse mês','3month':'Nesses 3 meses',
                     '6month':'Nesses 6 meses','12month':'Nesses 12 meses','overall':'Todo o período' };
