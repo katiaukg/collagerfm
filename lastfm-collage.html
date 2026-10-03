@@ -6113,27 +6113,28 @@
         <button type="button" id="recent-track-love" style="flex:1;padding:10px;border:1px solid #f89bad88;border-radius:8px;background:#f89bad16;color:#ffc1ce;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">CURTIR FAIXA</button>
         <button type="button" id="recent-track-obsession" class="extension-dependent-action" style="flex:1;padding:10px;border:1px solid #c281ee88;border-radius:8px;background:#c281ee18;color:#deb8fa;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">TORNAR OBSESSÃO</button>
       </div>
-      <button type="button" id="recent-metadata-save" class="extension-dependent-action" style="width:100%;padding:10px;border:1px solid #22c55e88;border-radius:8px;background:#123d24;color:#8af0ad;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">SALVAR</button>
-      <label class="recent-extension-metadata-option" style="display:none;align-items:center;justify-content:space-between;gap:10px;color:var(--text);font-size:11px;line-height:1.35;cursor:pointer;">
+      <span class="section-label" style="margin-bottom:0;">Edição automática de metadata</span>
+      <label class="recent-extension-metadata-option" style="display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--text);font-size:11px;line-height:1.35;cursor:pointer;">
         <span>Aplicar correção de metadata sobre esse scrobble</span>
         <input type="checkbox" id="recent-metadata-future" checked style="width:16px;height:16px;accent-color:#22c55e;">
       </label>
-      <label class="recent-extension-metadata-option" style="display:none;align-items:center;justify-content:space-between;gap:10px;color:var(--text);font-size:11px;line-height:1.35;cursor:pointer;">
+      <label class="recent-extension-metadata-option" style="display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--text);font-size:11px;line-height:1.35;cursor:pointer;">
         <span>Apagar scrobble com metadata antigo</span>
         <input type="checkbox" id="recent-metadata-replace" checked style="width:16px;height:16px;accent-color:#22c55e;">
       </label>
-      <div id="recent-scrobble-actions-row">
-        <button type="button" id="edit-scrobble-delete" class="extension-dependent-action" style="width:100%;padding:10px 7px;border:1px solid #ef444488;border-radius:8px;background:#3f1518;color:#ff9b9b;font-family:inherit;font-size:10.5px;font-weight:800;cursor:pointer;line-height:1.2;">EXCLUIR SCROBBLE</button>
-      </div>
-      <label class="recent-extension-metadata-option" style="display:none;align-items:center;justify-content:space-between;gap:10px;color:var(--text);font-size:11px;line-height:1.35;cursor:pointer;">
+      <label class="recent-extension-metadata-option" style="display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--text);font-size:11px;line-height:1.35;cursor:pointer;">
         <span>Apagar scrobbles contendo mesmo metadata</span>
         <input type="checkbox" id="recent-metadata-delete-future" style="width:16px;height:16px;flex:0 0 16px;accent-color:#ef4444;">
       </label>
+      <button type="button" id="recent-metadata-save" class="extension-dependent-action" style="width:100%;padding:10px;border:1px solid #22c55e88;border-radius:8px;background:#123d24;color:#8af0ad;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">SALVAR METADATA</button>
+      <div id="recent-scrobble-actions-row">
+        <button type="button" id="edit-scrobble-delete" class="extension-dependent-action" style="width:100%;padding:10px 7px;border:1px solid #ef444488;border-radius:8px;background:#3f1518;color:#ff9b9b;font-family:inherit;font-size:10.5px;font-weight:800;cursor:pointer;line-height:1.2;">EXCLUIR SCROBBLE</button>
+      </div>
       <div id="recent-metadata-status" aria-live="polite" style="display:none;color:var(--muted);font-size:10.5px;line-height:1.4;"></div>
     </div>
     <div id="loved-metadata-actions" style="display:none;flex-direction:column;gap:9px;padding:11px;border:1px solid #f89bad66;border-radius:8px;background:#f89bad0d;">
       <div style="display:flex;align-items:center;gap:8px;">
-        <button type="button" id="loved-metadata-save" style="flex:1;padding:10px;border:1px solid #22c55e88;border-radius:8px;background:#123d24;color:#8af0ad;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">SALVAR</button>
+        <button type="button" id="loved-metadata-save" style="flex:1;padding:10px;border:1px solid #22c55e88;border-radius:8px;background:#123d24;color:#8af0ad;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">SALVAR METADATA</button>
         <button type="button" id="loved-track-obsession" class="extension-dependent-action" style="flex:1;padding:10px;border:1px solid #c281ee88;border-radius:8px;background:#c281ee18;color:#deb8fa;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">TORNAR OBSESSÃO</button>
       </div>
       <button type="button" id="loved-track-remove" style="width:100%;padding:10px;border:1px solid #ef444488;border-radius:8px;background:#3f1518;color:#ff9b9b;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">REMOVER DAS CURTIDAS</button>
@@ -19277,8 +19278,6 @@ function openTextEditModal(index) {
   recentMetadataActions.style.display = recentMode ? 'flex' : 'none';
   lovedMetadataActions.style.display = lovedMode ? 'flex' : 'none';
   obsessionActions.style.display = obsessionsMode ? 'flex' : 'none';
-  recentMetadataSave.style.display = recentMode ? 'none' : '';
-  lovedMetadataSave.style.display = lovedMode ? 'none' : '';
   if (temporalMode) syncTemporalAuthorizePlacement();
   syncTemporalProfileAccessVisibility(temporalMode);
   const renderedMode = getRenderedQueryState()?.mode || currentType;
@@ -19307,7 +19306,7 @@ function openTextEditModal(index) {
   recentMetadataDeleteFuture.disabled = false;
   recentMetadataReplace.checked = true;
   recentMetadataReplace.disabled = Boolean(item._nowPlaying);
-  recentMetadataSave.disabled = recentMode;
+  recentMetadataSave.disabled = Boolean(item._nowPlaying || item._lastfmDeleted || !collagerLastfmExtensionAvailable);
   recentScrobbleDelete.disabled = Boolean(item._nowPlaying || item._lastfmDeleted);
   recentScrobbleDelete.textContent = item._lastfmDeleted ? 'SCROBBLE EXCLUÍDO' : 'EXCLUIR SCROBBLE';
   recentTrackLove.disabled = Boolean(item._loved);
@@ -19446,11 +19445,13 @@ function syncTemporalAuthorizePlacement() {
 function syncRecentExtensionDependentControls() {
   const extensionReady = collagerLastfmExtensionAvailable;
   recentExtensionMetadataOptions.forEach(option => {
-    option.style.display = extensionReady ? 'flex' : 'none';
+    option.style.display = 'flex';
+    const input = option.querySelector('input');
+    if (input) input.disabled = !extensionReady || Boolean(activeClickItem?._nowPlaying || activeClickItem?._lastfmDeleted);
   });
 
   const itemUnavailable = Boolean(activeClickItem?._nowPlaying || activeClickItem?._lastfmDeleted);
-  recentMetadataSave.disabled = true;
+  recentMetadataSave.disabled = !extensionReady || itemUnavailable;
   recentScrobbleDelete.disabled = !extensionReady || itemUnavailable;
   recentTrackLove.disabled = Boolean(activeClickItem?._loved);
   recentTrackObsession.disabled = !extensionReady;
