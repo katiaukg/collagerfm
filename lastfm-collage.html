@@ -2728,6 +2728,14 @@
   }
 
   /* ── INTERFACE MOBILE ────────────────────────────────────────── */
+  #local-workspace-panel { display:flex;flex-direction:column;gap:8px;min-width:0; }
+  #local-workspace-panel .toggle-row { gap:12px; }
+  .local-workspace-footer { display:flex;align-items:center;gap:8px;min-width:0; }
+  #local-workspace-usage { flex:1;min-width:0;color:var(--muted);font-size:10px;line-height:1.4;overflow-wrap:anywhere; }
+  #local-workspace-status { color:var(--muted);font-size:10px;line-height:1.4; }
+  .local-workspace-tool { display:grid;place-items:center;flex:0 0 32px;width:32px;height:32px;padding:6px;border:1px solid var(--border);border-radius:5px;background:var(--surface2);color:var(--text);cursor:pointer; }
+  .local-workspace-tool svg { width:16px;height:16px; }
+  .local-workspace-tool:disabled { opacity:.4;cursor:default; }
   #mobile-app-header,
   #mobile-menu-backdrop,
   #mobile-menu-drawer,
@@ -4301,6 +4309,21 @@
     </div>
 
     <div class="divider"></div>
+
+    <section id="local-workspace-panel" aria-label="Neste navegador">
+      <span class="section-label">Neste navegador</span>
+      <div class="toggle-row">
+        <label class="toggle-label" for="local-session-enabled">Continuar de onde parei</label>
+        <label class="toggle-switch"><input type="checkbox" id="local-session-enabled"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="local-workspace-footer">
+        <span id="local-workspace-usage" aria-live="polite"></span>
+        <button type="button" id="local-backup-export" class="local-workspace-tool" title="Exportar backup local" aria-label="Exportar backup local" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M5 17v4h14v-4"/></svg></button>
+        <button type="button" id="local-backup-import" class="local-workspace-tool" title="Importar backup local" aria-label="Importar backup local"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4m-5 5 5-5 5 5M5 17v4h14v-4"/></svg></button>
+        <input type="file" id="local-backup-file" accept=".json,application/json" hidden>
+      </div>
+      <span id="local-workspace-status" aria-live="polite"></span>
+    </section>
 
     <div class="accordion-body" id="below-grid-body"><div class="accordion-body-inner">
 
@@ -6096,7 +6119,7 @@
 
     <div id="tile-image-section" style="display:flex;flex-direction:column;gap:6px;">
       <div id="mobile-paste-target" contenteditable="true" role="textbox" aria-label="Cole a imagem copiada aqui" data-placeholder="Abra a área de transferência do teclado e toque na imagem copiada." hidden style="min-height:42px;padding:10px;border:1px dashed #555;border-radius:8px;background:#151515;color:var(--muted);font-size:11px;line-height:1.35;outline:none;"></div>
-      <div id="paste-hint" style="font-size:10px;color:var(--muted);line-height:1.4;">Arraste, escolha ou cole uma imagem. Com Pasta local ativa, ela será salva na pasta; fora dela, permanecerá somente nesta sessão.</div>
+      <div id="paste-hint" style="font-size:10px;color:var(--muted);line-height:1.4;">A capa escolhida fica salva neste navegador para este artista, álbum ou faixa.</div>
       <button type="button" id="fanart-picker-btn" style="display:none;width:100%;padding:9px 10px;border:1px solid #ef444466;border-radius:8px;background:#ef444410;color:#ff8b8b;font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;">LISTAGEM DA FANART.TV</button>
     </div>
 
@@ -6269,6 +6292,7 @@
 </div>
 
 <script src="./i18n.js?v=20260913-1"></script>
+<script src="./local-store.js"></script>
 <script>
 // ─────────────────────────────────────────────────────────────
 // CONFIG & STATE
@@ -8908,10 +8932,9 @@ Object.entries(FONT_BOLD_MAP).forEach(([id, role]) => {
 });
 
 // ── Fonte customizada (upload de .ttf/.otf/.woff/.woff2) ──
-// A fonte fica disponível só durante esta sessão do navegador (não é salva
-// em disco nem persiste após recarregar a página) — assim como acontece com
-// imagens customizadas coladas/arrastadas nos tiles.
+// Os arquivos enviados podem acompanhar a sessão local quando ela é salva.
 let customFontCounter = 0;
+const customFontFiles = new Map();
 
 async function addCustomFontFile(file) {
   const ext = (file.name.split('.').pop() || '').toLowerCase();
@@ -8935,6 +8958,7 @@ async function addCustomFontFile(file) {
       css: `'${internalFamily}', sans-serif`,
       source: 'custom',
     });
+    customFontFiles.set(`custom-${customFontCounter}`, file);
     document.querySelectorAll('.font-family-select').forEach(sel => populateFontSelect(sel, sel.value));
     showStatus(`Fonte "${displayName}" adicionada — já disponível nos 4 seletores.`);
   } catch (err) {
@@ -15665,6 +15689,7 @@ async function drawCollage(items, type, cols, rows, headerLabel, apikey, accentO
   updateCutModeExamples(items, type);
   const liveCanvas = document.getElementById('collage-canvas');
   const sliced  = items.slice(0, cols*rows);
+  await window.collagerLocalWorkspace?.applyCovers(sliced, type);
   const cacheOnlyImages = options.cacheOnlyImages === true;
   const omitTileText = options.omitTileText === true;
   const outputCanvasOnly = options.outputCanvasOnly === true;
@@ -17249,6 +17274,7 @@ async function refreshDownloadLink(version = _downloadRenderVersion) {
 }
 
 function scheduleDownloadRefresh(delay = 500) {
+  window.collagerLocalWorkspace?.scheduleSave();
   _downloadDirty = true;
   const version = ++_downloadRenderVersion;
   clearTimeout(_downloadRefreshTimer);
@@ -18763,13 +18789,15 @@ async function applyCustomImageToItem(targetItem, img, fileOrBlob, explicitRef =
   } else {
     delete customImageRefs[poolIdx];
   }
+  if (await window.collagerLocalWorkspace?.rememberCover(targetItem, effectiveType, img, fileOrBlob)) {
+    customImageRefs[poolIdx] = { kind: 'preserved' };
+  }
   captureCurrentCollageMemory();
   recordTimelineAction(`Imagem alterada: ${targetItem.name || 'quadro'}.`);
   return true;
 }
 
-// Fora da fonte Pasta local, imagens escolhidas/coladas ficam só na sessão.
-// Com a pasta ativa, o arquivo é salvo nela e a memória guarda só a referência.
+// A capa escolhida acompanha a identidade do item no armazenamento local.
 function applyModalImage(file) {
   if (!file || activeClickIndex === null || !activeClickItem) return;
   const blobUrl = URL.createObjectURL(file);
@@ -23360,6 +23388,7 @@ document.getElementById('edit-image-reset').addEventListener('click', async () =
   if (currentItems.indexOf(activeClickItem) === -1) { closeTextEditModal(); return; }
   const _rPoolIdx = allFetchedItems.indexOf(activeClickItem);
   if (_rPoolIdx === -1) { closeTextEditModal(); return; }
+  await window.collagerLocalWorkspace?.forgetCover(activeClickItem, getDrawType());
   delete customImages[_rPoolIdx];
   delete customImageRefs[_rPoolIdx];
   // Remove do poolImageCache para forçar rebusca da imagem original do last.fm
@@ -23417,6 +23446,7 @@ function captureTimelineSnapshot() {
       generatedQueryState: cloneTimelinePlain(generatedQueryState, null),
       headerLabelText,
       collageBehaviorRules: cloneTimelinePlain(collageBehaviorRules, []),
+      preservedCovers: window.collagerLocalWorkspace?.snapshotCovers() ?? null,
     },
   };
 }
@@ -23525,6 +23555,7 @@ function appendStatusHistoryEntry(message, error=false, options={}) {
 
 function recordTimelineAction(message) {
   if (window.__collagerTimelineRestoring) return;
+  window.collagerLocalWorkspace?.scheduleSave();
   const timelineParentId = window.__collagerTimelineActiveId ?? null;
   appendStatusHistoryEntry(message, false, {
     snapshot: captureTimelineSnapshot(),
@@ -23547,7 +23578,7 @@ function getPreviousTimelineEntry() {
   return fallbackIndex >= 0 ? entries[fallbackIndex] : null;
 }
 
-async function restoreStatusHistoryEntry(entry) {
+async function restoreStatusHistoryEntry(entry, { prepareDraw } = {}) {
   if (!entry?.snapshot || window.__collagerTimelineRestoring) return;
   window.__collagerTimelineRestoring = true;
   updateTimelineRestoreButtons();
@@ -23571,6 +23602,7 @@ async function restoreStatusHistoryEntry(entry) {
     applyJsState(entry.snapshot.settings.jsState);
 
     const runtime = entry.snapshot.runtime;
+    await window.collagerLocalWorkspace?.restoreCovers(runtime.preservedCovers);
     allFetchedItems = runtime.allFetchedItems.slice();
     deletedPoolIndices = new Set(runtime.deletedPoolIndices);
     customImages = { ...runtime.customImages };
@@ -23585,6 +23617,8 @@ async function restoreStatusHistoryEntry(entry) {
     headerLabelText = runtime.headerLabelText || '';
     collageBehaviorRules = cloneTimelinePlain(runtime.collageBehaviorRules, []);
     persistCollageBehaviorRules();
+
+    if (prepareDraw) await prepareDraw();
 
     const { cols, rows } = getDrawGrid();
     currentItems = computeVisibleItems(cols * rows);
@@ -23608,9 +23642,11 @@ async function restoreStatusHistoryEntry(entry) {
 
     window.__collagerTimelineActiveId = entry.id;
     triggerHapticFeedback('short');
+    return true;
   } catch (error) {
     console.error('Não foi possível restaurar o ponto da linha do tempo:', error);
     showStatus('Erro ao restaurar este ponto do histórico.', true);
+    return false;
   } finally {
     _redrawPending = false;
     _isDrawing = previousDrawingState;
@@ -24238,13 +24274,14 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
   // Tecla R sobre tile: restaura imagem original
   mainCanvas.setAttribute('tabindex', '0');
   mainCanvas.addEventListener('mouseenter', () => mainCanvas.focus());
-  mainCanvas.addEventListener('keydown', e => {
+  mainCanvas.addEventListener('keydown', async e => {
     if (e.key !== 'r' && e.key !== 'R') return;
     if (!lastHoveredHit) return;
     const item = currentItems[lastHoveredHit.index];
     if (!item) return;
     const poolIdx = allFetchedItems.indexOf(item);
     if (poolIdx === -1 || !(poolIdx in customImages)) return;
+    await window.collagerLocalWorkspace?.forgetCover(item, getDrawType());
     delete customImages[poolIdx];
     delete customImageRefs[poolIdx];
     poolImageCache.delete(poolIdx); // força rebusca da imagem original
@@ -24348,7 +24385,7 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
 
   // IDs de inputs que não fazem sentido (ou não devem) ser exportados.
   const SETTINGS_EXCLUDE_IDS = new Set([
-    'settings-import-input', 'custom-file-input', 'custom-font-input', 'local-artist-folder-input', 'local-artist-folder-path', 'header-subtitle-input', 'header-text-color'
+    'settings-import-input', 'custom-file-input', 'custom-font-input', 'local-artist-folder-input', 'local-artist-folder-path', 'header-subtitle-input', 'header-text-color', 'local-session-enabled', 'local-backup-file'
     // header-subtitle-input fica de fora da varredura automática pois seu
     // valor "vazio" tem significado especial (= automático); é tratado
     // junto de headerSubtitleOverride no JS_STATE abaixo.
@@ -26889,5 +26926,6 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
   recordTimelineAction('Estado inicial da sessão.');
 
 </script>
+<script src="./local-workspace.js"></script>
 </body>
 </html>

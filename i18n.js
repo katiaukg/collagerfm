@@ -3,6 +3,7 @@
 
   const supportedLocales = ['pt-BR', 'en-US'];
   const storageKey = 'collagerfm-language';
+  const manualPreferenceKey = 'collagerfm-language-manual';
   const localeCache = new Map();
   const textState = new WeakMap();
   const attributeState = new WeakMap();
@@ -15,10 +16,23 @@
   let localeRequest = 0;
   const reverseStrings = new Map();
 
-  function preferredLocale() {
-    const saved = localStorage.getItem(storageKey);
-    if (supportedLocales.includes(saved)) return saved;
-    return 'en-US';
+  async function preferredLocale() {
+    const manualChoice = () => localStorage.getItem(manualPreferenceKey) === '1'
+      && supportedLocales.includes(localStorage.getItem(storageKey)) ? localStorage.getItem(storageKey) : null;
+    if (manualChoice()) return manualChoice();
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 1500);
+    try {
+      const response = await fetch('./api/lastfm-auth?action=status', { cache: 'no-store', signal: controller.signal });
+      if (response.ok) {
+        const data = await response.json();
+        if (manualChoice()) return manualChoice();
+        if (supportedLocales.includes(data.suggestedLocale)) return data.suggestedLocale;
+      }
+    } catch { /* Local/static hosting falls back to the browser region. */ }
+    finally { clearTimeout(timeout); }
+    const browserLocale = navigator.languages?.[0] || navigator.language || '';
+    return /(?:-|_)BR(?:-|$)/i.test(browserLocale) ? 'pt-BR' : 'en-US';
   }
 
   async function loadLocale(locale) {
@@ -140,7 +154,7 @@
     }
   }
 
-  async function setLocale(locale) {
+  async function setLocale(locale, { automatic = false } = {}) {
     const request = ++localeRequest;
     const normalized = supportedLocales.includes(locale) ? locale : 'en-US';
     await loadLocale('en-US');
@@ -149,6 +163,7 @@
     currentMessages = messages;
     currentLocale = normalized;
     localStorage.setItem(storageKey, normalized);
+    if (!automatic) localStorage.setItem(manualPreferenceKey, '1');
     document.documentElement.lang = normalized;
     applyTo(document.body);
     document.dispatchEvent(new CustomEvent('collager:language-changed', { detail: { locale: normalized } }));
@@ -157,7 +172,7 @@
 
   async function init() {
     try {
-      await setLocale(preferredLocale());
+      await setLocale(await preferredLocale(), { automatic: true });
     } catch (error) {
       console.warn(error);
       currentLocale = 'en-US';

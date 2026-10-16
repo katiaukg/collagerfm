@@ -49,10 +49,12 @@ module.exports = async function handler(request, response) {
   if (request.method !== 'GET') return send(response, 405, { error: 'Metodo nao permitido.' });
   if (action === 'status') {
     const session = readSession(request);
+    const country = String(request.headers?.['x-vercel-ip-country'] || '').toUpperCase();
     return send(response, 200, {
       configured: Boolean(apiKey && apiSecret),
       connected: Boolean(session),
       username: session?.name || '',
+      suggestedLocale: /^[A-Z]{2}$/.test(country) ? (country === 'BR' ? 'pt-BR' : 'en-US') : null,
     });
   }
   if (!apiKey || !apiSecret) return send(response, 503, {
