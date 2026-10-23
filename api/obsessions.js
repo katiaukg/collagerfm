@@ -188,12 +188,14 @@ async function fetchPage(user, page) {
     }
     const error = new Error(message);
     error.status = upstream.status;
+    if ([403, 406, 600].includes(upstream.status)) error.code = 'LASTFM_ACCESS_CHALLENGE';
     throw error;
   }
   const html = await upstream.text();
   if (/<title>\s*Client Challenge\s*<\/title>|\/_fs-ch-|cf-chl-/i.test(html)) {
     const error = new Error('O Last.fm exigiu uma verificação de acesso. Não foi possível consultar o histórico geral de obsessões agora.');
     error.status = 503;
+    error.code = 'LASTFM_ACCESS_CHALLENGE';
     throw error;
   }
   return html;
@@ -235,6 +237,11 @@ module.exports = async function handler(request, response) {
         throw error;
       }
       const pageItems = parseObsessions(html);
+      if (!pageItems.length && !/obsession-history|<title>[^<]*(?:obsessions|obsessões)|no obsessions|hasn.t set any obsessions/i.test(html)) {
+        const error = new Error('Não foi possível reconhecer o histórico de obsessões do Last.fm.');
+        error.status = 502;
+        throw error;
+      }
       if (!pageItems.length) break;
       let added = 0;
       pageItems.forEach(item => {
@@ -255,8 +262,12 @@ module.exports = async function handler(request, response) {
   } catch (error) {
     const stalePayload = cached?.payload || persistent?.payload;
     if (stalePayload) {
-      return sendJson(response, 200, { ...stalePayload, stale: true });
+      return sendJson(response, 200, { ...stalePayload, stale: true, savedAt: persistent?.savedAt || null });
     }
-    return sendJson(response, error.status || 502, { error: `Falha ao consultar obsessoes: ${error.message}` });
+    return sendJson(response, error.status || 502, {
+      error: `Falha ao consultar obsessoes: ${error.message}`,
+      code: error.code || '',
+      openUrl: error.code === 'LASTFM_ACCESS_CHALLENGE' ? `https://www.last.fm/user/${encodeURIComponent(user)}/obsessions` : '',
+    });
   }
 };

@@ -13295,7 +13295,25 @@ async function getRecentObsessionItems(user, maxItems = 50) {
     : ['/api/obsessions'];
   let payload = {};
   let lastError = null;
-  for (const endpoint of [...new Set(endpoints)]) {
+  let accessChallengeError = null;
+  let browserError = null;
+  let browserRead = false;
+  obsessionDataIsStale = false;
+  const readFromBrowser = async () => {
+    if (!collagerLastfmExtensionCapabilities.has('readObsessions')) {
+      const ping = await collagerExtensionRequest('ping', {}, 1400);
+      collagerLastfmExtensionAvailable = Boolean(ping?.available);
+      collagerLastfmExtensionCapabilities = new Set(ping?.capabilities || []);
+    }
+    if (!collagerLastfmExtensionCapabilities.has('readObsessions')) return false;
+    payload = await collagerExtensionRequest('readObsessions', { username: user, limit: maxItems }, 65000);
+    browserRead = Array.isArray(payload?.obsessions);
+    return browserRead;
+  };
+  if (collagerLastfmExtensionAvailable) {
+    try { await readFromBrowser(); } catch (error) { browserError = error; }
+  }
+  for (const endpoint of browserRead ? [] : [...new Set(endpoints)]) {
     try {
       const response = await fetch(`${endpoint}?${params.toString()}`, {
         headers: { Accept: 'application/json' },
@@ -13308,14 +13326,28 @@ async function getRecentObsessionItems(user, maxItems = 50) {
         break;
       }
       lastError = new Error(payload.error || `Falha ao buscar obsessões (${response.status}).`);
+      lastError.code = payload.code || (/Client Challenge|verifica[çc][aã]o de acesso|access check/i.test(payload.error || '') ? 'LASTFM_ACCESS_CHALLENGE' : '');
+      lastError.openUrl = payload.openUrl || '';
+      if (lastError.code === 'LASTFM_ACCESS_CHALLENGE') accessChallengeError = lastError;
     } catch (error) {
       if (error?.name === 'AbortError') throw error;
       lastError = error;
     }
   }
-  if (lastError) {
-    throw new Error(lastError.message || 'Não foi possível acessar o serviço de obsessões. Verifique a conexão e tente novamente.');
+  if (lastError && !collagerLastfmExtensionAvailable) {
+    try { if (await readFromBrowser()) lastError = null; } catch (error) { browserError = error; }
   }
+  if (browserRead) lastError = null;
+  if (lastError) {
+    if (browserError?.code === 'LASTFM_ACCESS_CHALLENGE') throw browserError;
+    if (accessChallengeError && collagerLastfmExtensionAvailable
+      && !collagerLastfmExtensionCapabilities.has('readObsessions')) {
+      throw new Error('Atualize a extensão do collager.fm para a versão 1.1.0 ou superior e recarregue a página para consultar obsessões pelo navegador.');
+    }
+    throw accessChallengeError || lastError;
+  }
+  obsessionDataIsStale = payload.stale === true;
+  if (obsessionDataIsStale) showStatus('O Last.fm está indisponível. Exibindo o último histórico de obsessões disponível.');
   return (Array.isArray(payload.obsessions) ? payload.obsessions : []).map(item => ({
     name: item.name || '',
     artist: { name: item.artist || '' },
@@ -14259,7 +14291,7 @@ function stopRecentLiveUpdates() {
   recentLivePoll = null;
 }
 
-function startRecentLiveUpdates(user, apikey) {
+function startRecentLiveUpdates(user, apikey, { applyMetadataRules = true } = {}) {
   stopRecentLiveUpdates();
   const liveGeneration = recentLiveGeneration;
   let poolSize = Math.max(allFetchedItems.length, getDrawGrid().cols * getDrawGrid().rows + 20);
@@ -14282,6 +14314,7 @@ function startRecentLiveUpdates(user, apikey) {
         }, 0);
         const fresh = await fetchRecentScrobblePage(user, apikey, Math.min(200, poolSize), { silentQueue: true });
         if (liveGeneration !== recentLiveGeneration) return;
+        document.dispatchEvent(new CustomEvent('collager:recent-refreshed'));
         const newScrobbles = fresh.filter(item =>
           !item._nowPlaying
           && (Number(item?._temporalTimestamp) || 0) > previousNewestTimestamp
@@ -14305,8 +14338,10 @@ function startRecentLiveUpdates(user, apikey) {
         }
         // Reconfere regras mesmo sem mudança visual. Se a extensão ou o Last.fm
         // falharem em um ciclo, o scrobble pendente será tentado novamente.
-        applySavedMetadataRulesToLastfm(allFetchedItems, { redraw: true })
-          .catch(error => console.warn('Correção automática de metadata:', error.message));
+        if (applyMetadataRules) {
+          applySavedMetadataRulesToLastfm(allFetchedItems, { redraw: true })
+            .catch(error => console.warn('Correção automática de metadata:', error.message));
+        }
       } catch (error) {
         if (error.message !== 'cancelled') console.warn('Atualização de Recentes:', error.message);
         adaptiveInterval = Math.min(
@@ -17515,10 +17550,10 @@ let _genAbortController = null;
 let _lastfmQueueHeartbeatTimer = 0;
 function checkCancel() { if (cancelRequested) throw new Error('cancelled'); }
 
-async function generate() {
+async function generate({ refreshOnly = false } = {}) {
   const user   = document.getElementById('username').value.trim();
   const apikey = document.getElementById('apikey').value.trim();
-  if (!user) { showStatus('Preencha o usuário.', true); return; }
+  if (!user) { showStatus('Preencha o usuário.', true); return false; }
   stopRecentLiveUpdates();
 
   const cols = parseInt(document.getElementById('cols').value);
@@ -17530,7 +17565,7 @@ async function generate() {
   // Antes de substituir a collage atual, guarda suas exclusões, mesclagens,
   // textos e referências de imagem usando identidades estáveis.
   captureCurrentCollageMemory();
-  if (previousRenderedType && previousRenderedType !== requestedQueryState.effectiveType) {
+  if (!refreshOnly && previousRenderedType && previousRenderedType !== requestedQueryState.effectiveType) {
     setArtistSubDefaultsForEffectiveType(requestedQueryState.effectiveType);
   }
   generationQueryState = requestedQueryState;
@@ -17558,14 +17593,16 @@ async function generate() {
     }).catch(() => {});
   }, 4000);
   setLoading(true);
-  document.getElementById('collage-wrap').classList.remove('visible');
+  if (!refreshOnly) document.getElementById('collage-wrap').classList.remove('visible');
   updateTemporalPaginationControls();
-  document.getElementById('dl-btn').classList.remove('visible');
-  customImages = {};
-  customImageRefs = {};
-  customTexts  = {};
-  customPlays  = {};
-  mergeRecords = {};
+  if (!refreshOnly) {
+    document.getElementById('dl-btn').classList.remove('visible');
+    customImages = {};
+    customImageRefs = {};
+    customTexts  = {};
+    customPlays  = {};
+    mergeRecords = {};
+  }
   deletedHistoryPage = 0;
   mergedHistoryPage = 0;
   closeHistoryModal();
@@ -17589,7 +17626,7 @@ async function generate() {
     } else if (isObsessionsMode) {
       items = await getRecentObsessionItems(user, limit);
     } else if (isSpecificMode) {
-      if (!selectedSpecificArtists.length) { showStatus('Escolha pelo menos um artista específico.', true); setLoading(false); return; }
+      if (!selectedSpecificArtists.length) { showStatus('Escolha pelo menos um artista específico.', true); setLoading(false); return false; }
       items = await getSpecificArtistItems(user, apikey, specificSubType, currentPeriod, limit);
       showStatus('Buscando imagens...');
       items = await enrichItemImages(items, specificSubType, apikey);
@@ -17598,11 +17635,11 @@ async function generate() {
         const dateFrom = document.getElementById('date-from').value;
         const dateTo   = document.getElementById('date-to').value;
         const range = getCustomDateRangeValidation(dateFrom, dateTo);
-        if (!range.ok) { showStatus(range.message, true); setLoading(false); return; }
+        if (!range.ok) { showStatus(range.message, true); setLoading(false); return false; }
         items = await getNewItemsForDateRange(user, apikey, newSubType, range.fromTs, range.toTs, limit);
       } else if (currentPeriod === 'overall') {
         showStatus('Selecione um período específico (não "Geral") para o modo Novos.', true);
-        setLoading(false); return;
+        setLoading(false); return false;
       } else {
         items = await getNewItems(user, apikey, newSubType, currentPeriod, limit);
       }
@@ -17616,8 +17653,8 @@ async function generate() {
     } else {
       const dateFrom = document.getElementById('date-from').value;
       const dateTo   = document.getElementById('date-to').value;
-      if (!dateFrom||!dateTo) { showStatus('Selecione as datas.', true); setLoading(false); return; }
-      if (dateFrom>dateTo)    { showStatus('A data "De" deve ser anterior ou igual a "Até".', true); setLoading(false); return; }
+      if (!dateFrom||!dateTo) { showStatus('Selecione as datas.', true); setLoading(false); return false; }
+      if (dateFrom>dateTo)    { showStatus('A data "De" deve ser anterior ou igual a "Até".', true); setLoading(false); return false; }
       items = await getItemsForDateRange(user, apikey, currentType,
         Math.floor(parseLocalDateStart(dateFrom).getTime()/1000),
         Math.floor(parseLocalDateEnd(dateTo).getTime()/1000), limit);
@@ -17626,7 +17663,7 @@ async function generate() {
     if (!items.length) {
       showStatus(isObsessionsMode ? 'Nenhuma obsessão encontrada no histórico geral desta conta.' : 'Nenhum dado encontrado para esse período.', true);
       setLoading(false);
-      return;
+      return false;
     }
     if (isTemporalMode) {
       temporalPaginationRequestedLimit = limit;
@@ -17652,6 +17689,13 @@ async function generate() {
     const header   = isNewMode
       ? `Novos ${typeLabels[newSubType]} ${headerSeparatorMode === 'bar' ? '|' : headerSeparatorMode === 'none' ? '' : '\u00b7'} ${getHeaderSubtitlePart(getHeaderLabel(newSubType, periodMode, currentPeriod, dateFrom, dateTo))}`.replace(/\s+/g, ' ').trim()
       : getHeaderLabel(currentType, periodMode, currentPeriod, dateFrom, dateTo);
+    if (refreshOnly) {
+      customImages = {};
+      customImageRefs = {};
+      customTexts = {};
+      customPlays = {};
+      mergeRecords = {};
+    }
     allFetchedItems      = items;
     deletedPoolIndices   = new Set();
     headerLabelText      = header;
@@ -17716,8 +17760,8 @@ async function generate() {
         if (error.message !== 'cancelled') console.warn('Carregamento progressivo da collage temporal:', error);
       });
       if (isRecentMode) {
-        startRecentLiveUpdates(user, apikey);
-        applySavedMetadataRulesToLastfm(allFetchedItems, { redraw: true })
+        startRecentLiveUpdates(user, apikey, { applyMetadataRules: !refreshOnly });
+        if (!refreshOnly) applySavedMetadataRulesToLastfm(allFetchedItems, { redraw: true })
           .catch(error => console.warn('Correção automática de metadata:', error.message));
       }
     }
@@ -17729,6 +17773,7 @@ async function generate() {
     recordTimelineAction('Collage gerada.');
     triggerHapticFeedback('medium');
     notifyQueryConfigurationChanged();
+    return true;
 
   } catch(err) {
     if (err.message === 'cancelled') {
@@ -17740,6 +17785,7 @@ async function generate() {
       console.error(err);
       showStatus('Erro: '+err.message, true);
     }
+    return false;
   } finally {
     const finishedQueueGroup = window._lastfmQueueGroup;
     clearInterval(_lastfmQueueHeartbeatTimer);
@@ -19437,6 +19483,8 @@ obsessionLastfmLinkButton.addEventListener('click', () => {
 let lastfmAuthorizationPromise = null;
 let recentLastfmAuthState = { configured: false, connected: false, username: '' };
 let collagerLastfmExtensionAvailable = false;
+let collagerLastfmExtensionCapabilities = new Set();
+let obsessionDataIsStale = false;
 const collagerExtensionRequests = new Map();
 const LASTFM_REPLACEMENT_MAX_AGE_SECONDS = 14 * 24 * 60 * 60;
 
@@ -19515,11 +19563,13 @@ const extensionActivityClose = document.getElementById('extension-activity-close
 const extensionActivityActions = document.getElementById('extension-activity-actions');
 const extensionActivityOpenLastfm = document.getElementById('extension-activity-open-lastfm');
 const EXTENSION_ACTION_LABELS = {
+  readObsessions: 'Consultando obsessões',
   deleteScrobble: 'Excluindo scrobble',
   deleteObsession: 'Excluindo obsessão',
   setObsession: 'Definindo obsessão',
 };
 const EXTENSION_SUCCESS_MESSAGES = {
+  readObsessions: 'Obsessões carregadas.',
   deleteScrobble: 'Scrobble excluído com sucesso.',
   deleteObsession: 'Obsessão excluída com sucesso.',
   setObsession: 'Obsessão atualizada com sucesso.',
@@ -19727,10 +19777,13 @@ window.addEventListener('message', event => {
   }
   if (event.data?.type === 'collager-lastfm-extension-ready') {
     collagerLastfmExtensionAvailable = true;
+    collagerLastfmExtensionCapabilities = new Set(event.data.capabilities || []);
     updateRecentExtensionStatus();
     broadcastRecentMetadataRules();
-    queueRecentMetadataAutomaticDeletes(allFetchedItems);
-    queueRecentMetadataAutomaticCorrections(allFetchedItems);
+    if (!window.collagerLocalWorkspace?.isRestoring()) {
+      queueRecentMetadataAutomaticDeletes(allFetchedItems);
+      queueRecentMetadataAutomaticCorrections(allFetchedItems);
+    }
     return;
   }
   if (event.data?.type === 'collager-lastfm-extension-progress') {
@@ -26385,6 +26438,9 @@ const htmlSrc = unwrapUrl(toAbsoluteUrl(htmlSrcRaw, referrer));
     });
     function updateMobileAccountState() {
       const hasUsername = Boolean(document.getElementById('username')?.value.trim());
+      if (mobileQuickUsername && mobileQuickUsername.value !== primaryUsername?.value) {
+        mobileQuickUsername.value = primaryUsername?.value || '';
+      }
       if (desktopMenuUsername && desktopMenuUsername.value !== document.getElementById('username')?.value) {
         desktopMenuUsername.value = document.getElementById('username')?.value || '';
       }

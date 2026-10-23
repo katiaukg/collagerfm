@@ -10,7 +10,9 @@ Capas escolhidas, coladas ou arrastadas ficam no IndexedDB deste navegador, asso
 
 Em "Neste navegador", a opcao "Continuar de onde parei" salva a ultima collage com capas, textos, configuracoes e edicoes. O salvamento da sessao vem desativado; desativa-lo apaga a sessao salva e mantem as capas. O painel informa o espaco usado por esses dados e permite exportar/importar um backup com as imagens. Esse backup nao inclui chaves de API, tokens ou cookies. Presets continuam guardando apenas a personalizacao.
 
-Os dados ficam neste navegador e nesta origem. Limpar os dados do site pode remove-los; localhost e o site de producao possuem armazenamentos separados. A sessao reabre como uma copia local, sem executar acoes na conta Last.fm.
+Os dados ficam neste navegador e nesta origem. Limpar os dados do site pode remove-los; localhost e o site de producao possuem armazenamentos separados. Ao reabrir, a copia local aparece enquanto uma nova consulta atualiza o periodo salvo com os dados atuais. Recentes retoma a leitura ao vivo. Esta atualizacao automatica apenas consulta dados; regras que alteram a conta voltam ao fluxo normal quando o usuario gera a collage manualmente. Se a consulta falhar, a copia local permanece com um aviso de que nao foi atualizada.
+
+A extensao 1.1.0 adiciona leitura do historico de obsessoes pela sessao aberta do Last.fm. O site tenta essa leitura quando ela esta disponivel e pode usar a consulta do servidor como alternativa. Uma verificacao de acesso no proprio Last.fm deve ser concluida pelo usuario; ela nunca e interpretada como historico vazio.
 
 O idioma inicial usa o pais informado pela Vercel: Brasil recebe portugues e os demais paises recebem ingles. Em ambiente local ou sem essa informacao, a regiao configurada no navegador serve de alternativa. Uma escolha manual no menu de idiomas prevalece nas proximas visitas.
 

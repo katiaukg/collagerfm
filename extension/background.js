@@ -88,14 +88,14 @@ function waitForTab(tabId, timeoutMs = 20000) {
   });
 }
 
-async function sendToLastfmTab(tabId, action, payload) {
+async function sendToLastfmTab(tabId, action, payload, timeoutMs = 30000) {
   const send = () => new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       const error = new Error('O Last.fm demorou demais para concluir esta ação.');
       error.code = 'COLLAGER_ACTION_TIMEOUT';
       error.retryable = true;
       reject(error);
-    }, 30000);
+    }, timeoutMs);
     chrome.tabs.sendMessage(tabId, { channel: 'collager-lastfm-page', action, payload })
       .then(resolve, reject)
       .finally(() => clearTimeout(timeout));
@@ -106,6 +106,29 @@ async function sendToLastfmTab(tabId, action, payload) {
     if (error?.code === 'COLLAGER_ACTION_TIMEOUT') throw error;
     await chrome.scripting.executeScript({ target: { tabId }, files: ['lastfm-content.js'] });
     return send();
+  }
+}
+
+async function readObsessions(payload) {
+  const username = clean(payload?.username, 65);
+  if (!username || username.length > 64) throw new Error('Usuario invalido.');
+  const limit = Math.max(1, Math.min(500, Number.parseInt(payload?.limit, 10) || 50));
+  const url = `https://www.last.fm/user/${encodeURIComponent(username)}/obsessions`;
+  const tabs = await chrome.tabs.query({ url: 'https://www.last.fm/*' });
+  let tab = tabs.find(candidate => candidate.status === 'complete') || tabs[0];
+  const created = !tab;
+  if (!tab) tab = await chrome.tabs.create({ url, active: false });
+  let keepOpen = false;
+  try {
+    await waitForTab(tab.id);
+    const result = await sendToLastfmTab(tab.id, 'readObsessions', { username, limit }, 60000);
+    if (!result?.ok) {
+      keepOpen = result?.code === 'LASTFM_ACCESS_CHALLENGE';
+      throw actionError(result?.error || 'Falha ao consultar obsessões.', { code: result?.code, openUrl: result?.openUrl || url });
+    }
+    return { obsessions: result.obsessions, source: 'browser' };
+  } finally {
+    if (created && !keepOpen) await chrome.tabs.remove(tab.id).catch(() => {});
   }
 }
 
@@ -285,7 +308,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }).catch(() => {});
   };
   const operation = message.action === 'ping'
-    ? Promise.resolve({ available: true, version: chrome.runtime.getManifest().version })
+    ? Promise.resolve({ available: true, version: chrome.runtime.getManifest().version, capabilities: ['readObsessions'] })
+    : message.action === 'readObsessions'
+      ? readObsessions(message.payload)
     : message.action === 'deleteScrobble'
       ? enqueue(() => deleteScrobble(message.payload, report), report)
     : message.action === 'deleteObsession'

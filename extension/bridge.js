@@ -1042,7 +1042,7 @@ function mountHistoryUi() {
 
 function notifyReady() {
   if (!isAllowedPage()) return;
-  window.postMessage({ type: PAGE_READY, version: chrome.runtime.getManifest().version }, location.origin);
+  window.postMessage({ type: PAGE_READY, version: chrome.runtime.getManifest().version, capabilities: ['readObsessions'] }, location.origin);
 }
 
 window.addEventListener('message', event => {
@@ -1095,13 +1095,14 @@ window.addEventListener('message', event => {
   if (event.data?.type !== PAGE_REQUEST || typeof event.data.requestId !== 'string') return;
   const requestId = event.data.requestId;
   const action = event.data.action;
-  if (action !== 'ping' && action !== 'deleteScrobble' && action !== 'deleteObsession' && action !== 'setObsession') return;
+  if (action !== 'ping' && action !== 'readObsessions' && action !== 'deleteScrobble' && action !== 'deleteObsession' && action !== 'setObsession') return;
+  const readOnly = action === 'ping' || action === 'readObsessions';
   const operation = {
     action,
     payload: event.data.payload || {},
     events: [],
   };
-  if (action !== 'ping') activeOperations.set(requestId, operation);
+  if (!readOnly) activeOperations.set(requestId, operation);
 
   chrome.runtime.sendMessage({
     channel: 'collager-lastfm',
@@ -1111,7 +1112,7 @@ window.addEventListener('message', event => {
   })
     .then(result => {
       if (result?.__error) {
-        if (action !== 'ping') {
+        if (!readOnly) {
           addHistoryEntry(buildHistoryEntry(operation, false, {}, result.__error));
           activeOperations.delete(requestId);
         }
@@ -1128,14 +1129,14 @@ window.addEventListener('message', event => {
         }, location.origin);
         return;
       }
-      if (action !== 'ping') {
+      if (!readOnly) {
         addHistoryEntry(buildHistoryEntry(operation, true, result));
         activeOperations.delete(requestId);
       }
       window.postMessage({ type: PAGE_RESPONSE, requestId, ok: true, result }, location.origin);
     })
     .catch(error => {
-      if (action !== 'ping') {
+      if (!readOnly) {
         addHistoryEntry(buildHistoryEntry(operation, false, {}, error?.message));
         activeOperations.delete(requestId);
       }

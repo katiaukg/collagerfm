@@ -7,6 +7,8 @@ extensao exclua o registro original.
 
 O mesmo codigo atende Chromium e Firefox, com manifestos separados:
 
+A versao 1.1.0 tambem permite ler o historico de obsessoes pela sessao aberta do Last.fm quando a consulta do servidor encontra uma verificacao de acesso. A leitura retorna somente os metadados necessarios para a collage, sem adicionar uma operacao ao historico de alteracoes. Se o navegador tambem receber a verificacao, conclua-a manualmente no Last.fm e tente novamente.
+
 - Chrome e Edge usam `background.service_worker`.
 - Firefox desktop e Android usam `background.scripts`.
 - A extensao nao coleta nem transmite dados para armazenamento externo.

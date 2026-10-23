@@ -46,6 +46,76 @@ if (!globalThis.__collagerLastfmContentInstalled) {
     }
   }
 
+  function obsessionDateIso(raw) {
+    const text = String(raw || '').trim();
+    const parts = text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').match(/(\d{1,2})\s+(?:de\s+)?([a-z]+)\.?\s+(?:de\s+)?(\d{4})/i);
+    if (parts) {
+      const months = { jan: 0, feb: 1, fev: 1, mar: 2, apr: 3, abr: 3, may: 4, mai: 4, jun: 5, jul: 6, aug: 7, ago: 7, sep: 8, set: 8, oct: 9, out: 9, nov: 10, dec: 11, dez: 11 };
+      const month = months[parts[2].slice(0, 3).toLowerCase()];
+      if (month !== undefined) {
+        const date = new Date(Date.UTC(Number(parts[3]), month, Number(parts[1])));
+        if (date.getUTCMonth() === month && date.getUTCDate() === Number(parts[1])) return date.toISOString().slice(0, 10);
+      }
+    }
+    const timestamp = Date.parse(text);
+    return Number.isFinite(timestamp) ? new Date(timestamp).toISOString().slice(0, 10) : '';
+  }
+
+  async function readObsessions(payload) {
+    const username = String(payload?.username || '').trim();
+    const limit = Math.max(1, Math.min(500, Number.parseInt(payload?.limit, 10) || 50));
+    if (!username || username.length > 64) throw new Error('Usuario invalido.');
+    const profilePath = `/user/${encodeURIComponent(username)}/obsessions`;
+    const obsessions = [];
+    const seen = new Set();
+    for (let page = 1; page <= 50 && obsessions.length < limit; page++) {
+      const path = `${profilePath}${page > 1 ? `?page=${page}` : ''}`;
+      const response = await timedFetch(path, { credentials: 'include', cache: 'no-store', headers: { Accept: 'text/html' } });
+      const html = await response.text();
+      if (/<title>\s*Client Challenge\s*<\/title>|\/_fs-ch-|cf-chl-/i.test(html) || [403, 406, 600].includes(response.status)) {
+        const error = new Error('Abra o Last.fm, conclua a verificação de acesso e tente carregar as obsessões novamente.');
+        error.code = 'LASTFM_ACCESS_CHALLENGE';
+        error.openUrl = new URL(profilePath, location.origin).href;
+        throw error;
+      }
+      if (!response.ok) throw new Error(`Last.fm respondeu ${response.status}.`);
+      const pageDocument = new DOMParser().parseFromString(html, 'text/html');
+      const rows = pageDocument.querySelectorAll('.obsession-history-item');
+      if (!rows.length) {
+        if (!pageDocument.querySelector('.obsession-history, .obsession-history-list, .obsessions-history, .obsessions-page, .obsessions-empty')
+          && !/no obsessions|hasn.t set any obsessions|ainda n.o.*obsess|nenhuma obsess/i.test(pageDocument.body?.textContent || '')) {
+          throw new Error('Não foi possível reconhecer o histórico de obsessões do Last.fm.');
+        }
+        break;
+      }
+      for (const row of rows) {
+        const text = element => String(element?.textContent || '').replace(/\s+/g, ' ').trim();
+        const name = text(row.querySelector('.obsession-history-item-heading'));
+        const artist = text(row.querySelector('.obsession-history-item-artist a') || row.querySelector('.obsession-history-item-artist'));
+        const date = text(row.querySelector('.obsession-history-item-date a') || row.querySelector('.obsession-history-item-date'));
+        const link = [...row.querySelectorAll('a[href]')].find(anchor => /\/obsessions\/\d+/.test(anchor.getAttribute('href')));
+        const obsessionUrl = link ? new URL(link.getAttribute('href'), location.origin).href : '';
+        const obsessionId = obsessionUrl.match(/\/obsessions\/(\d+)/)?.[1] || '';
+        const key = obsessionId || `${artist}|${name}|${date}`;
+        if (!name || !artist || seen.has(key)) continue;
+        seen.add(key);
+        const rawDate = row.querySelector('time[datetime]')?.getAttribute('datetime') || date;
+        const style = row.querySelector('[style*="background-image"]')?.getAttribute('style') || row.getAttribute('style') || '';
+        const image = style.match(/url\(["']?(https?:\/\/[^)'"\s]+)["']?\)/)?.[1] || row.querySelector('img')?.getAttribute('src') || '';
+        const track = row.querySelector('[data-track-url]')?.getAttribute('data-track-url') || '';
+        obsessions.push({ name, artist, date, dateIso: obsessionDateIso(rawDate),
+          image, trackUrl: track ? new URL(track, location.origin).href : '', obsessionUrl, obsessionId });
+        if (obsessions.length >= limit) break;
+      }
+      const next = [...pageDocument.querySelectorAll('a[href]')].some(anchor => {
+        const url = new URL(anchor.getAttribute('href'), new URL(path, location.origin));
+        return url.origin === location.origin && url.pathname === profilePath && Number(url.searchParams.get('page')) === page + 1;
+      });
+      if (!next) break;
+    }
+    return { ok: true, obsessions, source: 'browser' };
+  }
+
   function cookieValue(name) {
     const prefix = `${name}=`;
     const part = document.cookie.split(';').map(value => value.trim()).find(value => value.startsWith(prefix));
@@ -375,7 +445,10 @@ if (!globalThis.__collagerLastfmContentInstalled) {
     if (message?.channel !== 'collager-lastfm-page') return undefined;
     let operation;
     let fallbackError;
-    if (message.action === 'deleteScrobble') {
+    if (message.action === 'readObsessions') {
+      operation = readObsessions(message.payload);
+      fallbackError = 'Falha ao consultar obsessões.';
+    } else if (message.action === 'deleteScrobble') {
       operation = deleteScrobble(message.payload);
       fallbackError = 'Falha ao excluir o scrobble.';
     } else if (message.action === 'deleteObsession') {
@@ -393,6 +466,7 @@ if (!globalThis.__collagerLastfmContentInstalled) {
         ok: false,
         error: error?.message || fallbackError,
         code: error?.code || '',
+        openUrl: error?.openUrl || '',
         retryable: Boolean(error?.retryable),
         retryAfterMs: Number(error?.retryAfterMs) || 0,
         temporaryUnavailable: Boolean(error?.temporaryUnavailable),

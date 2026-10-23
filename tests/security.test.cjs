@@ -163,6 +163,8 @@ test('obsession access challenge returns 503 and is not cached as an empty histo
     const res = response();
     await handler({ method: 'GET', headers: {}, query: { user: 'test-user' } }, res);
     assert.equal(res.code, 503);
+    assert.equal(JSON.parse(res.body).code, 'LASTFM_ACCESS_CHALLENGE');
+    assert.equal(JSON.parse(res.body).openUrl, 'https://www.last.fm/user/test-user/obsessions');
     assert(!JSON.parse(res.body).obsessions);
   }
   assert.equal(calls, 2);

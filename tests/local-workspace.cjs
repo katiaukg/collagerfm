@@ -81,6 +81,7 @@ async function upload(page, color = '#e12c47') {
     assert.equal(await page.evaluate(() => Boolean(customImages[2])), true);
 
     await page.evaluate(() => {
+      document.getElementById('username').value = '  Local-Test-User  ';
       customTexts[2] = { main: 'My saved title' };
       document.getElementById('apikey').value = 'SECRET_NOT_IN_BACKUP';
       document.getElementById('inline-youtube-apikey').value = 'YOUTUBE_SECRET_NOT_IN_BACKUP';
@@ -90,15 +91,25 @@ async function upload(page, color = '#e12c47') {
       deletedPoolIndices.add(1);
       mergeRecords[1] = { targetPoolIdx: 2, amount: 10 };
       customPlays[2] = 20;
+      document.getElementById('header-use-username-label').checked = true;
+      document.getElementById('header-username-size').value = '42';
     });
     await page.locator('label[for="local-session-enabled"]').click();
     await page.waitForFunction(() => document.getElementById('local-workspace-status').dataset.message === 'Sessão salva neste navegador.');
     const saved = await page.evaluate(() => CollagerLocalStore.session());
     assert(saved.bytes > 0);
+    assert.equal(saved.username, '  Local-Test-User  ');
     await page.reload();
-    await page.waitForFunction(() => document.getElementById('local-workspace-status').dataset.message === 'Sessão local restaurada.');
+    await page.waitForFunction(() => document.getElementById('local-workspace-status').dataset.message === 'Cópia local exibida. Não foi possível atualizar os dados agora.');
     const resumed = await page.evaluate(() => ({ title: customTexts[2]?.main, image: Boolean(customImages[2]), mode: getDrawType(), header: headerSubtitleOverride, count: currentItems.length, headerImage: Boolean(headerImage), transform: headerImageTransform, merged: mergeRecords[1].targetPoolIdx }));
     assert.deepEqual(resumed, { title: 'My saved title', image: true, mode: 'tracks', header: 'Saved header', count: 2, headerImage: true, transform: { x: 7, y: 3, zoom: 130 }, merged: 2 });
+    const readAccountFields = () => page.evaluate(() => ({
+      usernames: ['username', 'desktop-menu-username', 'mobile-quick-username'].map(id => document.getElementById(id).value),
+      headerUsesUsername: document.getElementById('header-use-username-label').checked,
+      headerUsernameSize: document.getElementById('header-username-size').value,
+    }));
+    const expectedAccount = { usernames: Array(3).fill('  Local-Test-User  '), headerUsesUsername: true, headerUsernameSize: '42' };
+    assert.deepEqual(await readAccountFields(), expectedAccount);
 
     const downloadPromise = page.waitForEvent('download');
     await page.locator('#local-backup-export').click();
@@ -108,9 +119,16 @@ async function upload(page, color = '#e12c47') {
     const fresh = await browser.newContext({ viewport: { width: 390, height: 844 } });
     const imported = await setup(fresh);
     await imported.page.locator('#local-backup-file').setInputFiles({ name: 'backup.json', mimeType: 'application/json', buffer: backup });
-    await imported.page.waitForFunction(() => document.getElementById('local-workspace-status').dataset.message === 'Backup local importado.');
+    await imported.page.waitForFunction(() => document.getElementById('local-workspace-status').dataset.message === 'Backup importado. Não foi possível atualizar os dados agora.');
     assert.equal(await imported.page.evaluate(() => customTexts[2].main), 'My saved title');
     assert.equal(await imported.page.evaluate(() => Boolean(customImages[2])), true);
+    await imported.page.reload();
+    await imported.page.waitForFunction(() => document.getElementById('local-workspace-status').dataset.message === 'Cópia local exibida. Não foi possível atualizar os dados agora.');
+    assert.deepEqual(await imported.page.evaluate(() => ({
+      usernames: ['username', 'desktop-menu-username', 'mobile-quick-username'].map(id => document.getElementById(id).value),
+      headerUsesUsername: document.getElementById('header-use-username-label').checked,
+      headerUsernameSize: document.getElementById('header-username-size').value,
+    })), expectedAccount);
     assert.equal(await imported.page.locator('#local-workspace-panel').evaluate(element => element.scrollWidth > element.clientWidth + 1), false);
     if (process.env.UI_SCREENSHOT_DIR) {
       fs.mkdirSync(process.env.UI_SCREENSHOT_DIR, { recursive: true });

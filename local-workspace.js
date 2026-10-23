@@ -15,6 +15,7 @@
   let baseline = new Map();
   let loaded = false;
   let restoring = true;
+  let awaitingLiveRefresh = false;
   let session = null;
   let saveTimer;
   let saveVersion = 0;
@@ -160,12 +161,13 @@
   }
 
   function safeSettings(settings) {
-    const blocked = /(?:api.?key|token|secret|password|client.?id|username)/i;
+    const blocked = /(?:api.?key|token|secret|password|client.?id)/i;
+    const accountFields = new Set(['username', 'desktop-menu-username', 'mobile-quick-username']);
     const allowedFields = new Set(scanFormFields().map(field => field.id));
     const allowedJsKeys = new Set(Object.keys(getTimelineSettingsSnapshot().jsState));
     return {
       fields: (settings.fields || []).filter(field => allowedFields.has(field.id)
-        && !PRIVATE_SETTINGS_FIELD_IDS.has(field.id) && !blocked.test(field.id)),
+        && !PRIVATE_SETTINGS_FIELD_IDS.has(field.id) && !blocked.test(field.id) && !accountFields.has(field.id)),
       buttonGroups: (settings.buttonGroups || []).filter(group => SETTINGS_BUTTON_GROUPS.some(definition => definition.id === group.id)),
       jsState: Object.fromEntries(Object.entries(settings.jsState || {}).filter(([key]) => allowedJsKeys.has(key))),
     };
@@ -189,7 +191,7 @@
     runtime.customImages = {};
     runtime.deletedImagePreviewCache = [];
     const result = {
-      version: 1, savedAt: Date.now(), username: document.getElementById('username').value.trim(),
+      version: 1, savedAt: Date.now(), username: document.getElementById('username').value,
       snapshot: cloneTimelinePlain(snapshot), images, custom,
       page: temporalCollagePage, estimatedTotal: temporalPaginationEstimatedTotal,
       hasMore: temporalPaginationHasMore, requestedLimit: temporalPaginationRequestedLimit,
@@ -226,7 +228,9 @@
 
   async function restoreSession(saved) {
     restoring = true;
+    awaitingLiveRefresh = false;
     stopRecentLiveUpdates();
+    let refreshed = false;
     try {
       const snapshot = structuredClone(saved.snapshot);
       snapshot.settings = safeSettings(snapshot.settings);
@@ -243,9 +247,10 @@
         if (field.id.includes('font') && fontIds.has(field.value)) field.value = fontIds.get(field.value);
       });
       const restoredHeader = saved.header ? await decode(saved.header.blob) : null;
-      document.getElementById('username').value = saved.username || '';
       currentApiKey = document.getElementById('apikey').value.trim();
-      const restored = await restoreStatusHistoryEntry({ id: 0, snapshot }, { prepareDraw: () => {
+      const prepareDraw = () => {
+        document.getElementById('username').value = typeof saved.username === 'string' ? saved.username : '';
+        document.dispatchEvent(new CustomEvent('collager:account-state-changed'));
         temporalCollagePage = saved.page || 0;
         temporalPaginationEstimatedTotal = saved.estimatedTotal || 0;
         temporalPaginationHasMore = Boolean(saved.hasMore);
@@ -254,13 +259,34 @@
         headerImageDataUrl = '';
         headerImageTransform = saved.header?.transform || { x: 0, y: 0, zoom: 100 };
         headerImageDominantColor = saved.header?.color || '#0d0d0d';
-      } });
+      };
+      const restored = await restoreStatusHistoryEntry({ id: 0, snapshot }, { prepareDraw });
       if (!restored) throw new Error('Session restore failed');
       syncHeaderImageUi();
       updateTemporalPaginationControls();
+      notifyQueryConfigurationChanged();
       recordTimelineAction('Sessão local restaurada.');
-      setStatus('Sessão local restaurada.');
-    } finally { restoring = false; }
+      const fallback = captureTimelineSnapshot();
+      setStatus('Atualizando a collage com os dados de agora...');
+      refreshed = await generate({ refreshOnly: true });
+      if (refreshed) {
+        setStatus(currentType === 'obsessions' && obsessionDataIsStale
+          ? 'O Last.fm está indisponível. Exibindo o último histórico de obsessões disponível.'
+          : 'Sessão restaurada e atualizada.');
+      } else {
+        cancelRequested = false;
+        await restoreStatusHistoryEntry({ id: 0, snapshot: fallback }, { prepareDraw });
+        setStatus('Cópia local exibida. Não foi possível atualizar os dados agora.', true);
+        if (getRenderedQueryState()?.mode === 'recent') {
+          awaitingLiveRefresh = true;
+          startRecentLiveUpdates(String(saved.username || '').trim(), currentApiKey, { applyMetadataRules: false });
+        }
+      }
+    } finally {
+      restoring = false;
+      if (refreshed) scheduleSave();
+    }
+    return refreshed;
   }
 
   function dataUrl(blob) {
@@ -348,19 +374,22 @@
       covers.set(cover.key, cover);
       decodedCovers.delete(cover.key);
     }
+    let sessionRefreshed = null;
     if (backup.session) {
-      await restoreSession(backup.session);
+      sessionRefreshed = await restoreSession(backup.session);
       await store.putSession(backup.session);
       session = backup.session;
       toggle.checked = true;
       localStorage.setItem(preferenceKey, '1');
     } else if (currentItems.length) await runDraw();
     updateUsage();
-    setStatus('Backup local importado.');
+    setStatus(sessionRefreshed === false
+      ? 'Backup importado. Não foi possível atualizar os dados agora.' : 'Backup local importado.');
   }
 
   window.collagerLocalWorkspace = {
     ready, coverKey, rememberCover, forgetCover, applyCovers, restoreCovers, scheduleSave,
+    isRestoring: () => restoring,
     snapshotCovers: () => loaded ? [...covers] : null,
   };
 
@@ -389,6 +418,11 @@
     if (file) await importBackup(file).catch(() => setStatus('Backup local inválido ou armazenamento indisponível.', true));
   });
   document.addEventListener('visibilitychange', () => { if (document.hidden) scheduleSave(); });
+  document.addEventListener('collager:recent-refreshed', () => {
+    if (!awaitingLiveRefresh || restoring) return;
+    awaitingLiveRefresh = false;
+    setStatus('Sessão restaurada e atualizada.');
+  });
   document.addEventListener('collager:language-changed', () => {
     updateUsage();
     if (status.dataset.message) setStatus(status.dataset.message);
